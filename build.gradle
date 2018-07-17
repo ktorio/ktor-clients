@@ -1,0 +1,42 @@
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+repositories {
+    maven { url 'https://dl.bintray.com/kotlin/ktor' }
+    maven { url 'https://dl.bintray.com/kotlin/kotlinx' }
+    maven { url 'https://dl.bintray.com/palantir/releases' }
+    jcenter()
+}
+
+apply plugin: 'kotlin'
+
+group 'io.ktor.client'
+version '0.1.0'
+
+kotlin.experimental.coroutines 'enable'
+
+sourceSets {
+    main.kotlin.srcDirs 'src'
+    test.kotlin.srcDirs 'test'
+    main.resources.srcDirs 'resources'
+}
+
+dependencies {
+    implementation group: 'org.jetbrains.kotlinx', name: 'kotlinx-coroutines-core', version: kotlinx_coroutines
+    implementation "io.ktor:ktor-network:$ktor_version"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+
+    testImplementation "io.ktor:ktor-server-core:$ktor_version"
+    testImplementation "io.ktor:ktor-server-sessions:$ktor_version"
+    testImplementation "junit:junit:4.12"
+    testImplementation "org.jetbrains.kotlin:kotlin-test:$kotlin_version"
+    testImplementation group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.25'
+    testImplementation "com.palantir.docker.compose:docker-compose-rule-junit4:0.34.0"
+}
