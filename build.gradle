@@ -16,6 +16,8 @@ repositories {
 }
 
 apply plugin: 'kotlin'
+apply plugin: 'maven'
+apply plugin: 'maven-publish'
 
 group 'io.ktor.client'
 version '0.1.0'
@@ -39,4 +41,30 @@ dependencies {
     testImplementation "org.jetbrains.kotlin:kotlin-test:$kotlin_version"
     testImplementation group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.25'
     testImplementation "com.palantir.docker.compose:docker-compose-rule-junit4:0.34.0"
+}
+
+task(type: Jar, 'javadocJar') {
+    classifier = 'javadoc'
+    from 'build/docs/javadoc'
+}
+
+task(type: Jar, 'sourcesJar') {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    archives javadocJar
+    archives sourcesJar
+}
+
+publishing {
+    publications {
+        MyPublication(MavenPublication) {
+            from components.java
+            groupId project.group
+            artifactId project.name
+            version "$project.version"
+        }
+    }
 }
