@@ -35,7 +35,7 @@ class IntegrationTest {
     }
 
     @Test
-    fun sets(): Unit = redisTest {
+    fun testSets(): Unit = redisTest {
         val key = "myset"
         val key1 = "myset1"
         val key2 = "myset2"
@@ -85,7 +85,7 @@ class IntegrationTest {
         assertEquals(setOf("a", "b", "c", "d", "e", "f", "g"), smembers(key4))
 
         // SMOVE
-        cleanKeys(key1, key2) {
+        cleanSetKeys(key1, key2) {
             sadd(key1, "a", "b")
             sadd(key2, "c")
             assertEquals(true, smove(key1, key2, "b"))
@@ -95,21 +95,21 @@ class IntegrationTest {
         }
 
         // SPOP (single)
-        cleanKeys(key1) {
+        cleanSetKeys(key1) {
             sadd(key1, "a")
             assertEquals("a", spop(key1))
             assertEquals(null, spop(key1))
         }
 
         // SPOP (multi)
-        cleanKeys(key1) {
+        cleanSetKeys(key1) {
             sadd(key1, "a", "b", "c")
             assertEquals(setOf("a", "b", "c"), spop(key1, 3))
             assertEquals(setOf(), spop(key1, 3))
         }
 
         // SRANDMEMBER
-        cleanKeys(key1) {
+        cleanSetKeys(key1) {
             sadd(key1, "a", "b", "c")
             assertTrue(srandmember(key1) in setOf("a", "b", "c"))
             assertEquals(setOf("a", "b", "c"), srandmember(key1, 3))
@@ -119,7 +119,79 @@ class IntegrationTest {
         // @TODO
     }
 
-    private suspend inline fun Redis.cleanKeys(vararg keys: String, callback: () -> Unit) {
+    @Test
+    fun testMaps(): Unit = redisTest {
+        val key = "myhashmap1"
+        val key2 = "myhashmap2"
+
+        // HSET, HGET, HDEL, HEXISTS, HKEYS, HVALS, HGETALL
+        run {
+            del(key)
+            hset(key, "hello", "world")
+            assertEquals("world", hget(key, "hello"))
+            assertEquals(true, hexists(key, "hello"))
+            assertEquals(1L, hlen(key))
+            assertEquals(setOf("hello"), hkeys(key))
+            assertEquals(setOf("world"), hvals(key))
+            assertEquals(mapOf("hello" to "world"), hgetall(key))
+            hdel(key, "hello")
+            assertEquals(null, hget(key, "hello"))
+            assertEquals(false, hexists(key, "hello"))
+            assertEquals(0L, hlen(key))
+            assertEquals(setOf(), hkeys(key))
+            assertEquals(setOf(), hvals(key))
+            assertEquals(mapOf(), hgetall(key))
+        }
+
+        // HSETNX
+        run {
+            del(key)
+            val field = "hello2"
+            val value1 = "test"
+            val value2 = "test2"
+
+            assertEquals(true, hsetnx(key, field, value1)) // Set because key not existed yet
+            assertEquals(value1, hget(key, field))
+
+            assertEquals(false, hsetnx(key, field, value2)) // Not re-set because key existed already
+            assertEquals(value1, hget(key, field))
+        }
+
+        // HSTRLEN
+        run {
+            del(key)
+            hset(key, "hello", "worldworld")
+            assertEquals("worldworld".length.toLong(), hstrlen(key, "hello"))
+            assertEquals(0L, hstrlen(key, "non-existant-key"))
+        }
+
+        // HINCR, HINCRFLOAT
+        run {
+            del(key)
+            assertEquals(10L, hincrby(key, "int", 10L))
+            assertEquals(20L, hincrby(key, "int", 10L))
+            hset(key, "int", "100")
+            assertEquals(100L, hincrby(key, "int", 0L))
+
+            assertEquals(10.5, hincrbyfloat(key, "double", 10.5))
+            assertEquals(21.0, hincrbyfloat(key, "double", 10.5))
+            hset(key, "double", "100.5")
+            assertEquals(100.5, hincrbyfloat(key, "double", 0.0))
+        }
+
+        // HMSET, HMGET
+        run {
+            hmset(key, "akey" to "avalue", "bkey" to "bvalue", "ckey" to "cvalue")
+            hmset(key2, mapOf("akey" to "avalue", "bkey" to "bvalue", "ckey" to "cvalue"))
+            assertEquals(listOf("avalue", "cvalue", "bvalue"), hmget(key, "akey", "ckey", "bkey"))
+            assertEquals(listOf("avalue", "cvalue", "bvalue"), hmget(key2, "akey", "ckey", "bkey"))
+        }
+
+        // HSCAN
+        // @TODO
+    }
+
+    private suspend inline fun Redis.cleanSetKeys(vararg keys: String, callback: () -> Unit) {
         val keysMembers = keys.map { it to if (exists(it)) smembers(it) else null }
         del(*keys)
         try {

@@ -19,12 +19,6 @@ suspend fun Redis.del(vararg keys: String) = commandString("del", *keys)
 suspend fun Redis.echo(msg: String) = commandString("echo", msg)
 suspend fun Redis.expire(key: String, time: Int) = commandString("expire", key, "$time")
 
-suspend fun Redis.hset(key: String, member: String, value: String): Long = commandLong("hset", key, member, value)
-
-suspend fun Redis.hget(key: String, member: String): String? = commandString("hget", key, member)
-suspend fun Redis.hincrby(key: String, member: String, increment: Long): Long =
-    commandLong("hincrby", key, member, "$increment")
-
 suspend fun Redis.zadd(key: String, vararg scores: Pair<String, Double>): Long {
     val args = kotlin.collections.arrayListOf<Any?>()
     for (score in scores) {
@@ -43,8 +37,6 @@ suspend fun Redis.zcard(key: String): Long = commandLong("zcard", key)
 suspend fun Redis.zrevrank(key: String, member: String): Long = commandLong("zrevrank", key, member)
 suspend fun Redis.zscore(key: String, member: String): Long = commandLong("zscore", key, member)
 
-suspend fun Redis.hgetall(key: String): Map<String, String> = commandArrayString("hgetall", key).listOfPairsToMap()
-
 suspend fun Redis.zrevrange(key: String, start: Long, stop: Long): Map<String, Double> =
     commandArrayString("zrevrange", key, start, stop, "WITHSCORES").listOfPairsToMap()
         .mapValues { it.value.toDouble() }
@@ -59,8 +51,9 @@ suspend fun Redis.commandArrayLong(vararg args: Any?): List<Long> =
 
 suspend fun Redis.commandString(vararg args: Any?): String? = execute(*args)?.toString()
 suspend fun Redis.commandLong(vararg args: Any?): Long = execute(*args)?.toString()?.toLongOrNull() ?: 0L
+suspend fun Redis.commandDouble(vararg args: Any?): Double = execute(*args)?.toString()?.toDoubleOrNull() ?: 0.0
 suspend fun Redis.commandUnit(vararg args: Any?): Unit = run { execute(*args) }
 suspend fun Redis.commandBool(vararg args: Any?): Boolean = commandLong(*args) != 0L
 
-private fun List<Any?>.listOfPairsToMap(): Map<String, String> =
+internal fun List<Any?>.listOfPairsToMap(): Map<String, String> =
     (0 until size / 2).map { ("" + this[it * 2 + 0]) to ("" + this[it * 2 + 1]) }.toMap()
