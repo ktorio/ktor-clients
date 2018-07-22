@@ -11,6 +11,8 @@ suspend fun Redis.bitcount(key: String): String? = commandString("bitcount", key
 suspend fun Redis.bitcount(key: String, start: Int, end: Int): String? =
     commandString("bitcount", key, "$start", "$end")
 
+suspend fun Redis.exists(key: String): Boolean = commandBool("exists", key)
+suspend fun Redis.exists(vararg keys: String): Long = commandLong("exists", *keys)
 suspend fun Redis.set(key: String, value: String): String? = commandString("set", key, value)
 suspend fun Redis.get(key: String): String? = commandString("get", key)
 suspend fun Redis.del(vararg keys: String) = commandString("del", *keys)
@@ -33,8 +35,8 @@ suspend fun Redis.zadd(key: String, vararg scores: Pair<String, Double>): Long {
 }
 
 suspend fun Redis.zadd(key: String, member: String, score: Double): Long = commandLong("zadd", key, score, member)
-suspend fun Redis.sadd(key: String, member: String): Long = commandLong("sadd", key, member)
-suspend fun Redis.smembers(key: String): List<String> = commandArrayString("smembers", key)
+
+// Sorted sets
 
 suspend fun Redis.zincrby(key: String, member: String, score: Double) = commandString("zincrby", key, score, member)!!
 suspend fun Redis.zcard(key: String): Long = commandLong("zcard", key)
@@ -49,14 +51,16 @@ suspend fun Redis.zrevrange(key: String, start: Long, stop: Long): Map<String, D
 
 @Suppress("UNCHECKED_CAST")
 suspend fun Redis.commandArrayString(vararg args: Any?): List<String> =
-    (execute(*args) as List<String>?) ?: listOf()
+    (execute(*args) as List<Any?>?)?.map { it.toString() } ?: listOf() // toString required because, it returns a CharBuffer
 
+@Suppress("UNCHECKED_CAST")
 suspend fun Redis.commandArrayLong(vararg args: Any?): List<Long> =
     (execute(*args) as List<Long>?) ?: listOf()
 
 suspend fun Redis.commandString(vararg args: Any?): String? = execute(*args)?.toString()
 suspend fun Redis.commandLong(vararg args: Any?): Long = execute(*args)?.toString()?.toLongOrNull() ?: 0L
 suspend fun Redis.commandUnit(vararg args: Any?): Unit = run { execute(*args) }
+suspend fun Redis.commandBool(vararg args: Any?): Boolean = commandLong(*args) != 0L
 
 private fun List<Any?>.listOfPairsToMap(): Map<String, String> =
     (0 until size / 2).map { ("" + this[it * 2 + 0]) to ("" + this[it * 2 + 1]) }.toMap()

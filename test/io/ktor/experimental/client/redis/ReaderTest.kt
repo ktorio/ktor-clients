@@ -2,7 +2,7 @@ package io.ktor.experimental.client.redis
 
 import io.ktor.experimental.client.redis.protocol.*
 import kotlinx.coroutines.experimental.*
-import org.junit.*
+import org.junit.Test
 import kotlin.test.*
 
 
