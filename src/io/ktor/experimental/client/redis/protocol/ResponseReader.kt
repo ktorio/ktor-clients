@@ -1,6 +1,5 @@
 package io.ktor.experimental.client.redis.protocol
 
-import io.ktor.experimental.client.redis.*
 import io.ktor.experimental.client.redis.utils.*
 import kotlinx.coroutines.experimental.io.*
 import kotlinx.io.core.*
@@ -8,7 +7,6 @@ import kotlinx.io.pool.*
 import java.nio.*
 import java.nio.ByteBuffer
 import java.nio.charset.*
-
 
 internal suspend fun ByteReadChannel.readRedisMessage(
     decoder: CharsetDecoder = Charsets.UTF_8.newDecoder()
@@ -25,7 +23,7 @@ internal suspend fun ByteReadChannel.readRedisMessage(
 
             val data = readPacket(size).readBytes()
             readShort() // Skip CRLF
-            decoder.decode(ByteBuffer.wrap(data))
+            decoder.decode(ByteBuffer.wrap(data)).toString()
         }
         RedisType.ARRAY -> {
             val arraySize = line.toInt()

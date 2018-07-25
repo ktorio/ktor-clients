@@ -3,10 +3,11 @@ package io.ktor.experimental.client.redis
 import com.palantir.docker.compose.*
 import com.palantir.docker.compose.connection.waiting.*
 import io.ktor.experimental.client.redis.protocol.*
+import kotlinx.coroutines.experimental.*
+import org.junit.*
+import org.junit.Test
 import java.net.*
 import kotlin.test.*
-import org.junit.*
-import kotlin.test.Test
 
 class IntegrationTest {
 
@@ -191,6 +192,104 @@ class IntegrationTest {
         // @TODO
     }
 
+    @Test
+    fun testSortedSets() = redisTest {
+        val key = "mysortedset"
+
+        // ZADD (variants), ZCARD, ZCOUNT, ZSCORE
+        run {
+            del(key)
+            assertEquals(0, zcard(key))
+            assertEquals(0, zcount(key))
+            zadd(key, "hello" to 10.0)
+            zadd(key, mapOf("world" to 20.0, "demo" to 0.0))
+            zadd(key, "hi" to 30.0, "there" to 40.0)
+            assertEquals(5, zcard(key))
+            assertEquals(5, zcount(key))
+            assertEquals(3, zcount(key, 10.0, 30.0))
+            assertEquals(2, zcount(key, 10.0, 30.0, includeMin = false))
+            assertEquals(1, zcount(key, 10.0, 30.0, includeMin = false, includeMax = false))
+            assertEquals(10.0, zscore(key, "hello"))
+            zincrby(key, "hello", 2.5)
+            assertEquals(12.5, zscore(key, "hello"))
+        }
+        // ZLEXCOUNT ( https://redis.io/commands/zlexcount )
+        run {
+            del(key)
+            zadd(key, "a" to 0.0, "b" to 0.0, "c" to 0.0, "d" to 0.0, "e" to 0.0)
+            zadd(key, "f" to 0.0, "g" to 0.0)
+            assertEquals(7, zlexcount(key, "-", "+"))
+            assertEquals(5, zlexcount(key, "[b", "[f"))
+        }
+        // ZPOPMAX, ZPOPMIN
+        // Disabled until Redis 5.0.0 is released
+        //run {
+        //    del(key)
+        //    zadd(key, "one" to 1.0, "two" to 2.0, "three" to 3.0)
+        //    assertEquals(mapOf("three" to 3.0), zpopmax(key))
+        //    assertEquals(mapOf("one" to 1.0), zpopmin(key))
+        //}
+    }
+
+    @Test
+    fun testScripting() = redisTest {
+        run {
+            assertEquals(
+                listOf("key1", "key2", "first", "second"),
+                eval("return {KEYS[1],KEYS[2],ARGV[1],ARGV[2]}", "key1" to "first", "key2" to "second")
+            )
+            assertEquals(
+                listOf("key1", "key2", "first", "second"),
+                eval("return {KEYS[1],KEYS[2],ARGV[1],ARGV[2]}", mapOf("key1" to "first", "key2" to "second"))
+            )
+        }
+        run {
+            assertEquals(
+                "a42059b356c875f0717db19a51f6aaca9ae659ea",
+                scriptLoad("return {KEYS[1],KEYS[2],ARGV[1],ARGV[2]}")
+            )
+            assertEquals(
+                listOf("key1", "key2", "first", "second"),
+                evalsha("a42059b356c875f0717db19a51f6aaca9ae659ea", "key1" to "first", "key2" to "second")
+            )
+            assertEquals(
+                listOf("key1", "key2", "first", "second"),
+                evalsha("a42059b356c875f0717db19a51f6aaca9ae659ea", mapOf("key1" to "first", "key2" to "second"))
+            )
+            assertEquals(
+                listOf(true, false),
+                scriptExists("a42059b356c875f0717db19a51f6aaca9ae659ea", "0000000000000000000000000000000000000000")
+            )
+            scriptFlush()
+            assertEquals(
+                listOf(false, false),
+                scriptExists("a42059b356c875f0717db19a51f6aaca9ae659ea", "0000000000000000000000000000000000000000")
+            )
+        }
+        run {
+            // https://redis.io/commands/script-debug
+            scriptDebug(RedisScriptDebug.No)
+            // @TODO: Check that the LDB port is open with Yes and Sync
+        }
+        run {
+            // @TODO: Doesn't work.
+            launch(start = CoroutineStart.UNDISPATCHED) {
+                try {
+                    eval(
+                        """
+                            while (1) do
+                            end
+                        """.trimIndent()
+                    )
+                } catch (e: Throwable) {
+                    e.printStackTrace()
+                }
+            }
+            delay(300)
+            scriptKill()
+        }
+    }
+
     private suspend inline fun Redis.cleanSetKeys(vararg keys: String, callback: () -> Unit) {
         val keysMembers = keys.map { it to if (exists(it)) smembers(it) else null }
         del(*keys)
@@ -206,7 +305,11 @@ class IntegrationTest {
         }
     }
 
-    private fun redisTest(password: String = REDIS_PASSWORD, cleanup: suspend Redis.() -> Unit = {}, callback: suspend Redis.() -> Unit) =
+    private fun redisTest(
+        password: String = REDIS_PASSWORD,
+        cleanup: suspend Redis.() -> Unit = {},
+        callback: suspend Redis.() -> Unit
+    ) =
         redisTest(address, password) {
             cleanup()
             try {
