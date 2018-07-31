@@ -3,12 +3,12 @@ package io.ktor.experimental.client.redis
 /**
  * @since 5.0.0
  */
-suspend fun Redis.bzpopmax(vararg keys: String, timeout: Long = 0): List<String> = TODO()
+internal suspend fun Redis.bzpopmax(vararg keys: String, timeout: Long = 0): List<String> = TODO()
 
 /**
  * @since 5.0.0
  */
-suspend fun Redis.bzpopmin(vararg keys: String, timeout: Long = 0): List<String> = TODO()
+internal suspend fun Redis.bzpopmin(vararg keys: String, timeout: Long = 0): List<String> = TODO()
 
 /**
  * Add one or more members to a sorted set, or update its score if it already exists
@@ -86,7 +86,7 @@ suspend fun Redis.zincrby(key: String, member: String, increment: Double) =
  *
  * @since 2.0.0
  */
-suspend fun Redis.zinterstore(todo: Any = TODO()): Long = TODO()
+internal suspend fun Redis.zinterstore(todo: Any = TODO()): Long = TODO()
 
 /**
  * Count the number of members in a sorted set between a given lexicographical range
@@ -257,7 +257,7 @@ suspend fun Redis.zrevrank(key: String, member: String): Long = commandLong("zre
  *
  * @since 2.8.0
  */
-suspend fun Redis.zscan(key: String, cursor: Long, match: String? = null, count: Long? = null): Unit = TODO()
+internal suspend fun Redis.zscan(key: String, cursor: Long, match: String? = null, count: Long? = null): Unit = TODO()
 
 /**
  * Get the score associated with the given member in a sorted set
@@ -275,7 +275,7 @@ suspend fun Redis.zscore(key: String, member: String): Double = commandDouble("z
  *
  * @since 2.0.0
  */
-suspend fun Redis.zunionstore(todo: Any = TODO()): Long = TODO()
+internal suspend fun Redis.zunionstore(todo: Any = TODO()): Long = TODO()
 
 private fun Double.toRedisString() = when {
     isInfinite() -> if (this >= 0) "+inf" else "-inf"

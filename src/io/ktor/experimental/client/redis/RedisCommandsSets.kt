@@ -153,4 +153,4 @@ suspend fun Redis.srandmember(key: String, count: Long): Set<String> = commandAr
  *
  * @since 2.8.0
  */
-suspend fun Redis.sscan(key: String, cursor: Long, match: String? = null, count: Long? = null): Unit = TODO()
+internal suspend fun Redis.sscan(key: String, cursor: Long, match: String? = null, count: Long? = null): Unit = TODO()
