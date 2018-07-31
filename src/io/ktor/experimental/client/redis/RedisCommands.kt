@@ -21,10 +21,7 @@ suspend fun Redis.expire(key: String, time: Int) = commandString("expire", key, 
 
 @Suppress("UNCHECKED_CAST")
 suspend fun Redis.commandArrayString(vararg args: Any?): List<String> =
-    (execute(*args) as List<Any?>?)?.map { it.toString() } ?: listOf() // toString required because, it returns a CharBuffer
-
-suspend fun Redis.commandArrayStringNotNull(vararg args: Any?): List<String> =
-    (execute(*args) as List<Any?>?)?.filterNotNull()?.map { it.toString() } ?: listOf() // toString required because, it returns a CharBuffer
+    (execute(*args) as List<Any?>?)?.filterIsInstance<String>() ?: listOf()
 
 @Suppress("UNCHECKED_CAST")
 suspend fun Redis.commandArrayLong(vararg args: Any?): List<Long> =
@@ -37,7 +34,7 @@ suspend fun Redis.commandUnit(vararg args: Any?): Unit = run { execute(*args) }
 suspend fun Redis.commandBool(vararg args: Any?): Boolean = commandLong(*args) != 0L
 
 internal fun <T> List<T>.toListOfPairs(): List<Pair<String, String>> =
-    (0 until size / 2).map { ("${this[it * 2 + 0]}") to ("${this[it * 2 + 1]}") }
+    (0 until size / 2).map { ("${this[it * 2 + 0]}") to ("" + this[it * 2 + 1]) }
 
 internal fun List<Any?>.listOfPairsToMap(): Map<String, String> =
     (0 until size / 2).map { ("${this[it * 2 + 0]}") to ("${this[it * 2 + 1]}") }.toMap()
