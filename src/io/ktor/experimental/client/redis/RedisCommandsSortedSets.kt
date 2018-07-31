@@ -125,7 +125,7 @@ suspend fun Redis.zpopmin(key: String, count: Long = 1): Map<String, Double> =
  * @since 1.2.0
  */
 suspend fun Redis.zrange(key: String, start: Long, stop: Long): Map<String, Double> =
-    commandArrayStringNotNull("zrange", key, start, stop, "WITHSCORES").listOfPairsToMap()
+    commandArrayString("zrange", key, start, stop, "WITHSCORES").listOfPairsToMap()
         .mapValues { it.value.toDouble() }
 
 /**
@@ -217,7 +217,7 @@ suspend fun Redis.zremrangebyscore(key: String, min: Double, max: Double): Long 
  * @since 1.2.0
  */
 suspend fun Redis.zrevrange(key: String, start: Long, stop: Long): Map<String, Double> =
-    commandArrayStringNotNull("zrevrange", key, start, stop, "WITHSCORES").listOfPairsToMap()
+    commandArrayString("zrevrange", key, start, stop, "WITHSCORES").listOfPairsToMap()
         .mapValues { it.value.toDouble() }
 
 /**
