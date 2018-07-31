@@ -34,7 +34,7 @@ suspend fun Redis.commandUnit(vararg args: Any?): Unit = run { execute(*args) }
 suspend fun Redis.commandBool(vararg args: Any?): Boolean = commandLong(*args) != 0L
 
 internal fun <T> List<T>.toListOfPairs(): List<Pair<String, String>> =
-    (0 until size / 2).map { ("${this[it * 2 + 0]}") to ("" + this[it * 2 + 1]) }
+    (0 until size / 2).map { ("${this[it * 2 + 0]}") to ("${this[it * 2 + 1]}") }
 
 internal fun List<Any?>.listOfPairsToMap(): Map<String, String> =
     (0 until size / 2).map { ("${this[it * 2 + 0]}") to ("${this[it * 2 + 1]}") }.toMap()
