@@ -1,16 +1,14 @@
 package io.ktor.experimental.client.redis
 
-suspend fun Redis.eval(script: String, vararg args: Pair<String, Any?>): Any? {
-    return execute(
-        "eval",
-        script,
-        args.size,
-        *(args.map { it.first }.toTypedArray()),
-        *(args.map { it.second }.toTypedArray())
-    )
-}
+suspend fun Redis.eval(script: String, vararg args: Pair<String, Any?>): Any? = execute(
+    "eval",
+    script,
+    args.size,
+    *(args.map { it.first }.toTypedArray()),
+    *(args.map { it.second }.toTypedArray())
+)
 
-suspend fun Redis.eval(script: String, args: Map<String, Any?>) =
+suspend fun Redis.eval(script: String, args: Map<String, Any?>): Any? =
     eval(script, *(args.map { it.key to it.value }.toTypedArray()))
 
 suspend fun Redis.evalsha(sha1: String, vararg args: Pair<String, Any?>): Any? {
@@ -23,7 +21,7 @@ suspend fun Redis.evalsha(sha1: String, vararg args: Pair<String, Any?>): Any? {
     )
 }
 
-suspend fun Redis.evalsha(sha1: String, args: Map<String, Any?>) =
+suspend fun Redis.evalsha(sha1: String, args: Map<String, Any?>): Any? =
     evalsha(sha1, *(args.map { it.key to it.value }.toTypedArray()))
 
 suspend fun Redis.scriptLoad(script: String): String = this.commandString("SCRIPT", "LOAD", script) ?: ""
