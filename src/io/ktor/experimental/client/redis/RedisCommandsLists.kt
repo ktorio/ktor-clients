@@ -1,3 +1,40 @@
+/**
+ * Lists
+ * Redis Lists are simply lists of strings, sorted by insertion order. It is possible to add elements to a Redis List
+ * pushing new elements on the head (on the left) or on the tail (on the right) of the list.
+ *
+ * The LPUSH command inserts a new element on the head, while RPUSH inserts a new element on the tail.
+ * A new list is created when one of this operations is performed against an empty key.
+ * Similarly the key is removed from the key space if a list operation will empty the list.
+ * These are very handy semantics since all the list commands will behave exactly like they were
+ * called with an empty list if called with a non-existing key as argument.
+ *
+ * Some example of list operations and resulting lists:
+ *
+ * LPUSH mylist a   # now the list is "a"
+ * LPUSH mylist b   # now the list is "b","a"
+ * RPUSH mylist c   # now the list is "b","a","c" (RPUSH was used this time)
+ * The max length of a list is 2**32 - 1 elements (4294967295, more than 4 billion of elements per list).
+ *
+ * The main features of Redis Lists from the point of view of time complexity are the support for constant time
+ * insertion and deletion of elements near the head and tail, even with many millions of inserted items.
+ * Accessing elements is very fast near the extremes of the list but is slow if you try accessing the middle
+ * of a very big list, as it is an O(N) operation.
+ *
+ * You can do many interesting things with Redis Lists, for instance you can:
+ *
+ * Model a timeline in a social network, using LPUSH in order to add new elements in the user time line,
+ * and using LRANGE in order to retrieve a few of recently inserted items.
+ * You can use LPUSH together with LTRIM to create a list that never exceeds a given number of elements,
+ * but just remembers the latest N elements.
+ * Lists can be used as a message passing primitive, See for instance the well known Resque Ruby library
+ * for creating background jobs.
+ * You can do a lot more with lists, this data type supports a number of commands,
+ * including blocking commands like BLPOP.
+ * Please check all the available commands operating on lists for more information,
+ * or read the introduction to Redis data types.
+ */
+
 package io.ktor.experimental.client.redis
 
 /**
@@ -97,7 +134,7 @@ suspend fun Redis.rpop(key: String): String? = commandString("rpop", key)
  *
  * @since 1.0.0
  */
-suspend fun Redis.lpush(key: String, vararg values: String): Long = commandLong("lpush", key, *values)
+suspend fun Redis.lpush(key: String, value: String, vararg extraValues: String): Long = commandLong("lpush", key, value, *extraValues)
 
 /**
  * Prepend a value to a list, only if the list exists
@@ -115,7 +152,7 @@ suspend fun Redis.lpushx(key: String, value: String): Long = commandLong("lpushx
  *
  * @since 1.0.0
  */
-suspend fun Redis.rpush(key: String, vararg values: String): Long = commandLong("rpush", key, *values)
+suspend fun Redis.rpush(key: String, value: String, vararg extraValues: String): Long = commandLong("rpush", key, value, *extraValues)
 
 /**
  * Append a value to a list, only if the list exists
@@ -133,7 +170,12 @@ suspend fun Redis.rpushx(key: String, value: String): Long = commandLong("rpushx
  *
  * @since 1.0.0
  */
-suspend fun Redis.lrange(key: String, start: Long, stop: Long): List<String> = commandArrayString("lrange", key, start, stop)
+suspend fun Redis.lrange(key: String, range: LongRange): List<String> = commandArrayString("lrange", key, range.start, range.endInclusive)
+
+/**
+ * Returns the whole list. (Shortcut of lrange(key, 0L until 4294967295L))
+ */
+suspend fun Redis.lgetall(key: String): List<String> = lrange(key, 0L until 4294967295L)
 
 /**
  * Remove elements from a list
@@ -160,4 +202,4 @@ suspend fun Redis.lset(key: String, index: Long, value: String) = commandUnit("l
  *
  * @since 1.0.0
  */
-suspend fun Redis.ltrim(key: String, start: Long, stop: Long) = commandUnit("ltrim", key, start, stop)
+suspend fun Redis.ltrim(key: String, range: LongRange) = commandUnit("ltrim", key, range.start, range.endInclusive)
