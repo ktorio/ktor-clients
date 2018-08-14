@@ -295,6 +295,67 @@ class IntegrationTest {
         }
     }
 
+    @Test
+    fun testKeys() = redisTest {
+        val (key1, value1) = "key1" to "value1"
+        val (key2, value2) = "key2" to "value2"
+        val (key3, value3) = "key3" to "value3"
+        val (key4, _) = "key4" to "value4"
+
+        // del
+        run {
+            set(key1, value1)
+            set(key2, value2)
+            set(key3, value3)
+            del(key1, key2, key4)
+            assertEquals(null, get(key1))
+            assertEquals(null, get(key2))
+            assertEquals(value3, get(key3))
+            assertEquals(null, get(key4))
+            del(key3)
+            assertEquals(null, get(key3))
+        }
+
+        // exists
+        run {
+            set(key1, value1)
+            set(key2, value2)
+            set(key3, value3)
+            del(key1, key2, key4)
+            assertEquals(null, get(key1))
+            assertEquals(null, get(key2))
+            assertEquals(value3, get(key3))
+            assertEquals(null, get(key4))
+            del(key3)
+            assertEquals(null, get(key3))
+        }
+
+        // @TODO: Not working yet: "ERR DUMP payload version or checksum are wrong"
+        // dump/restore
+        //run {
+        //    val mykey = "mykey"
+        //    val myvalue = "10"
+        //    set(mykey, myvalue)
+        //    val mykeyDump = dump(mykey)
+        //    println(mykeyDump!!.size)
+        //    expectException<RedisException>("BUSYKEY Target key name already exists.") { restore(mykey, mykeyDump) }
+        //    del(mykey)
+        //    assertEquals("OK", restore(mykey, mykeyDump))
+        //    assertEquals(value1, get(mykey))
+        //}
+
+        // object
+        run {
+            del("mylist")
+            lpush("mylist", "Hello World")
+            assertEquals(1L, objectRefcount("mylist"))
+            assertTrue(objectEncoding("mylist")!!.contains("list"))
+            assertEquals(0L, objectIdletime("mylist"))
+            // assertEquals(0L, objectFreq("mylist")) // Requires LFU: ERR An LFU maxmemory policy is not selected, access frequency not tracked. Please note that when switching between policies at runtime LRU and LFU data will take some time to adjust.
+            assertTrue(objectHelp()!!.isNotBlank())
+        }
+    }
+
     private suspend inline fun Redis.cleanSetKeys(vararg keys: String, callback: () -> Unit) {
         val keysMembers = keys.map { it to if (exists(it)) smembers(it) else null }
         del(*keys)
@@ -306,6 +367,20 @@ class IntegrationTest {
                 if (members != null) {
                     sadd(key, *members.toTypedArray())
                 }
+            }
+        }
+    }
+
+    inline fun <reified T : Any> expectException(message: String? = null, callback: () -> Unit) {
+        try {
+            callback()
+        } catch (e: Throwable) {
+            if (T::class.isInstance(e)) {
+                if (message != null) {
+                    assertEquals(message, e.message)
+                }
+            } else {
+                throw e
             }
         }
     }

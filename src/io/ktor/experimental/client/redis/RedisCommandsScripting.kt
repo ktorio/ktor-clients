@@ -1,9 +1,7 @@
 package io.ktor.experimental.client.redis
 
-suspend fun Redis.eval(script: String, vararg args: Pair<String, Any?>): Any? = execute(
-    "eval",
-    script,
-    args.size,
+suspend fun Redis.eval(script: String, vararg args: Pair<String, Any?>): Any? = executeText(
+    "eval", script, args.size,
     *(args.map { it.first }.toTypedArray()),
     *(args.map { it.second }.toTypedArray())
 )
@@ -12,10 +10,8 @@ suspend fun Redis.eval(script: String, args: Map<String, Any?>): Any? =
     eval(script, *(args.map { it.key to it.value }.toTypedArray()))
 
 suspend fun Redis.evalsha(sha1: String, vararg args: Pair<String, Any?>): Any? {
-    return execute(
-        "evalsha",
-        sha1,
-        args.size,
+    return executeText(
+        "evalsha", sha1, args.size,
         *(args.map { it.first }.toTypedArray()),
         *(args.map { it.second }.toTypedArray())
     )
