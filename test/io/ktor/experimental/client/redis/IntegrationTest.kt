@@ -356,6 +356,13 @@ class IntegrationTest {
         }
     }
 
+    @Test
+    fun testServer() = redisTest {
+        //run {
+        //    println(clientList())
+        //}
+    }
+
     private suspend inline fun Redis.cleanSetKeys(vararg keys: String, callback: () -> Unit) {
         val keysMembers = keys.map { it to if (exists(it)) smembers(it) else null }
         del(*keys)
