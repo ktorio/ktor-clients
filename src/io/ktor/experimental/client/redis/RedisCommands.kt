@@ -1,10 +1,5 @@
 package io.ktor.experimental.client.redis
 
-// @TODO: Missing commands & generate
-
-suspend fun Redis.bgrewriteaof(): String? = commandString("bgrewriteaof")
-suspend fun Redis.bgsave(): String? = commandString("bgsave")
-
 suspend fun Redis.executeBinary(vararg args: Any?): Any? = execute(*args)
 suspend fun Redis.executeText(vararg args: Any?): Any? = execute(*args).byteArraysToString
 

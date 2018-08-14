@@ -50,6 +50,8 @@ suspend fun Redis.watch(vararg keys: String) = commandUnit("watch", *keys)
  * - If no exception is thrown, all the commands executed inside callback will be commited
  * - If an exception is thrown, all the commands executed inside callback will be discarded and the exception rethrown
  *
+ * https://redis.io/topics/transactions
+ *
  * @since 2.2.0
  */
 suspend inline fun Redis.transaction(vararg keys: String, callback: () -> Unit) {
