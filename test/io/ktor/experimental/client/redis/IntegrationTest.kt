@@ -295,6 +295,79 @@ class IntegrationTest {
         }
     }
 
+    private val key1 = "key1"
+
+    @Test
+    fun testList() = redisTest(cleanup = {
+        del(key1)
+    }) {
+        suspend fun lgetallStr(key: String) = lgetall(key1).joinToString("")
+
+        // lpush, rpush, llen, lrange
+        run {
+            del(key1)
+            assertEquals(0, llen(key1))
+            assertEquals(listOf(), lgetall(key1))
+            rpush(key1, "hello")
+            rpush(key1, "world")
+            assertEquals(2, llen(key1))
+            assertEquals(listOf("hello", "world"), lgetall(key1))
+            rpush(key1, "hi", "there")
+            assertEquals(listOf("hello", "world", "hi", "there"), lgetall(key1))
+            lpush(key1, "nice")
+            lpush(key1, "works", "it")
+            assertEquals(listOf("it", "works", "nice", "hello", "world", "hi", "there"), lgetall(key1))
+            assertEquals(listOf("it", "works", "nice"), lrange(key1, 0L until 3L))
+            assertEquals(listOf("hi", "there"), lrange(key1, -2L until 0L))
+        }
+        // lrem, lset
+        run {
+            del(key1)
+            rpush(key1, ".", ".", ".", "*", "*", ".", ".", ".")
+            lrem(key1, 2, ".")
+            assertEquals(".**...", lgetallStr(key1))
+            lrem(key1, -2, ".")
+            assertEquals(".**.", lgetallStr(key1))
+            lset(key1, 1L, "-")
+            assertEquals(".-*.", lgetallStr(key1))
+            lset(key1, -2L, "+")
+            assertEquals(".-+.", lgetallStr(key1))
+        }
+        // ltrim
+        run {
+            del(key1)
+            rpush(key1, "0", "1", "2", "3", "4", "5", "6", "7")
+            ltrim(key1, 1L..5L)
+            assertEquals("12345", lgetallStr(key1))
+        }
+        // lpop, rpop
+        run {
+            del(key1)
+            rpush(key1, "a", "b", "c")
+            rpop(key1)
+            assertEquals("ab", lgetallStr(key1))
+            lpop(key1)
+            assertEquals("b", lgetallStr(key1))
+        }
+        // linsertBefore, linsertAfter
+        run {
+            del(key1)
+            rpush(key1, "-", "b", "-")
+            linsertBefore(key1, "b", "a")
+            linsertAfter(key1, "b", "c")
+            assertEquals("-abc-", lgetallStr(key1))
+        }
+        // lindex
+        run {
+            del(key1)
+            rpush(key1, "0", "1", "2")
+            assertEquals("0", lindex(key1, 0))
+            assertEquals("1", lindex(key1, 1))
+            assertEquals("2", lindex(key1, 2))
+            assertEquals("2", lindex(key1, -1))
+        }
+    }
+
     @Test
     fun testKeys() = redisTest {
         val (key1, value1) = "key1" to "value1"
