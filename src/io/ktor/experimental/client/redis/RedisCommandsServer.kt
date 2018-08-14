@@ -51,7 +51,7 @@ internal suspend fun Redis.commandGetKeys(todo: Any): Any = TODO()
 internal suspend fun Redis.commandInfo(vararg names: String): Any = executeText("command", "info", *names)!!
 
 internal suspend fun Redis.configGet(pattern: String): Map<String, String> {
-    return commandArrayString("config", "get", pattern).toListOfPairs().toMap()
+    return commandArrayString("config", "get", pattern).toListOfPairsString().toMap()
 }
 
 suspend fun Redis.configResetStat(): Unit = commandUnit("config", "resetstat")

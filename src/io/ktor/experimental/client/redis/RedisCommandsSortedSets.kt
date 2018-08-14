@@ -177,7 +177,7 @@ suspend fun Redis.zrem(key: String, member: String): Boolean = commandBool("zrem
  * @since 1.2.0
  */
 suspend fun Redis.zrem(key: String, vararg members: String): Map<String, Double> =
-    commandArrayString("zrem", *members).toListOfPairs().map { it.first to it.second.toDouble() }.toMap()
+    commandArrayString("zrem", *members).toListOfPairsString().map { it.first to it.second.toDouble() }.toMap()
 
 /**
  * Remove all members in a sorted set between the given lexicographical range
