@@ -4,15 +4,8 @@ package io.ktor.experimental.client.redis
 
 suspend fun Redis.ping(): String? = commandString("ping")
 
-suspend fun Redis.append(key: String, value: String): String? = commandString("append", key, value)
 suspend fun Redis.bgrewriteaof(): String? = commandString("bgrewriteaof")
 suspend fun Redis.bgsave(): String? = commandString("bgsave")
-suspend fun Redis.bitcount(key: String): String? = commandString("bitcount", key)
-suspend fun Redis.bitcount(key: String, start: Int, end: Int): String? =
-    commandString("bitcount", key, "$start", "$end")
-
-suspend fun Redis.set(key: String, value: String): String? = commandString("set", key, value)
-suspend fun Redis.get(key: String): String? = commandString("get", key)
 
 suspend fun Redis.executeBinary(vararg args: Any?): Any? = execute(*args)
 suspend fun Redis.executeText(vararg args: Any?): Any? = execute(*args).byteArraysToString
@@ -21,6 +14,9 @@ suspend fun Redis.executeText(vararg args: Any?): Any? = execute(*args).byteArra
 suspend fun Redis.commandArrayString(vararg args: Any?): List<String> =
     (executeText(*args) as List<Any?>?)?.filterIsInstance<String>() ?: listOf()
 
+suspend fun Redis.commandArrayStringNull(vararg args: Any?): List<String?> =
+    (executeText(*args) as List<Any?>?) as? List<String?> ?: listOf()
+
 @Suppress("UNCHECKED_CAST")
 suspend fun Redis.commandArrayLong(vararg args: Any?): List<Long> =
     (executeText(*args) as List<Long>?) ?: listOf()
@@ -28,6 +24,7 @@ suspend fun Redis.commandArrayLong(vararg args: Any?): List<Long> =
 suspend fun Redis.commandString(vararg args: Any?): String? = executeText(*args)?.toString()
 suspend fun Redis.commandByteArray(vararg args: Any?): ByteArray? = execute(*args) as? ByteArray?
 suspend fun Redis.commandLong(vararg args: Any?): Long = executeText(*args)?.toString()?.toLongOrNull() ?: 0L
+suspend fun Redis.commandInt(vararg args: Any?): Int = executeText(*args)?.toString()?.toIntOrNull() ?: 0
 suspend fun Redis.commandDouble(vararg args: Any?): Double = executeText(*args)?.toString()?.toDoubleOrNull() ?: 0.0
 suspend fun Redis.commandUnit(vararg args: Any?): Unit = run { execute(*args) }
 suspend fun Redis.commandBool(vararg args: Any?): Boolean = commandLong(*args) != 0L

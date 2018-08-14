@@ -1,6 +1,6 @@
 package io.ktor.experimental.client.redis
 
-@Suppress("DEPRECATION", "DeprecatedCallableAddReplaceWith")
+@Suppress("DEPRECATION")
 // https://redis.io/commands/
 // https://github.com/antirez/redis/blob/32ac4c64baf00747da1acc0cc61ee236922e2dcf/src/help.h#L23
 object RedisCommands {
