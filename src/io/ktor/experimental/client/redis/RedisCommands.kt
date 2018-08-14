@@ -2,8 +2,6 @@ package io.ktor.experimental.client.redis
 
 // @TODO: Missing commands & generate
 
-suspend fun Redis.ping(): String? = commandString("ping")
-
 suspend fun Redis.bgrewriteaof(): String? = commandString("bgrewriteaof")
 suspend fun Redis.bgsave(): String? = commandString("bgsave")
 

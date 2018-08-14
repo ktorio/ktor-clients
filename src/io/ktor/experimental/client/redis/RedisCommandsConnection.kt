@@ -25,7 +25,16 @@ suspend fun Redis.echo(msg: String) = commandString("echo", msg)
  *
  * @since 1.0.0
  */
-suspend fun Redis.ping(msg: String? = null) = commandString("ping", *arrayOfNotNull(msg))
+suspend fun Redis.ping(msg: String) = commandString("ping", msg)
+
+/**
+ * Ping the server
+ *
+ * https://redis.io/commands/ping
+ *
+ * @since 1.0.0
+ */
+suspend fun Redis.ping(): String? = commandString("ping")
 
 /**
  * Change the selected database for the current connection
