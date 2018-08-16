@@ -557,6 +557,29 @@ class IntegrationTest {
     }
 
     @Test
+    fun testConnection() = redisTest {
+        assertEquals("hello", echo("hello"))
+        assertEquals("PONG", ping())
+        assertEquals("hello", ping("hello"))
+
+        select(1).set("key", "value1")
+        select(2).set("key", "value2")
+
+        assertEquals("value1", select(1).get("key"))
+        assertEquals("value2", select(2).get("key"))
+
+        swapdb(1, 2)
+
+        assertEquals("value2", select(1).get("key"))
+        assertEquals("value1", select(2).get("key"))
+
+        quit()
+        //run {
+        //    println(clientList())
+        //}
+    }
+
+    @Test
     fun testServer() = redisTest {
         //run {
         //    println(clientList())

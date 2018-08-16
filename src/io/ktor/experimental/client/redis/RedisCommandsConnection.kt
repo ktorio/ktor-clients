@@ -43,7 +43,7 @@ suspend fun Redis.ping(): String? = commandString("ping")
  *
  * @since 1.0.0
  */
-suspend fun Redis.select(db: Int) = commandString("select", db)
+suspend fun Redis.select(db: Int): Redis = this.apply { commandString("select", db) }
 
 /**
  * This command swaps two Redis databases, so that immediately all the clients connected
@@ -53,7 +53,7 @@ suspend fun Redis.select(db: Int) = commandString("select", db)
  *
  * @since 4.0.0
  */
-suspend fun Redis.swapdb(db1: Int, db2: Int) = commandString("swapdb", db1, db2)
+suspend fun Redis.swapdb(db1: Int, db2: Int) = this.apply { commandString("swapdb", db1, db2) }
 
 /**
  * Close the connection
