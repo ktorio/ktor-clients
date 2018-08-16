@@ -51,7 +51,7 @@ suspend fun Redis.geohash(key: String, vararg members: String): List<String> = c
  */
 suspend fun Redis.geopos(key: String, vararg members: String): List<GeoPosition?> =
     commandArrayAny("geopos", key, *members).map {
-        if (it != null && it is List<*>) {
+        if (it != null && it is List<*> && it.size >= 2) {
             GeoPosition(it[0].toString().toDouble(), it[1].toString().toDouble())
         } else {
             null

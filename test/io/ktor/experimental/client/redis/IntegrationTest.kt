@@ -496,6 +496,20 @@ class IntegrationTest {
     }
 
     @Test
+    fun testGeo() = redisTest {
+        val key = "Sicily"
+        del(key)
+        assertEquals(2, geoadd(key, "Palermo" to GeoPosition(13.361389, 38.115556), "Catania" to GeoPosition(15.087269, 37.502669)))
+        assertEquals(166274.1516, geodist(key, "Palermo", "Catania"))
+        assertEquals(166.2742, geodist(key, "Palermo", "Catania", GeoUnit.KILOMETERS))
+        assertEquals(listOf("sqc8b49rny0", "sqdtr74hyu0"), geohash(key, "Palermo", "Catania"))
+        assertEquals(listOf(), geohash(key))
+        assertEquals(listOf(
+            GeoPosition(13.361389338970184, 38.1155563954963), null, GeoPosition(15.087267458438873, 37.50266842333162)
+        ), geopos(key, "Palermo", "NonExisting", "Catania"))
+    }
+
+    @Test
     fun testServer() = redisTest {
         //run {
         //    println(clientList())
