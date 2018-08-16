@@ -44,7 +44,10 @@ package io.ktor.experimental.client.redis
  *
  * @since 2.0.0
  */
-suspend fun Redis.blpop(vararg keys: String, timeoutMs: Int = 0): Long = commandLong("blpop", *keys, timeoutMs)
+suspend fun Redis.blpop(vararg keys: String, timeout: Int = 0): Pair<String, String>? {
+    val result = commandArrayString("blpop", *keys, timeout)
+    return if (result.size >= 2) result[0] to result[1] else null
+}
 
 /**
  * Remove and get the last element in a list, or block until one is available
@@ -53,7 +56,10 @@ suspend fun Redis.blpop(vararg keys: String, timeoutMs: Int = 0): Long = command
  *
  * @since 2.0.0
  */
-suspend fun Redis.brpop(vararg keys: String, timeoutMs: Int = 0): Long = commandLong("brpop", *keys, timeoutMs)
+suspend fun Redis.brpop(vararg keys: String, timeout: Int = 0): Pair<String, String>? {
+    val result = commandArrayString("brpop", *keys, timeout)
+    return if (result.size >= 2) result[0] to result[1] else null
+}
 
 /**
  * Pop a value from a list, push it to another list and return it; or block until one is available
@@ -62,7 +68,10 @@ suspend fun Redis.brpop(vararg keys: String, timeoutMs: Int = 0): Long = command
  *
  * @since 2.2.0
  */
-suspend fun Redis.brpoplpush(src: String, dst: String, timeoutMs: Int = 0): Long = commandLong("brpoplpush", src, dst, timeoutMs)
+suspend fun Redis.brpoplpush(src: String, dst: String, timeout: Int = 0): String? {
+    val result = executeText("brpoplpush", src, dst, timeout)
+    return if (result != listOf<Any?>()) result?.toString() else null
+}
 
 /**
  * Remove the last element in a list, prepend it to another list and return it
@@ -71,7 +80,7 @@ suspend fun Redis.brpoplpush(src: String, dst: String, timeoutMs: Int = 0): Long
  *
  * @since 1.2.0
  */
-suspend fun Redis.rpoplpush(src: String, dst: String): Long = commandLong("rpoplpush", src, dst)
+suspend fun Redis.rpoplpush(src: String, dst: String): String? = commandString("rpoplpush", src, dst)
 
 /**
  * Get an element from a list by its index

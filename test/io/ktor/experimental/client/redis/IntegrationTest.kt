@@ -8,6 +8,7 @@ import org.junit.*
 import org.junit.Ignore
 import org.junit.Test
 import java.net.*
+import kotlin.system.*
 import kotlin.test.*
 
 class IntegrationTest {
@@ -296,10 +297,12 @@ class IntegrationTest {
     }
 
     private val key1 = "key1"
+    private val key2 = "key2"
 
     @Test
     fun testList() = redisTest(cleanup = {
         del(key1)
+        del(key2)
     }) {
         suspend fun lgetallStr(key: String) = lgetall(key1).joinToString("")
 
@@ -365,6 +368,69 @@ class IntegrationTest {
             assertEquals("1", lindex(key1, 1))
             assertEquals("2", lindex(key1, 2))
             assertEquals("2", lindex(key1, -1))
+        }
+        // lpushx, rpushx
+        run {
+            del(key1)
+            del(key2)
+            rpush(key1, "hello")
+            rpushx(key1, "world")
+            rpushx(key2, "world")
+            lpushx(key1, "hey")
+            lpushx(key2, "hey")
+            assertEquals("hey hello world", lgetall(key1).joinToString(" "))
+            assertEquals("", lgetall(key2).joinToString(" "))
+        }
+        // rpoplpush
+        run {
+            del(key1)
+            del(key2)
+            rpush(key1, "a", "b")
+            assertEquals("b", rpoplpush(key1, key2))
+            assertEquals("a", rpoplpush(key1, key2))
+            assertEquals(null, rpoplpush(key1, key2))
+            assertEquals("", lgetall(key1).joinToString(" "))
+            assertEquals("a b", lgetall(key2).joinToString(" "))
+        }
+        // brpop
+        run {
+            del(key1)
+            del(key2)
+            rpush(key1, "a", "b")
+            rpush(key2, "c")
+            assertEquals(key1 to "b", brpop(key1, key2, timeout = 1))
+            assertEquals(key1 to "a", brpop(key1, key2, timeout = 1))
+            assertEquals(key2 to "c", brpop(key1, key2, timeout = 1))
+            val time = measureTimeMillis {
+                assertEquals(null, brpop(key1, key2, timeout = 1))
+            }
+            assertTrue { time >= 1000 }
+        }
+        // blpop
+        run {
+            del(key1)
+            del(key2)
+            rpush(key1, "a", "b")
+            rpush(key2, "c")
+            assertEquals(key1 to "a", blpop(key1, key2, timeout = 1))
+            assertEquals(key1 to "b", blpop(key1, key2, timeout = 1))
+            assertEquals(key2 to "c", blpop(key1, key2, timeout = 1))
+            val time = measureTimeMillis {
+                assertEquals(null, blpop(key1, key2, timeout = 1))
+            }
+            assertTrue { time >= 1000 }
+        }
+        // brpoplpush
+        run {
+            del(key1)
+            del(key2)
+            rpush(key1, "a", "b")
+            assertEquals("b", brpoplpush(key1, key2, timeout = 1))
+            assertEquals("a", brpoplpush(key1, key2, timeout = 1))
+            val time = measureTimeMillis {
+                assertEquals(null, brpoplpush(key1, key2, timeout = 1))
+            }
+            assertTrue { time >= 1000 }
         }
     }
 
