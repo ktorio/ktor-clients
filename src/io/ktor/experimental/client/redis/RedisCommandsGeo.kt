@@ -2,11 +2,39 @@ package io.ktor.experimental.client.redis
 
 data class GeoPosition(val longitude: Double, val latitude: Double)
 
-enum class GeoUnit(val symbol: String) {
-    METERS("m"),
-    KILOMETERS("km"),
-    MILES("mi"),
-    FEET("ft")
+@Suppress("NOTHING_TO_INLINE")
+inline fun GeoPosition(longitude: Number, latitude: Number): GeoPosition =
+    GeoPosition(longitude.toDouble(), latitude.toDouble())
+
+enum class GeoUnit(val symbol: String, val nmet: Double) {
+    METERS("m", 1.0),
+    KILOMETERS("km", 0.001),
+    MILES("mi", 0.000621371),
+    FEET("ft", 3.28084);
+
+    fun convertTo(value: Double, other: GeoUnit) = value * (other.nmet / this.nmet)
+}
+
+data class GeoDistance(val value: Double, val unit: GeoUnit) {
+    override fun toString(): String = "$value ${unit.symbol}"
+
+    fun to(unit: GeoUnit) = this.unit.convertTo(value, unit)
+
+    val m get() = unit.convertTo(value, GeoUnit.METERS)
+    val km get() = unit.convertTo(value, GeoUnit.KILOMETERS)
+    val mi get() = unit.convertTo(value, GeoUnit.MILES)
+    val ft get() = unit.convertTo(value, GeoUnit.FEET)
+
+    companion object {
+        val Number.m get() = GeoDistance(this.toDouble(), GeoUnit.METERS)
+        val Number.km get() = GeoDistance(this.toDouble(), GeoUnit.KILOMETERS)
+        val Number.mi get() = GeoDistance(this.toDouble(), GeoUnit.MILES)
+        val Number.gt get() = GeoDistance(this.toDouble(), GeoUnit.FEET)
+    }
+}
+
+inline fun geoTools(callback: GeoDistance.Companion.() -> Unit) {
+    callback(GeoDistance.Companion)
 }
 
 /**
@@ -58,6 +86,13 @@ suspend fun Redis.geopos(key: String, vararg members: String): List<GeoPosition?
         }
     }
 
+data class GeoRadiusResult(
+    val name: String,
+    val distance: GeoDistance? = null,
+    val coords: GeoPosition? = null,
+    val hash: Long? = null
+)
+
 /**
  * Query a sorted set representing a geospatial index to fetch members matching a given maximum distance from a point
  *
@@ -65,7 +100,20 @@ suspend fun Redis.geopos(key: String, vararg members: String): List<GeoPosition?
  *
  * @since 3.2.0
  */
-internal suspend fun Redis.georadius(todo: Any): Any = TODO()
+suspend fun Redis.georadius(
+    key: String,
+    pos: GeoPosition,
+    radius: GeoDistance,
+    withCoord: Boolean = false,
+    withDist: Boolean = false,
+    withHash: Boolean = false,
+    count: Long? = null,
+    sort: SortDirection? = null,
+    storeKey: String? = null,
+    storeDistKey: String? = null
+): List<GeoRadiusResult> = geoRadiusCommon(
+    key, pos, radius, withCoord, withDist, withHash, count, sort, storeKey, storeDistKey
+)
 
 /**
  * Query a sorted set representing a geospatial index to fetch members matching a given maximum distance from a member
@@ -74,4 +122,78 @@ internal suspend fun Redis.georadius(todo: Any): Any = TODO()
  *
  * @since 3.2.0
  */
-internal suspend fun Redis.georadiusbymember(todo: Any): Any = TODO()
+suspend fun Redis.georadiusbymember(
+    key: String,
+    member: String,
+    radius: GeoDistance,
+    withCoord: Boolean = false,
+    withDist: Boolean = false,
+    withHash: Boolean = false,
+    count: Long? = null,
+    sort: SortDirection? = null,
+    storeKey: String? = null,
+    storeDistKey: String? = null
+): List<GeoRadiusResult> = geoRadiusCommon(
+    key, member, radius, withCoord, withDist, withHash, count, sort, storeKey, storeDistKey
+)
+
+private suspend fun Redis.geoRadiusCommon(
+    key: String,
+    reference: Any?,
+    radius: GeoDistance,
+    withCoord: Boolean = false,
+    withDist: Boolean = false,
+    withHash: Boolean = false,
+    count: Long? = null,
+    sort: SortDirection? = null,
+    storeKey: String? = null,
+    storeDistKey: String? = null
+): List<GeoRadiusResult>{
+    val radiusValue = radius.value
+    val radiusUnit = radius.unit
+    val cmds = arrayListOf<Any?>()
+    cmds += if (reference is GeoPosition) "georadius" else "georadiusbymember"
+    cmds += key
+    if (reference is GeoPosition) {
+        cmds += reference.longitude
+        cmds += reference.latitude
+    } else {
+        cmds += reference.toString()
+    }
+    cmds += radiusValue
+    cmds += radiusUnit.symbol
+    if (withCoord) cmds += "WITHCOORD"
+    if (withDist) cmds += "WITHDIST"
+    if (withHash) cmds += "WITHHASH"
+    if (count != null) {
+        cmds += "COUNT"
+        cmds += count
+    }
+    if (sort != null) {
+        cmds += sort.name
+    }
+    if (storeKey != null) {
+        cmds += "STORE"
+        cmds += storeKey
+    }
+    if (storeDistKey != null) {
+        cmds += "STOREDIST"
+        cmds += storeDistKey
+    }
+    val result = executeText(*cmds.toTypedArray())
+    if (result is List<*>) {
+        @Suppress("UNUSED_CHANGED_VALUE")
+        return result.map {
+            val item = it as List<*>
+            var pos = 0
+            val name = item[pos++].toString()
+            val dist = if (withDist) item[pos++]?.toString()?.toDoubleOrNull() else null
+            val hash = if (withHash) item[pos++].toString()?.toLongOrNull() else null
+            val coords = if (withCoord) (item[pos++] as List<*>).map { it.toString().toDouble() } else null
+            GeoRadiusResult(
+                name, dist?.let { GeoDistance(it, radiusUnit) }, coords?.let { GeoPosition(it[0], it[1]) }, hash
+            )
+        }
+    }
+    return listOf()
+}

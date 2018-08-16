@@ -1,5 +1,7 @@
 package io.ktor.experimental.client.redis
 
+enum class SortDirection { ASC, DESC }
+
 suspend fun Redis.executeBinary(vararg args: Any?): Any? = execute(*args)
 suspend fun Redis.executeText(vararg args: Any?): Any? = execute(*args).byteArraysToString
 
