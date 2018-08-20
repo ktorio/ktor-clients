@@ -120,6 +120,17 @@ suspend fun Redis.hmset(key: String, map: Map<String, String>) = hmset(key, *map
 suspend fun Redis.hset(key: String, field: String, value: String): Boolean = commandBool("hset", key, field, value)
 
 /**
+ * Set the string value of a hash field
+ *
+ * https://redis.io/commands/hset
+ *
+ * @since 2.0.0
+ */
+suspend fun Redis.hset(key: String, vararg pairs: Pair<String, String>): Int {
+    return pairs.map { hset(key, it.first, it.second) }.count { it }
+}
+
+/**
  * Set the value of a hash field, only if the field does not exist
  *
  * https://redis.io/commands/hsetnx
