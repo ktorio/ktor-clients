@@ -86,7 +86,6 @@ suspend fun Redis.clientList(): List<Map<String, String>> {
  */
 suspend fun Redis.clientPause(timeoutMs: Int): Unit = commandUnit("client", "pause", timeoutMs)
 
-enum class RedisClientReplyMode { ON, OFF, SKIP }
 
 /**
  * Instruct the server whether to reply to commands.
@@ -96,7 +95,25 @@ enum class RedisClientReplyMode { ON, OFF, SKIP }
  * @since 3.2
  */
 // @TODO: This would require some processing from the client.
-suspend fun Redis.clientReply(mode: RedisClientReplyMode): Unit = commandUnit("client", "reply", mode.name)
+private suspend fun Redis.clientReply(mode: Redis.ClientReplyMode): Unit {
+    Redis.Ex.apply {
+        setReplyMode(mode)
+    }
+    commandUnit("client", "reply", mode.name)
+}
+
+suspend fun Redis.clientReplyOn(): Unit = clientReply(Redis.ClientReplyMode.ON)
+suspend fun Redis.clientReplyOff(): Unit = clientReply(Redis.ClientReplyMode.OFF)
+suspend fun Redis.clientReplySkip(): Unit = clientReply(Redis.ClientReplyMode.SKIP)
+
+suspend inline fun Redis.clientReplyOff(callback: () -> Unit) {
+    clientReplyOff()
+    try {
+        callback()
+    } finally {
+        clientReplyOn()
+    }
+}
 
 /**
  * Set the current connection name.

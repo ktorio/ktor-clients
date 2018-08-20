@@ -941,6 +941,17 @@ class IntegrationTest {
         }
     }
 
+    @Test
+    fun testDisableProcessing() = redisTest {
+        RedisClient(address, maxConnections = 1, password = REDIS_PASSWORD).apply {
+            clientReplyOff {
+                del(key1)
+                lpush(key1, "a", "b", "c")
+            }
+            assertEquals(listOf("a", "b", "c"), lgetall(key1).sorted())
+        }
+    }
+
     private suspend inline fun Redis.cleanSetKeys(vararg keys: String, callback: () -> Unit) {
         val keysMembers = keys.map { it to if (exists(it)) smembers(it) else null }
         del(*keys)

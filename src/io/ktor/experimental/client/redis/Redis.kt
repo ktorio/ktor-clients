@@ -39,6 +39,12 @@ interface Redis : Closeable {
      * It may throw a [RedisResponseException]
      */
     suspend fun execute(vararg args: Any?): Any?
+
+    object Ex
+
+    fun Ex.setReplyMode(mode: ClientReplyMode) = Unit
+
+    enum class ClientReplyMode { ON, OFF, SKIP }
 }
 
 /**
@@ -73,6 +79,12 @@ class RedisClient(
         charset,
         dispatcher
     )
+
+    private var rmode = Redis.ClientReplyMode.ON
+
+    override fun Redis.Ex.setReplyMode(mode: Redis.ClientReplyMode) {
+        rmode = mode
+    }
 
     override val context: Job = Job()
 
@@ -109,12 +121,20 @@ class RedisClient(
     }
 
     override suspend fun execute(vararg args: Any?): Any? {
-        val result = CompletableDeferred<Any?>()
-        postmanService.send(RedisRequest(args, result))
-        try {
-            return result.await()
-        } catch (e: RedisException) {
-            throw RedisException(e.message ?: "error", args)
+        return when (rmode) {
+            Redis.ClientReplyMode.ON -> {
+                val result = CompletableDeferred<Any?>()
+                postmanService.send(RedisRequest(args, result, rmode))
+                try {
+                    result.await()
+                } catch (e: RedisException) {
+                    throw RedisException(e.message ?: "error", args)
+                }
+            }
+            else -> {
+                postmanService.send(RedisRequest(args, null, rmode))
+                null
+            }
         }
     }
 
