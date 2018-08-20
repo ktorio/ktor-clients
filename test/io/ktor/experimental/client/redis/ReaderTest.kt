@@ -5,9 +5,7 @@ import kotlinx.coroutines.experimental.*
 import org.junit.Test
 import kotlin.test.*
 
-
 class ReaderTest {
-
     @Test
     fun errorTest() {
         val error = buildChannel {

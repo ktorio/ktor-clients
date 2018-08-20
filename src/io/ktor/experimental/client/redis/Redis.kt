@@ -1,5 +1,6 @@
 package io.ktor.experimental.client.redis
 
+import io.ktor.experimental.client.redis.protocol.*
 import io.ktor.network.selector.*
 import io.ktor.network.sockets.*
 import kotlinx.coroutines.experimental.*
@@ -15,6 +16,10 @@ import java.util.concurrent.atomic.*
  * Specific commands are exposed as extension methods.
  */
 interface Redis : Closeable {
+    companion object {
+        val DEFAULT_PORT = 6379
+    }
+
     /**
      * Use [context] to await client close or terminate
      */
@@ -39,6 +44,7 @@ interface Redis : Closeable {
 /**
  * TODO
  * 1. add pipeline timeouts
+ * 2. multiple endpoints (since the point of having several connections is mostly multiple endpoints)
  */
 
 /**
@@ -53,6 +59,21 @@ class RedisClient(
     override val charset: Charset = Charsets.UTF_8,
     private val dispatcher: CoroutineDispatcher = DefaultDispatcher
 ) : Redis {
+    constructor(
+        host: String,
+        port: Int = Redis.DEFAULT_PORT,
+        maxConnections: Int = 50,
+        password: String? = null,
+        charset: Charset = Charsets.UTF_8,
+        dispatcher: CoroutineDispatcher = DefaultDispatcher
+    ) : this(
+        InetSocketAddress(host, port),
+        maxConnections,
+        password,
+        charset,
+        dispatcher
+    )
+
     override val context: Job = Job()
 
     private val runningPipelines = AtomicInteger()
@@ -90,7 +111,11 @@ class RedisClient(
     override suspend fun execute(vararg args: Any?): Any? {
         val result = CompletableDeferred<Any?>()
         postmanService.send(RedisRequest(args, result))
-        return result.await()
+        try {
+            return result.await()
+        } catch (e: RedisException) {
+            throw RedisException(e.message ?: "error", args)
+        }
     }
 
     override fun close() {

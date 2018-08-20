@@ -17,4 +17,5 @@ internal enum class RedisType(val code: Byte) {
     }
 }
 
-class RedisException(message: String) : Exception(message)
+class RedisException(message: String, args: Array<out Any?>? = null)
+    : Exception(if (args == null) message else "$message processing '${args.getOrNull(0)?.toString()?.toUpperCase()}'")
