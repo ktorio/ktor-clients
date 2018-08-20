@@ -86,6 +86,80 @@ suspend fun Redis.clientReply(mode: RedisClientReplyMode): Unit = commandUnit("c
  */
 suspend fun Redis.clientSetname(name: String): Unit = commandUnit("client", "setname", name)
 
+data class CommandInfo(
+    /** command name */
+    val name: String,
+
+    /** command arity specification */
+    val arity: Int,
+
+    /** nested Array reply of command flags */
+    val flags: Set<String>,
+
+    /** position of first key in argument list */
+    val firstKey: Int,
+
+    /** position of last key in argument list */
+    val lastKey: Int,
+
+    /** step count for locating repeating keys */
+    val step: Int
+) {
+    /** command may result in modifications */
+    val hasWrite get() = "write" in flags
+
+    /** command will never modify keys */
+    val hasReadonly get() = "readonly" in flags
+
+    /** reject command if currently OOM */
+    val hasDenyoom get() = "denyoom" in flags
+
+    /** server admin command */
+    val hasAdmin get() = "admin" in flags
+
+    /** pubsub-related command */
+    val hasPubsub get() = "pubsub" in flags
+
+    /** deny this command from scripts */
+    val hasNoscript get() = "noscript" in flags
+
+    /** command has random results, dangerous for scripts */
+    val hasRandom get() = "random" in flags
+
+    /** if called from script, sort output */
+    val hasSortForScripts get() = "sort_for_script" in flags
+
+    /** allow command while database is loading */
+    val hasLoading get() = "loading" in flags
+
+    /** allow command while replica has stale data */
+    val hasStale get() = "stale" in flags
+
+    /** do not show this command in MONITOR */
+    val hasSkipMonitor get() = "skip_monitor" in flags
+
+    /** cluster related - accept even if importing */
+    val hasAsking get() = "asking" in flags
+
+    /** command operates in constant or log(N) time. Used for latency monitoring. */
+    val hasFast get() = "fast" in flags
+
+    /** keys have no pre-determined position. You must discover keys yourself. */
+    val hasMoveableKeys get() = "movablekeys" in flags
+}
+
+private suspend fun Redis._commandInfo(vararg args: String): List<CommandInfo> = commandArrayAny(*args).map {
+    val parts = it as List<Any>
+    CommandInfo(
+        name = parts[0].toString(),
+        arity = (parts[1] as Long).toInt(),
+        flags = (parts[2] as List<String>).toSet(),
+        firstKey = (parts[3] as Long).toInt(),
+        lastKey = (parts[4] as Long).toInt(),
+        step = (parts[5] as Long).toInt()
+    )
+}
+
 /**
  * Get array of Redis command details
  *
@@ -93,25 +167,8 @@ suspend fun Redis.clientSetname(name: String): Unit = commandUnit("client", "set
  *
  * @since 2.8.13
  */
-suspend fun Redis.command(): Any = executeText("command")!!
-
-/**
- * Get total number of Redis commands.
- *
- * https://redis.io/commands/command-count
- *
- * @since 2.8.13
- */
-suspend fun Redis.commandCount(): Long = commandLong("command", "count")
-
-/**
- * Extract keys given a full Redis command
- *
- * https://redis.io/commands/command-getkeys
- *
- * @since 2.8.13
- */
-internal suspend fun Redis.commandGetKeys(todo: Any): Any = TODO()
+@Suppress("UNCHECKED_CAST")
+suspend fun Redis.command(): List<CommandInfo> = _commandInfo("command")
 
 /**
  * Get array of specific Redis command details
@@ -120,7 +177,27 @@ internal suspend fun Redis.commandGetKeys(todo: Any): Any = TODO()
  *
  * @since 2.8.13
  */
-internal suspend fun Redis.commandInfo(vararg names: String): Any = executeText("command", "info", *names)!!
+internal suspend fun Redis.commandInfo(vararg names: String): List<CommandInfo> =
+    _commandInfo("command", "info", *names)
+
+/**
+ * Get total number of Redis commands.
+ *
+ * https://redis.io/commands/command-count
+ *
+ * @since 2.8.13
+ */
+suspend fun Redis.commandCount(): Int = commandInt("command", "count")
+
+/**
+ * Extract keys given a full Redis command
+ *
+ * https://redis.io/commands/command-getkeys
+ *
+ * @since 2.8.13
+ */
+internal suspend fun Redis.commandGetKeys(vararg args: Any?): List<String> =
+    commandArrayString("command", "getkeys", *args)
 
 /**
  * Get the value of a configuration parameter
@@ -129,7 +206,7 @@ internal suspend fun Redis.commandInfo(vararg names: String): Any = executeText(
  *
  * @since 2.0.0
  */
-internal suspend fun Redis.configGet(pattern: String): Map<String, String> {
+internal suspend fun Redis.configGet(pattern: String = "*"): Map<String, String> {
     return commandArrayString("config", "get", pattern).toListOfPairsString().toMap()
 }
 
@@ -343,9 +420,9 @@ internal suspend fun Redis.sync(): Unit = commandUnit("sync")
  * @since 2.6.0
  */
 suspend fun Redis.time(): Pair<Date, Long> {
-    val res = commandArrayLong("time")
-    val unixSeconds = res.getOrElse(0) { 0 }
-    val microSeconds = res.getOrElse(1) { 0 }
+    val res = commandArrayString("time")
+    val unixSeconds = res.getOrElse(0) { "0" }.toLong()
+    val microSeconds = res.getOrElse(1) { "0" }.toLong()
     return Date(unixSeconds * 1000L + (microSeconds / 1000L)) to (microSeconds % 1000L)
 }
 
