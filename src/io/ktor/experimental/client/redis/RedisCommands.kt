@@ -22,14 +22,39 @@ suspend fun Redis.commandArrayStringNull(vararg args: Any?): List<String?> =
 suspend fun Redis.commandArrayLong(vararg args: Any?): List<Long> =
     (executeText(*args) as List<Long>?) ?: listOf()
 
-suspend fun Redis.commandString(vararg args: Any?): String? = executeText(*args)?.toString()
-suspend fun Redis.commandByteArray(vararg args: Any?): ByteArray? = execute(*args) as? ByteArray?
-suspend fun Redis.commandLong(vararg args: Any?): Long = executeText(*args)?.toString()?.toLongOrNull() ?: 0L
-suspend fun Redis.commandInt(vararg args: Any?): Int = executeText(*args)?.toString()?.toIntOrNull() ?: 0
-suspend fun Redis.commandDouble(vararg args: Any?): Double = executeText(*args)?.toString()?.toDoubleOrNull() ?: 0.0
-suspend fun Redis.commandDoubleOrNull(vararg args: Any?): Double? = executeText(*args)?.toString()?.toDoubleOrNull()
-suspend fun Redis.commandUnit(vararg args: Any?): Unit = run { execute(*args) }
-suspend fun Redis.commandBool(vararg args: Any?): Boolean = commandLong(*args) != 0L
+suspend fun Redis.commandLong(vararg args: Any?): Long = command(*args) ?: 0L
+suspend fun Redis.commandInt(vararg args: Any?): Int = command(*args) ?: 0
+
+@Deprecated("", ReplaceWith("command(*args)"))
+suspend fun Redis.commandByteArray(vararg args: Any?): ByteArray? = command(*args)
+
+@Deprecated("", ReplaceWith("command(*args)"))
+suspend fun Redis.commandDoubleOrNull(vararg args: Any?): Double? = command(*args)
+
+@Deprecated("", ReplaceWith("command(*args)"))
+suspend fun Redis.commandDouble(vararg args: Any?): Double = commandNotNull(*args)
+
+@Deprecated("", ReplaceWith("command(*args)"))
+suspend fun Redis.commandString(vararg args: Any?): String? = command(*args)
+
+@Deprecated("", ReplaceWith("command(*args)"))
+suspend fun Redis.commandUnit(vararg args: Any?): Unit = commandNotNull(*args)
+
+@Deprecated("", ReplaceWith("command(*args)"))
+suspend fun Redis.commandBool(vararg args: Any?): Boolean = commandNotNull(*args)
+
+suspend inline fun <reified T> Redis.command(vararg args: Any?): T? = when (T::class) {
+    Boolean::class -> (commandLong(*args) != 0L) as T?
+    Unit::class -> run { execute(*args); Unit as T? }
+    String::class -> executeText(*args)?.toString() as T?
+    Double::class -> executeText(*args)?.toString()?.toDoubleOrNull() as T?
+    Int::class -> executeText(*args)?.toString()?.toIntOrNull() as T?
+    Long::class -> executeText(*args)?.toString()?.toLongOrNull() as T?
+    ByteArray::class -> execute(*args) as? T?
+    else -> error("Unsupported type")
+}
+
+suspend inline fun <reified T> Redis.commandNotNull(vararg args: Any?): T = command(*args)!!
 
 internal fun <T> List<T>.toListOfPairs(): List<Pair<T, T>> =
     (0 until size / 2).map { this[it * 2 + 0] to this[it * 2 + 1] }
