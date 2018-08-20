@@ -101,7 +101,22 @@ suspend fun Redis.keys(pattern: String) = commandArrayString("keys", pattern)
  *
  * @since 2.6.0
  */
-internal suspend fun Redis.migrate(todo: Any?): Unit = TODO()
+internal suspend fun Redis.migrate(host: String, port: Int, vararg keys: String, destinationDb: Int = 0, timeoutMs: Int = 0, copy: Boolean = false, replace: Boolean = false) {
+    check(keys.isNotEmpty()) { "Keys must not be empty" }
+
+    commandUnit(arrayListOf<Any?>().apply {
+        this += "MIGRATE"
+        this += host
+        this += port
+        this += ""
+        this += destinationDb
+        this += timeoutMs
+        if (copy) this += "COPY"
+        if (replace) this += "REPLACE"
+        this += "KEYS"
+        this.addAll(keys)
+    }.toTypedArray())
+}
 
 /**
  * Move a key to another database

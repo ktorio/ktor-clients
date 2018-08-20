@@ -1,5 +1,7 @@
 package io.ktor.experimental.client.redis
 
+import com.natpryce.hamkrest.*
+import com.natpryce.hamkrest.assertion.*
 import com.palantir.docker.compose.*
 import com.palantir.docker.compose.connection.waiting.*
 import io.ktor.experimental.client.redis.protocol.*
@@ -9,6 +11,8 @@ import org.junit.*
 import org.junit.Ignore
 import org.junit.Test
 import java.net.*
+import java.util.*
+import kotlin.math.*
 import kotlin.system.*
 import kotlin.test.*
 
@@ -397,6 +401,11 @@ class IntegrationTest {
             assertEquals("", lgetall(key1).joinToString(" "))
             assertEquals("a b", lgetall(key2).joinToString(" "))
         }
+    }
+
+    @Test
+    @Ignore("Slow tests because timeouts are in econds")
+    fun testListBlocking() = redisTest {
         // brpop
         run {
             del(key1)
@@ -484,6 +493,33 @@ class IntegrationTest {
             assertEquals(null, get(key3))
         }
 
+        // rename
+        run {
+            del(key1)
+            del(key2)
+            set(key1, value1)
+            assertEquals(value1 to null, get(key1) to get(key2))
+            rename(key1, key2)
+            assertEquals(null to value1, get(key1) to get(key2))
+        }
+
+        // rename overwritten
+        run {
+            del(key1)
+            del(key2)
+            set(key1, value1)
+            set(key2, value2)
+            assertEquals(value1 to value2, get(key1) to get(key2))
+            rename(key1, key2)
+            assertEquals(null to value1, get(key1) to get(key2))
+        }
+
+        // rename source doesn't exists
+        run {
+            del(key1).also { del(key2) }
+            expectException<RedisException>("ERR no such key") { rename(key1, key2) }
+        }
+
         // @TODO: Not working yet: "ERR DUMP payload version or checksum are wrong"
         // dump/restore
         //run {
@@ -545,9 +581,11 @@ class IntegrationTest {
             assertEquals(
                 listOf(
                     GeoRadiusResult(
-                        "Palermo", 190.4424.km, GeoPosition(13.361389338970184, 38.1155563954963), 3479099956230698),
+                        "Palermo", 190.4424.km, GeoPosition(13.361389338970184, 38.1155563954963), 3479099956230698
+                    ),
                     GeoRadiusResult(
-                        "Catania", 56.4413.km, GeoPosition(15.087267458438873, 37.50266842333162), 3479447370796909)
+                        "Catania", 56.4413.km, GeoPosition(15.087267458438873, 37.50266842333162), 3479447370796909
+                    )
                 ), georadius(key, GeoPosition(15, 37), 200.km, withDist = true, withCoord = true, withHash = true)
             )
 
@@ -608,6 +646,7 @@ class IntegrationTest {
     }
 
     private val FLUSHABLE_DB = 10
+    private val FLUSHABLE_DB2 = 11
 
     @Test
     fun testScan() = redisTest {
@@ -649,10 +688,75 @@ class IntegrationTest {
     }
 
     @Test
+    fun testKeysMove() = redisTest {
+        val (db1, db2) = FLUSHABLE_DB to FLUSHABLE_DB2
+        val (key1, value1) = "key1" to "value1"
+        select(db1).flushdb()
+        select(db2).flushdb()
+        select(db1)
+        set(key1, value1)
+        move(key1, db2)
+        assertEquals(null, select(db1).get(key1))
+        assertEquals(value1, select(db2).get(key1))
+    }
+
+    @Test
     fun testServer() = redisTest {
-        //run {
-        //    println(clientList())
-        //}
+        // 60 seconds of difference. Since this is a docker instance, time should be synchronized with the host
+        assertThat(abs(Date().time - time().first.time), lessThan(60_000L))
+
+        save()
+        bgsave()
+
+        // Saved right now
+        assertThat(abs(Date().time - lastsave().time), lessThan(60_000L))
+
+        clientSetname("ktor-client-redis")
+        assertEquals("ktor-client-redis", clientGetname())
+
+        // command, command count, command getkeys
+        run {
+            val cmds = command().associateBy { it.name }
+            assertThat(cmds.size, greaterThan(150))
+            assertEquals(
+                cmds["set"],
+                CommandInfo(
+                    name = "set", arity = -3, flags = setOf("write", "denyoom"), firstKey = 1, lastKey = 1, step = 1
+                )
+            )
+            val setCmd = cmds["set"]!!
+
+            assert(setCmd.hasWrite)
+            assert(setCmd.hasDenyoom)
+            assert(!setCmd.hasAdmin)
+
+            assertEquals(cmds.size, commandCount())
+            assertEquals(listOf("a", "c", "e"), commandGetKeys("mset", "a", "b", "c", "d", "e", "f"))
+        }
+        // command info
+        run {
+            assertEquals(
+                listOf(
+                    CommandInfo(
+                        name = "set", arity = -3, flags = setOf("write", "denyoom"), firstKey = 1, lastKey = 1, step = 1
+                    ),
+                    CommandInfo(
+                        name = "get", arity = 2, flags = setOf("readonly", "fast"), firstKey = 1, lastKey = 1, step = 1
+                    )
+                ),
+                commandInfo("set", "get")
+            )
+        }
+    }
+
+    @Test
+    fun testServerConfig() = redisTest {
+        val conf = configGet()
+        for ((k, v) in conf) println("$k:$v")
+        assertThat(conf.size, greaterThan(50))
+        assertEquals("6379", conf["port"])
+        assertEquals(mapOf("port" to "6379"), configGet("port"))
+
     }
 
     private suspend inline fun Redis.cleanSetKeys(vararg keys: String, callback: () -> Unit) {
@@ -670,7 +774,7 @@ class IntegrationTest {
         }
     }
 
-    inline fun <reified T : Any> expectException(message: String? = null, callback: () -> Unit) {
+    inline fun <reified T : Throwable> expectException(message: String? = null, callback: () -> Unit) {
         try {
             callback()
         } catch (e: Throwable) {
