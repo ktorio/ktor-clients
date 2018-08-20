@@ -1,5 +1,6 @@
 package io.ktor.experimental.client.redis
 
+import kotlinx.coroutines.experimental.channels.*
 import java.util.*
 
 /**
@@ -246,13 +247,13 @@ suspend fun Redis.rename(oldKey: String, newKey: String) = commandUnit("rename",
 suspend fun Redis.renamenx(oldKey: String, newKey: String) = commandBool("renamenx", oldKey, newKey)
 
 /**
- * Incrementally iterate hash fields and associated values
+ * Incrementally iterate the keys space
  *
- * https://redis.io/commands/hscan
+ * https://redis.io/commands/scan
  *
  * @since 2.8.0
  */
-internal suspend fun Redis.scan(key: String, cursor: Long, match: String? = null, count: Long? = null): Unit = TODO()
+internal suspend fun Redis.scan(pattern: String? = null): ReceiveChannel<String> = scanBaseString("scan", null, pattern)
 
 /**
  * Returns or stores the elements contained in the list, set or sorted set at key.

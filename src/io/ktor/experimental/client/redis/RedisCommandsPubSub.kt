@@ -36,7 +36,7 @@ internal suspend fun Redis.subscribe(vararg channels: String): RedisPubSub = pub
 /**
  * Gets the a channel of packets for this client subscription.
  */
-suspend fun RedisPubSub.channel(): Channel<RedisPubSub.Packet> = TODO()
+suspend fun RedisPubSub.channel(): ReceiveChannel<RedisPubSub.Packet> = TODO()
 
 /**
  * Listen for messages published to channels matching the given patterns

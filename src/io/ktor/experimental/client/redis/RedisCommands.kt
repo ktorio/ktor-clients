@@ -1,5 +1,8 @@
 package io.ktor.experimental.client.redis
 
+import kotlinx.coroutines.experimental.*
+import kotlinx.coroutines.experimental.channels.*
+
 enum class SortDirection { ASC, DESC }
 
 suspend fun Redis.executeBinary(vararg args: Any?): Any? = execute(*args)
@@ -39,15 +42,81 @@ internal fun List<Any?>.listOfPairsToMap(): Map<String, String> =
 
 private val UTF8 = Charsets.UTF_8
 
-private val Any?.byteArraysToString: Any? get() = when (this) {
-    is ByteArray -> this.toString(UTF8)
-    is List<*> -> { // @TODO: Copy only on different instances
-        this.map { it.byteArraysToString }.toList()
+private val Any?.byteArraysToString: Any?
+    get() = when (this) {
+        is ByteArray -> this.toString(UTF8)
+        is List<*> -> { // @TODO: Copy only on different instances
+            this.map { it.byteArraysToString }.toList()
+        }
+        is Map<*, *> -> { // @TODO: Copy only on different instances
+            this.map { it.key.byteArraysToString to it.value.byteArraysToString }.toMap()
+        }
+        else -> this
     }
-    is Map<*, *> -> { // @TODO: Copy only on different instances
-        this.map { it.key.byteArraysToString to it.value.byteArraysToString }.toMap()
-    }
-    else -> this
-}
 
 internal inline fun <reified T : Any> arrayOfNotNull(vararg items: T?): Array<T> = listOfNotNull(*items).toTypedArray()
+
+data class RedisScanStepResult(val nextCursor: Long, val items: List<String>)
+
+internal suspend fun Redis.scanBaseStep(
+    cmd: String,
+    key: String?,
+    cursor: Long,
+    pattern: String? = null,
+    count: Int? = null
+): RedisScanStepResult {
+    val result = commandArrayAny(*arrayListOf<Any?>().apply {
+        this += cmd
+        if (key != null) {
+            this += key
+        }
+        this += cursor
+        if (pattern != null) {
+            this += "PATTERN"
+            this += pattern
+        }
+        if (count != null) {
+            this += "COUNT"
+            this += count
+        }
+    }.toTypedArray())
+    return RedisScanStepResult(result[0].toString().toLong(), result[1] as List<String>)
+}
+
+internal suspend fun Redis.scanBase(
+    cmd: String, key: String?,
+    pattern: String? = null, count: Int? = null,
+    pairs: Boolean = false
+): ReceiveChannel<Any> {
+    val channel = Channel<Any>((count ?: 10) * 2)
+    launch {
+        try {
+            var cursor = 0L
+            do {
+                val result = scanBaseStep(cmd, key, cursor, pattern, count)
+                cursor = result.nextCursor
+                val items = result.items
+                if (pairs) {
+                    for (n in 0 until items.size step 2) {
+                        channel.send(items[n + 0] to items[n + 1])
+                    }
+                } else {
+                    for (item in items) {
+                        channel.send(item)
+                    }
+                }
+            } while (cursor > 0L)
+        } finally {
+            channel.close()
+        }
+    }
+    return channel
+}
+
+internal suspend fun Redis.scanBaseString(
+    cmd: String, key: String?, pattern: String? = null, count: Int? = null
+): ReceiveChannel<String> = scanBase(cmd, key, pattern, count, pairs = false) as Channel<String>
+
+internal suspend fun Redis.scanBasePairs(
+    cmd: String, key: String?, pattern: String? = null, count: Int? = null
+): ReceiveChannel<Pair<String, String>> = scanBase(cmd, key, pattern, count, pairs = true) as Channel<Pair<String, String>>

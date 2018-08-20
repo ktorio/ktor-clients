@@ -4,6 +4,7 @@ import com.palantir.docker.compose.*
 import com.palantir.docker.compose.connection.waiting.*
 import io.ktor.experimental.client.redis.protocol.*
 import kotlinx.coroutines.experimental.*
+import kotlinx.coroutines.experimental.channels.*
 import org.junit.*
 import org.junit.Ignore
 import org.junit.Test
@@ -594,6 +595,47 @@ class IntegrationTest {
         assertEquals(1, pfadd(hll2, "a", "b", "c", "foo"))
         assertEquals(Unit, pfmerge(hll3, hll1, hll2))
         assertEquals(6, pfcount(hll3))
+    }
+
+    private val FLUSHABLE_DB = 10
+
+    @Test
+    fun testScan() = redisTest {
+        // scan
+        run {
+            select(FLUSHABLE_DB)
+            flushdb()
+            for (n in 0 until 100) set("key$n", "value$n")
+            assertEquals((0 until 100).map { "key$it" }.sorted(), scan().toList().sorted())
+        }
+        // hscan
+        run {
+            select(FLUSHABLE_DB)
+            flushdb()
+            val key = "key"
+            for (n in 0 until 100) hset(key, "key$n", "value$n")
+            val items = hscan(key).toList()
+            assertEquals((0 until 100).map { "key$it" }.sorted(), items.map { it.first }.sorted())
+            assertEquals((0 until 100).map { "value$it" }.sorted(), items.map { it.second }.sorted())
+        }
+        // sscan
+        run {
+            select(FLUSHABLE_DB)
+            flushdb()
+            val key = "key"
+            for (n in 0 until 100) sadd(key, "key$n")
+            assertEquals((0 until 100).map { "key$it" }.sorted(), sscan(key).toList().sorted())
+        }
+        // zscan
+        run {
+            select(FLUSHABLE_DB)
+            flushdb()
+            val key = "key"
+            for (n in 0 until 100) zadd(key, "key$n", n.toDouble())
+            val items = zscan(key).toList()
+            assertEquals((0 until 100).map { "key$it" }.sorted(), items.map { it.first }.sorted())
+            assertEquals((0 until 100).map { it.toDouble() }.sorted(), items.map { it.second }.sorted())
+        }
     }
 
     @Test

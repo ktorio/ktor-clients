@@ -1,5 +1,7 @@
 package io.ktor.experimental.client.redis
 
+import kotlinx.coroutines.experimental.channels.*
+
 /**
  * Delete one or more hash fields
  *
@@ -164,4 +166,5 @@ suspend fun Redis.hvals(key: String): Set<String> = commandArrayString("hvals", 
  *
  * @since 2.8.0
  */
-internal suspend fun Redis.hscan(key: String, cursor: Long, match: String? = null, count: Long? = null): Unit = TODO()
+internal suspend fun Redis.hscan(key: String, pattern: String? = null): ReceiveChannel<Pair<String, String>> =
+    scanBasePairs("hscan", key, pattern)
