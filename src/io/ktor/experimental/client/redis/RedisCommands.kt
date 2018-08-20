@@ -141,7 +141,7 @@ internal suspend fun Redis._scanBase(
         }
     } while (cursor > 0L)
 }
-i
+
 internal fun <T> Channel<T>._sending(callback: suspend SendChannel<T>.() -> Unit): ReceiveChannel<T> {
     launch(start = CoroutineStart.UNDISPATCHED) {
         try {
