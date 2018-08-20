@@ -446,7 +446,7 @@ class IntegrationTest {
         val (key3, value3) = "key3" to "value3"
         val (key4, _) = "key4" to "value4"
 
-        // del
+        // del, set, get
         run {
             set(key1, value1)
             set(key2, value2)
@@ -458,6 +458,16 @@ class IntegrationTest {
             assertEquals(null, get(key4))
             del(key3)
             assertEquals(null, get(key3))
+        }
+
+        // unlink
+        run {
+            unlink(key1)
+            assertEquals(null, get(key1))
+            set(key1, value1)
+            assertEquals(value1, get(key1))
+            unlink(key1)
+            assertEquals(null, get(key1))
         }
 
         // exists
