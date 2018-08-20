@@ -59,6 +59,10 @@ suspend inline fun <reified T> Redis.commandBuild(
     initialCapacity: Int = 16, callback: ArrayList<Any?>.() -> Unit
 ): T? = commandAny(*ArrayList<Any?>(initialCapacity).apply(callback).toTypedArray())
 
+suspend inline fun <reified T> Redis.commandBuildNotNull(
+    initialCapacity: Int = 16, callback: ArrayList<Any?>.() -> Unit
+): T = commandAnyNotNull(*ArrayList<Any?>(initialCapacity).apply(callback).toTypedArray())
+
 suspend inline fun <reified T> Redis.commandAnyNotNull(vararg args: Any?): T = commandAny(*args)!!
 
 internal fun <T> List<T>.toListOfPairs(): List<Pair<T, T>> =

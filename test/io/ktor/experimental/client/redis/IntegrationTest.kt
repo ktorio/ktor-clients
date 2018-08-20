@@ -872,6 +872,50 @@ class IntegrationTest {
         )
     }
 
+    @Test
+    fun testSort() = redisTest {
+        // list sort
+        run {
+            del(key1)
+            lpush(key1, "c", "a", "b")
+            assertEquals(listOf("a", "b", "c"), sort(key1, alpha = true).items)
+        }
+        // set sort
+        run {
+            del(key1)
+            sadd(key1, "c", "a", "b")
+            assertEquals(listOf("a", "b", "c"), sort(key1, alpha = true).items)
+        }
+        // sorted set sort
+        run {
+            del(key1)
+            zadd(key1, "c" to 1.0, "a" to 2.0, "b" to 0.0)
+            assertEquals(listOf("a", "b", "c"), sort(key1, alpha = true).items)
+        }
+        // descending sort
+        run {
+            del(key1)
+            lpush(key1, "c", "a", "b")
+            assertEquals(listOf("c", "b", "a"), sort(key1, alpha = true, sortDirection = -1).items)
+        }
+        // range
+        run {
+            del(key1)
+            lpush(key1, "c", "a", "b")
+            assertEquals(listOf("b", "c"), sort(key1, alpha = true, sortDirection = +1, range = 1L..2L).items)
+        }
+        // storeDestination
+        run {
+            del(key1)
+            del(key2)
+            lpush(key1, "c", "a", "b")
+            val result = sort(key1, storeDestination = key2)
+            assertEquals(3L, result.count)
+            assertEquals(null, result.items)
+            assertEquals(listOf("a", "b", "c"), lgetall(key2))
+        }
+    }
+
     private suspend inline fun Redis.cleanSetKeys(vararg keys: String, callback: () -> Unit) {
         val keysMembers = keys.map { it to if (exists(it)) smembers(it) else null }
         del(*keys)

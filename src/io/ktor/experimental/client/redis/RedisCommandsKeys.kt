@@ -270,6 +270,8 @@ suspend fun Redis.renamenx(oldKey: String, newKey: String) = commandBool("rename
  */
 internal suspend fun Redis.scan(pattern: String? = null): ReceiveChannel<String> = scanBaseString("scan", null, pattern)
 
+data class RedisSortResult(val count: Long, val items: List<String>?)
+
 /**
  * Returns or stores the elements contained in the list, set or sorted set at key.
  * By default, sorting is numeric and elements are compared by their value interpreted as double precision
@@ -277,9 +279,52 @@ internal suspend fun Redis.scan(pattern: String? = null): ReceiveChannel<String>
  *
  * https://redis.io/commands/sort
  *
+ * @param alpha Set to order string elements lexicographically (required if elements in the list are not numbers)
+ *
  * @since 1.0.0
  */
-internal suspend fun Redis.sort(todo: Any): Unit = TODO()
+// SORT key [BY pattern] [LIMIT offset count] [GET pattern [GET pattern ...]] [ASC|DESC] [ALPHA] [STORE destination]
+suspend fun Redis.sort(
+    key: String, pattern: String? = null,
+    range: LongRange? = null,
+    vararg getPatterns: String,
+    sortDirection: Int = 0, alpha: Boolean = true, storeDestination: String? = null
+): RedisSortResult {
+    val result = commandBuildNotNull<Any> {
+        add("SORT")
+        add(key)
+        if (pattern != null) {
+            add("BY")
+            add(pattern)
+        }
+        if (range != null) {
+            val count = range.endInclusive - range.start + 1
+            add("LIMIT")
+            add(range.start)
+            add(count)
+        }
+        for (getPattern in getPatterns) {
+            add("GET")
+            add(getPattern)
+        }
+        when {
+            (sortDirection < 0) -> add("DESC")
+            (sortDirection > 0) -> add("ASC")
+            else -> Unit
+        }
+        if (alpha) add("ALPHA")
+        if (storeDestination != null) {
+            add("STORE")
+            add(storeDestination)
+        }
+    }
+    if (storeDestination != null) {
+        return RedisSortResult((result as Number).toLong(), null)
+    } else {
+        val list = result as List<String>
+        return RedisSortResult(list.size.toLong(), list)
+    }
+}
 
 /**
  * Alters the last access time of a key(s). A key is ignored if it does not exist.
