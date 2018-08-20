@@ -851,7 +851,25 @@ class IntegrationTest {
         assertThat(conf.size, greaterThan(50))
         assertEquals("6379", conf["port"])
         assertEquals(mapOf("port" to "6379"), configGet("port"))
+    }
 
+    @Test
+    fun testBitfield() = redisTest {
+        val key1 = "key1"
+        del(key1)
+        val results = bitfield(key1) {
+            val i4 = i(4)
+            set(i4, 0, 1)
+            incrby(i4, 0, +1)
+            overflowSaturate()
+            incrby(i4, 0, +100)
+            get(i4, 0)
+            incrby(i4, 0, -100)
+        }
+        assertEquals(
+            listOf(0L, 2L, 7L, 7L, -8L),
+            results
+        )
     }
 
     private suspend inline fun Redis.cleanSetKeys(vararg keys: String, callback: () -> Unit) {
