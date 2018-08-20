@@ -584,6 +584,19 @@ class IntegrationTest {
     }
 
     @Test
+    fun testHyperlog() = redisTest {
+        val hll1 = "hll1"
+        val hll2 = "hll2"
+        val hll3 = "hll3"
+        del(hll1)
+        del(hll2)
+        assertEquals(1, pfadd(hll1, "foo", "bar", "zap", "a"))
+        assertEquals(1, pfadd(hll2, "a", "b", "c", "foo"))
+        assertEquals(Unit, pfmerge(hll3, hll1, hll2))
+        assertEquals(6, pfcount(hll3))
+    }
+
+    @Test
     fun testServer() = redisTest {
         //run {
         //    println(clientList())

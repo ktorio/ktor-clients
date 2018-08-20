@@ -25,4 +25,4 @@ suspend fun Redis.pfcount(vararg keys: String): Long = commandLong("pfcount", *k
  *
  * @since 2.8.9
  */
-suspend fun Redis.pfmerge(destKey: String, vararg sourceKeys: String): Long = commandLong("pfmerge", destKey, *sourceKeys)
+suspend fun Redis.pfmerge(destKey: String, vararg sourceKeys: String): Unit = commandUnit("pfmerge", destKey, *sourceKeys)
