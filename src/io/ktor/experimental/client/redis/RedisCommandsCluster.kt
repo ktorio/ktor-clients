@@ -148,7 +148,7 @@ suspend fun Redis.clusterSaveconfig(): Unit =
  *
  * @since 3.0.0
  */
-internal suspend fun Redis.clusterSetConfigEpoch(todo: Any): Any = TODO()
+suspend fun Redis.clusterSetConfigEpoch(epoch: Long): Unit = commandAnyNotNull("CLUSTER", "SET-CONFIG-EPOCH", epoch)
 
 /**
  * Bind a hash slot to a specific node
@@ -157,7 +157,38 @@ internal suspend fun Redis.clusterSetConfigEpoch(todo: Any): Any = TODO()
  *
  * @since 3.0.0
  */
-internal suspend fun Redis.clusterSetSlot(todo: Any): Any = TODO()
+suspend fun Redis.clusterSetSlotImporting(slot: Long, sourceNodeId: Long): Unit =
+    commandAnyNotNull("CLUSTER", "SETSLOT", slot, "IMPORTING", sourceNodeId)
+
+/**
+ * Bind a hash slot to a specific node
+ *
+ * https://redis.io/commands/cluster-setslot
+ *
+ * @since 3.0.0
+ */
+suspend fun Redis.clusterSetSlotMigrating(slot: Long, destNodeId: Long): Unit =
+    commandAnyNotNull("CLUSTER", "SETSLOT", slot, "MIGRATING", destNodeId)
+
+/**
+ * Bind a hash slot to a specific node
+ *
+ * https://redis.io/commands/cluster-setslot
+ *
+ * @since 3.0.0
+ */
+suspend fun Redis.clusterSetSlotStable(slot: Long): Unit =
+    commandAnyNotNull("CLUSTER", "SETSLOT", slot, "STABLE")
+
+/**
+ * Bind a hash slot to a specific node
+ *
+ * https://redis.io/commands/cluster-setslot
+ *
+ * @since 3.0.0
+ */
+suspend fun Redis.clusterSetSlotNode(slot: Long, nodeId: Long): Unit =
+    commandAnyNotNull("CLUSTER", "SETSLOT", slot, "NODE", nodeId)
 
 /**
  * List slave nodes of the specified master node

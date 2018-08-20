@@ -37,6 +37,51 @@ suspend fun Redis.bitcount(key: String, start: Int, end: Int): String? = command
 suspend fun Redis.bitcount(key: String, range: LongRange): Long =
     commandLong("bitcount", key, *arrayOfNotNull(range?.start, range?.endInclusive))
 
+class RedisBitFieldBuilder {
+    val cmds = arrayListOf<Any?>()
+
+    data class Type(val str: String)
+
+    fun u(bits: Int) = Type("u$bits")
+    fun i(bits: Int) = Type("i$bits")
+    fun type(bits: Int, signed: Boolean = true) = if (signed) i(bits) else u(bits)
+
+    fun get(type: Type, offset: Long) {
+        cmds += "GET"
+        cmds += type.str
+        cmds += offset
+    }
+
+    fun set(type: Type, offset: Long, value: Long) {
+        cmds += "SET"
+        cmds += type.str
+        cmds += offset
+        cmds += value
+    }
+
+    fun incrby(type: Type, offset: Long, increment: Long) {
+        cmds += "INCRBY"
+        cmds += type.str
+        cmds += offset
+        cmds += increment
+    }
+
+    fun overflowWrap() {
+        cmds += "OVERFLOW"
+        cmds += "WRAP"
+    }
+
+    fun overflowSaturate() {
+        cmds += "OVERFLOW"
+        cmds += "SAT"
+    }
+
+    fun overflowFail() {
+        cmds += "OVERFLOW"
+        cmds += "FAIL"
+    }
+}
+
 /**
  * Perform arbitrary bitfield integer operations on strings
  *
@@ -44,7 +89,11 @@ suspend fun Redis.bitcount(key: String, range: LongRange): Long =
  *
  * @since 3.2.0
  */
-internal suspend fun Redis.bitfield(todo: Any): Unit = TODO()
+internal suspend fun Redis.bitfield(key: String, callback: RedisBitFieldBuilder.() -> Unit): List<Long?> {
+    val builder = RedisBitFieldBuilder()
+    callback(builder)
+    return commandArrayAny(*((listOf("BITFIELD", key) + builder.cmds).toTypedArray())).map { (it as? Number?)?.toLong() }
+}
 
 enum class RedisBitop { AND, OR, XOR, NOT }
 
