@@ -95,7 +95,7 @@ internal inline fun <reified T : Any> arrayOfNotNull(vararg items: T?): Array<T>
 
 data class RedisScanStepResult(val nextCursor: Long, val items: List<String>)
 
-internal suspend fun Redis.scanBaseStep(
+internal suspend fun Redis._scanBaseStep(
     cmd: String,
     key: String?,
     cursor: Long,
@@ -120,14 +120,14 @@ internal suspend fun Redis.scanBaseStep(
     return RedisScanStepResult(result[0].toString().toLong(), result[1] as List<String>)
 }
 
-internal suspend fun Redis.scanBase(
+internal suspend fun Redis._scanBase(
     cmd: String, key: String?,
     pattern: String? = null, count: Int? = null,
     pairs: Boolean = false
-): ReceiveChannel<Any> = Channel<Any>((count ?: 10) * 2).sending {
+): ReceiveChannel<Any> = Channel<Any>((count ?: 10) * 2)._sending {
     var cursor = 0L
     do {
-        val result = scanBaseStep(cmd, key, cursor, pattern, count)
+        val result = _scanBaseStep(cmd, key, cursor, pattern, count)
         cursor = result.nextCursor
         val items = result.items
         if (pairs) {
@@ -141,8 +141,8 @@ internal suspend fun Redis.scanBase(
         }
     } while (cursor > 0L)
 }
-
-internal fun <T> Channel<T>.sending(callback: suspend SendChannel<T>.() -> Unit): ReceiveChannel<T> {
+i
+internal fun <T> Channel<T>._sending(callback: suspend SendChannel<T>.() -> Unit): ReceiveChannel<T> {
     launch(start = CoroutineStart.UNDISPATCHED) {
         try {
             callback()
@@ -153,11 +153,11 @@ internal fun <T> Channel<T>.sending(callback: suspend SendChannel<T>.() -> Unit)
     return this
 }
 
-internal suspend fun Redis.scanBaseString(
+internal suspend fun Redis._scanBaseString(
     cmd: String, key: String?, pattern: String? = null, count: Int? = null
-): ReceiveChannel<String> = scanBase(cmd, key, pattern, count, pairs = false) as Channel<String>
+): ReceiveChannel<String> = _scanBase(cmd, key, pattern, count, pairs = false) as Channel<String>
 
-internal suspend fun Redis.scanBasePairs(
+internal suspend fun Redis._scanBasePairs(
     cmd: String, key: String?, pattern: String? = null, count: Int? = null
 ): ReceiveChannel<Pair<String, String>> =
-    scanBase(cmd, key, pattern, count, pairs = true) as Channel<Pair<String, String>>
+    _scanBase(cmd, key, pattern, count, pairs = true) as Channel<Pair<String, String>>

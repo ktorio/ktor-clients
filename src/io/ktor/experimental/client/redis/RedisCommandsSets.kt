@@ -155,5 +155,5 @@ suspend fun Redis.srandmember(key: String, count: Long): Set<String> = commandAr
  *
  * @since 2.8.0
  */
-suspend fun Redis.sscan(key: String, pattern: String? = null): ReceiveChannel<String> = scanBaseString("sscan", key, pattern)
+suspend fun Redis.sscan(key: String, pattern: String? = null): ReceiveChannel<String> = _scanBaseString("sscan", key, pattern)
 

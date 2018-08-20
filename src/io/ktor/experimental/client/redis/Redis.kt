@@ -164,7 +164,7 @@ class RedisClient(
 
     override fun Redis.Ex.getMessageChannel(): ReceiveChannel<Any> {
         setReplyMode(Redis.ClientReplyMode.OFF)
-        return Channel<Any>(1024).sending {
+        return Channel<Any>(1024)._sending {
             while (true) {
                 val result = CompletableDeferred<Any?>()
                 postmanService.send(RedisRequest(null, result))
