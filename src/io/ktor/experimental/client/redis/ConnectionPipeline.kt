@@ -9,7 +9,7 @@ import kotlinx.coroutines.experimental.io.*
 import java.io.*
 import java.nio.charset.*
 
-internal class RedisRequest(val args: Any?, val result: CompletableDeferred<Any?>)
+internal class RedisRequest(val args: Any?, val result: CompletableDeferred<Any?>?, val mode: Redis.ClientReplyMode)
 
 private const val DEFAULT_PIPELINE_SIZE = 10
 
@@ -35,7 +35,7 @@ internal class ConnectionPipeline(
         } catch (cause: Throwable) {
 
             requestQueue.consumeEach {
-                it.result.completeExceptionally(cause)
+                it.result?.completeExceptionally(cause)
             }
 
             requestQueue.cancel(cause)
@@ -43,7 +43,9 @@ internal class ConnectionPipeline(
         }
 
         requestQueue.consumeEach { request ->
-            receiver.send(request.result)
+            if (request.mode == Redis.ClientReplyMode.ON) {
+                request.result?.let { receiver.send(it) }
+            }
 
             output.writePacket {
                 writeRedisValue(request.args, charset = charset)
