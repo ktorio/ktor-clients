@@ -198,7 +198,7 @@ suspend fun Redis.command(): List<CommandInfo> = _commandInfo("command")
  *
  * @since 2.8.13
  */
-internal suspend fun Redis.commandInfo(vararg names: String): List<CommandInfo> =
+suspend fun Redis.commandInfo(vararg names: String): List<CommandInfo> =
     _commandInfo("command", "info", *names)
 
 /**
@@ -217,7 +217,7 @@ suspend fun Redis.commandCount(): Int = commandInt("command", "count")
  *
  * @since 2.8.13
  */
-internal suspend fun Redis.commandGetKeys(vararg args: Any?): List<String> =
+suspend fun Redis.commandGetKeys(vararg args: Any?): List<String> =
     commandArrayString("command", "getkeys", *args)
 
 /**
@@ -227,7 +227,7 @@ internal suspend fun Redis.commandGetKeys(vararg args: Any?): List<String> =
  *
  * @since 2.0.0
  */
-internal suspend fun Redis.configGet(pattern: String = "*"): Map<String, String> {
+suspend fun Redis.configGet(pattern: String = "*"): Map<String, String> {
     return commandArrayString("config", "get", pattern).toListOfPairsString().toMap()
 }
 
@@ -429,7 +429,7 @@ suspend fun Redis.save(): Long = commandLong("save")
  *
  * @since 1.0.0
  */
-internal suspend fun Redis.sync(): Unit = commandUnit("sync")
+suspend fun Redis.sync(): Unit = commandUnit("sync")
 
 /**
  * Returns the current server time as a two items lists: a Unix timestamp and the

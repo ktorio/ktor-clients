@@ -307,6 +307,8 @@ class IntegrationTest {
 
     private val key1 = "key1"
     private val key2 = "key2"
+    private val key3 = "key3"
+    private val key4 = "key4"
 
     @Test
     fun testList() = redisTest(cleanup = {
@@ -913,6 +915,29 @@ class IntegrationTest {
             assertEquals(3L, result.count)
             assertEquals(null, result.items)
             assertEquals(listOf("a", "b", "c"), lgetall(key2))
+        }
+    }
+
+    @Test
+    fun testSortedSetBoolOps() = redisTest {
+        suspend fun prepare(aggregate: RedisZBoolStoreAggregate) {
+            del(key1, key2, key3, key4)
+            zadd(key1, "a" to 100.0, "b" to 50.0, "c" to 300.0)
+            zadd(key2, "a" to 10.0, "c" to 0.0, "d" to 1000.0)
+            zunionstore(key3, key1, key2, aggregate = aggregate)
+            zinterstore(key4, key1, key2, aggregate = aggregate)
+        }
+        // sum
+        run {
+            prepare(RedisZBoolStoreAggregate.SUM)
+            assertEquals(mapOf("a" to 110.0, "b" to 50.0, "c" to 300.0, "d" to 1000.0), zgetall(key3).toList().sortedBy { it.first }.toMap())
+            assertEquals(mapOf("a" to 110.0, "c" to 300.0), zgetall(key4).toList().sortedBy { it.first }.toMap())
+        }
+        // min
+        run {
+            prepare(RedisZBoolStoreAggregate.MIN)
+            assertEquals(mapOf("a" to 10.0, "b" to 50.0, "c" to 0.0, "d" to 1000.0), zgetall(key3).toList().sortedBy { it.first }.toMap())
+            assertEquals(mapOf("a" to 10.0, "c" to 0.0), zgetall(key4).toList().sortedBy { it.first }.toMap())
         }
     }
 
