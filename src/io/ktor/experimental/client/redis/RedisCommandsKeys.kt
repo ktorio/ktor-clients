@@ -101,7 +101,7 @@ suspend fun Redis.keys(pattern: String) = commandArrayString("keys", pattern)
  *
  * @since 2.6.0
  */
-internal suspend fun Redis.migrate(host: String, port: Int, vararg keys: String, destinationDb: Int = 0, timeoutMs: Int = 0, copy: Boolean = false, replace: Boolean = false) {
+suspend fun Redis.migrate(host: String, port: Int, vararg keys: String, destinationDb: Int = 0, timeoutMs: Int = 0, copy: Boolean = false, replace: Boolean = false) {
     check(keys.isNotEmpty()) { "Keys must not be empty" }
 
     commandUnit(arrayListOf<Any?>().apply {
@@ -268,7 +268,7 @@ suspend fun Redis.renamenx(oldKey: String, newKey: String) = commandBool("rename
  *
  * @since 2.8.0
  */
-internal suspend fun Redis.scan(pattern: String? = null): ReceiveChannel<String> = scanBaseString("scan", null, pattern)
+suspend fun Redis.scan(pattern: String? = null): ReceiveChannel<String> = scanBaseString("scan", null, pattern)
 
 data class RedisSortResult(val count: Long, val items: List<String>?)
 

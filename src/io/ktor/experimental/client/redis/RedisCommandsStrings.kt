@@ -89,7 +89,7 @@ class RedisBitFieldBuilder {
  *
  * @since 3.2.0
  */
-internal suspend fun Redis.bitfield(key: String, callback: RedisBitFieldBuilder.() -> Unit): List<Long?> {
+suspend fun Redis.bitfield(key: String, callback: RedisBitFieldBuilder.() -> Unit): List<Long?> {
     val builder = RedisBitFieldBuilder()
     callback(builder)
     return commandArrayAny(*((listOf("BITFIELD", key) + builder.cmds).toTypedArray())).map { (it as? Number?)?.toLong() }

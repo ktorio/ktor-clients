@@ -130,6 +130,11 @@ suspend fun Redis.zrange(key: String, start: Long, stop: Long): Map<String, Doub
         .mapValues { it.value.toDouble() }
 
 /**
+ * Uses zrange to get all the items in a sorted set
+ */
+suspend fun Redis.zgetall(key: String): Map<String, Double> = zrange(key, 0L, Int.MAX_VALUE.toLong())
+
+/**
  * Return a range of members in a sorted set, by lexicographical range
  *
  * https://redis.io/commands/zrangebylex
@@ -258,7 +263,7 @@ suspend fun Redis.zrevrank(key: String, member: String): Long = commandLong("zre
  *
  * @since 2.8.0
  */
-internal suspend fun Redis.zscan(key: String, pattern: String? = null): ReceiveChannel<Pair<String, Double>> = scanBasePairs("zscan", key, pattern).map { it.first to it.second.toDouble() }
+suspend fun Redis.zscan(key: String, pattern: String? = null): ReceiveChannel<Pair<String, Double>> = scanBasePairs("zscan", key, pattern).map { it.first to it.second.toDouble() }
 
 /**
  * Get the score associated with the given member in a sorted set
@@ -276,7 +281,11 @@ suspend fun Redis.zscore(key: String, member: String): Double = commandDouble("z
  *
  * @since 2.0.0
  */
-internal suspend fun Redis.zinterstore(todo: Any = TODO()): Long = TODO()
+suspend fun Redis.zinterstore(
+    dest: String,
+    vararg keysWithScores: Pair<String, Double>,
+    aggregate: RedisZBoolStoreAggregate = RedisZBoolStoreAggregate.SUM
+): Long = _zboolstore("ZINTERSTORE", dest, *keysWithScores, aggregate = aggregate)
 
 /**
  * Add multiple sorted sets and store the resulting sorted set in a new key
@@ -285,7 +294,62 @@ internal suspend fun Redis.zinterstore(todo: Any = TODO()): Long = TODO()
  *
  * @since 2.0.0
  */
-internal suspend fun Redis.zunionstore(todo: Any = TODO()): Long = TODO()
+suspend fun Redis.zunionstore(
+    dest: String,
+    vararg keysWithScores: Pair<String, Double>,
+    aggregate: RedisZBoolStoreAggregate = RedisZBoolStoreAggregate.SUM
+): Long = _zboolstore("ZUNIONSTORE", dest, *keysWithScores, aggregate = aggregate)
+
+/**
+ * Intersect multiple sorted sets and store the resulting sorted set in a new key
+ *
+ * https://redis.io/commands/zinterstore
+ *
+ * @since 2.0.0
+ */
+suspend fun Redis.zinterstore(
+    dest: String,
+    vararg keys: String,
+    aggregate: RedisZBoolStoreAggregate = RedisZBoolStoreAggregate.SUM
+): Long = _zboolstore("ZINTERSTORE", dest, *keys.map { it to 1.0 }.toTypedArray(), aggregate = aggregate)
+
+/**
+ * Add multiple sorted sets and store the resulting sorted set in a new key
+ *
+ * https://redis.io/commands/zunionstore
+ *
+ * @since 2.0.0
+ */
+suspend fun Redis.zunionstore(
+    dest: String,
+    vararg keys: String,
+    aggregate: RedisZBoolStoreAggregate = RedisZBoolStoreAggregate.SUM
+): Long = _zboolstore("ZUNIONSTORE", dest, *keys.map { it to 1.0 }.toTypedArray(), aggregate = aggregate)
+
+enum class RedisZBoolStoreAggregate {
+    SUM, MIN, MAX
+}
+
+// ZINTERSTORE destination numkeys key [key ...] [WEIGHTS weight [weight ...]] [AGGREGATE SUM|MIN|MAX]
+internal suspend fun Redis._zboolstore(
+    kind: String,
+    dest: String,
+    vararg keys: Pair<String, Double>,
+    aggregate: RedisZBoolStoreAggregate = RedisZBoolStoreAggregate.SUM
+): Long = commandBuildNotNull {
+    add(kind)
+    add(dest)
+    add(keys.size)
+    for (key in keys) add(key.first)
+    if (keys.any { it.second != 1.0 }) {
+        add("WEIGHTS")
+        for (key in keys) add(key.second)
+    }
+    if (aggregate != RedisZBoolStoreAggregate.SUM) {
+        add("AGGREGATE")
+        add(aggregate.name)
+    }
+}
 
 private fun Double.toRedisString() = when {
     isInfinite() -> if (this >= 0) "+inf" else "-inf"
