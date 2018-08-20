@@ -144,6 +144,10 @@ class IntegrationTest {
             assertEquals(setOf(), hkeys(key))
             assertEquals(setOf(), hvals(key))
             assertEquals(mapOf(), hgetall(key))
+            hset(key, "hi" to "there", "hello" to "world")
+            assertEquals(2L, hlen(key))
+            hdel(key, "hi", "hello")
+            assertEquals(0L, hlen(key))
         }
 
         // HSETNX
