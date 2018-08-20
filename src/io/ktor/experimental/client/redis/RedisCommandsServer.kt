@@ -299,7 +299,7 @@ suspend fun Redis.memoryUsage(key: String, samplesCount: Long? = null) =
  *
  * @since 1.0.0
  */
-internal suspend fun Redis.monitor(): Channel<String> = TODO()
+internal suspend fun Redis.monitor(): ReceiveChannel<String> = TODO()
 
 /**
  * Provide information on the role of a Redis instance in the context of replication,
