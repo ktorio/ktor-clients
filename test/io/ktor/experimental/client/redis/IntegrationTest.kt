@@ -952,6 +952,42 @@ class IntegrationTest {
         }
     }
 
+    @Test
+    fun testMonitor() = redisTest {
+        val log = arrayListOf<String>()
+        val prepared = CompletableDeferred<Unit>()
+        val complete = CompletableDeferred<Unit>()
+        launch(start = CoroutineStart.UNDISPATCHED) {
+            RedisClient(address, maxConnections = 1, password = REDIS_PASSWORD).apply {
+                val channel = monitor()
+                prepared.complete(Unit)
+                repeat(4) {
+                    log += channel.receive()
+                }
+                complete.complete(Unit)
+            }
+        }
+        val value1 = "value1"
+        prepared.await()
+        RedisClient(address, maxConnections = 1, password = REDIS_PASSWORD).apply {
+            del(key1)
+            set(key1, value1)
+            assertEquals(value1, get(key1))
+            complete.await()
+            assertEquals(
+                listOf(
+                    "'auth' '$REDIS_PASSWORD'",
+                    "'del' 'key1'",
+                    "'set' 'key1' 'value1'",
+                    "'get' 'key1'"
+                ),
+                log.map {
+                    it.replace(Regex("^\\d+\\.\\d+\\s*\\[.*?\\]\\s*"), "").replace('"', '\'')
+                }
+            )
+        }
+    }
+
     private suspend inline fun Redis.cleanSetKeys(vararg keys: String, callback: () -> Unit) {
         val keysMembers = keys.map { it to if (exists(it)) smembers(it) else null }
         del(*keys)

@@ -44,6 +44,8 @@ interface Redis : Closeable {
 
     fun Ex.setReplyMode(mode: ClientReplyMode) = Unit
 
+    fun Ex.getMessageStream(): ReceiveChannel<Any> = Channel<Any>(0).apply { close() }
+
     enum class ClientReplyMode { ON, OFF, SKIP }
 }
 
@@ -51,6 +53,7 @@ interface Redis : Closeable {
  * TODO
  * 1. add pipeline timeouts
  * 2. multiple endpoints (since the point of having several connections is mostly multiple endpoints)
+ * 3. redis connections are stateful, so the connection pool cannot be done at this level
  */
 
 /**
@@ -79,12 +82,6 @@ class RedisClient(
         charset,
         dispatcher
     )
-
-    private var rmode = Redis.ClientReplyMode.ON
-
-    override fun Redis.Ex.setReplyMode(mode: Redis.ClientReplyMode) {
-        rmode = mode
-    }
 
     override val context: Job = Job()
 
@@ -122,17 +119,21 @@ class RedisClient(
 
     override suspend fun execute(vararg args: Any?): Any? {
         return when (rmode) {
-            Redis.ClientReplyMode.ON -> {
+            Redis.ClientReplyMode.ON, Redis.ClientReplyMode.SKIP -> {
                 val result = CompletableDeferred<Any?>()
-                postmanService.send(RedisRequest(args, result, rmode))
-                try {
-                    result.await()
-                } catch (e: RedisException) {
-                    throw RedisException(e.message ?: "error", args)
+                postmanService.send(RedisRequest(args, result))
+                if (rmode != Redis.ClientReplyMode.SKIP) {
+                    try {
+                        result.await()
+                    } catch (e: RedisException) {
+                        throw RedisException(e.message ?: "error", args)
+                    }
+                } else {
+                    null
                 }
             }
             else -> {
-                postmanService.send(RedisRequest(args, null, rmode))
+                postmanService.send(RedisRequest(args, null))
                 null
             }
         }
@@ -152,6 +153,23 @@ class RedisClient(
 
         pipeline.context.invokeOnCompletion {
             runningPipelines.decrementAndGet()
+        }
+    }
+
+    private var rmode = Redis.ClientReplyMode.ON
+
+    override fun Redis.Ex.setReplyMode(mode: Redis.ClientReplyMode) {
+        rmode = mode
+    }
+
+    override fun Redis.Ex.getMessageStream(): ReceiveChannel<Any> {
+        setReplyMode(Redis.ClientReplyMode.OFF)
+        return Channel<Any>(1024).sending {
+            while (true) {
+                val result = CompletableDeferred<Any?>()
+                postmanService.send(RedisRequest(null, result))
+                send(result.await() ?: Unit)
+            }
         }
     }
 }
