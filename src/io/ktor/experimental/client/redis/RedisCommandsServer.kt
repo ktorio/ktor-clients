@@ -35,9 +35,30 @@ suspend fun Redis.clientGetname(): String? = commandString("client", "getname")
  *
  * https://redis.io/commands/client-kill
  *
+ * @param type Possible values: normal, master, slave or pubsub
+ *
  * @since 2.4.0
  */
-internal suspend fun Redis.clientKill(todo: Any): Any = TODO()
+//[ip:port] [ID client-id] [TYPE normal|master|slave|pubsub] [ADDR ip:port] [SKIPME yes/no]
+suspend fun Redis.clientKill(clientId: String? = null, type: String? = null, addr: String? = null, skipme: Boolean = true): Unit =
+    commandBuildNotNull {
+        if (clientId != null) {
+            add("ID")
+            add(clientId)
+        }
+        if (type != null) {
+            add("TYPE")
+            add(type)
+        }
+        if (addr != null) {
+            add("ADDR")
+            add(addr)
+        }
+        if (!skipme) {
+            add("SKIPME")
+            add(if (skipme) "yes" else "no")
+        }
+    }
 
 /**
  * Get the list of client connections

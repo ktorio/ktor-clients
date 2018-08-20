@@ -2,15 +2,23 @@ package io.ktor.experimental.client.redis
 
 import kotlinx.coroutines.experimental.channels.*
 
-/**
- * @since 5.0.0
- */
-internal suspend fun Redis.bzpopmax(vararg keys: String, timeout: Long = 0): List<String> = TODO()
+data class RedisBzPopResult(val key: String, val member: String, val score: Double)
 
 /**
  * @since 5.0.0
  */
-internal suspend fun Redis.bzpopmin(vararg keys: String, timeout: Long = 0): List<String> = TODO()
+suspend fun Redis.bzpopmax(vararg keys: String, timeout: Long = 0): RedisBzPopResult? {
+    val parts = commandArrayString("bzpopmax", *keys, timeout)
+    return if (parts.size >= 3) RedisBzPopResult(parts[0], parts[2], parts[1].toDouble()) else null
+}
+
+/**
+ * @since 5.0.0
+ */
+suspend fun Redis.bzpopmin(vararg keys: String, timeout: Long = 0): RedisBzPopResult? {
+    val parts = commandArrayString("bzpopmax", *keys, timeout)
+    return if (parts.size >= 3) RedisBzPopResult(parts[0], parts[2], parts[1].toDouble()) else null
+}
 
 /**
  * Add one or more members to a sorted set, or update its score if it already exists
@@ -80,15 +88,6 @@ suspend fun Redis.zcount(
  */
 suspend fun Redis.zincrby(key: String, member: String, increment: Double) =
     commandString("zincrby", key, increment, member)!!
-
-/**
- * Intersect multiple sorted sets and store the resulting sorted set in a new key
- *
- * https://redis.io/commands/zinterstore
- *
- * @since 2.0.0
- */
-internal suspend fun Redis.zinterstore(todo: Any = TODO()): Long = TODO()
 
 /**
  * Count the number of members in a sorted set between a given lexicographical range
@@ -269,6 +268,15 @@ internal suspend fun Redis.zscan(key: String, pattern: String? = null): ReceiveC
  * @since 1.2.0
  */
 suspend fun Redis.zscore(key: String, member: String): Double = commandDouble("zscore", key, member)
+
+/**
+ * Intersect multiple sorted sets and store the resulting sorted set in a new key
+ *
+ * https://redis.io/commands/zinterstore
+ *
+ * @since 2.0.0
+ */
+internal suspend fun Redis.zinterstore(todo: Any = TODO()): Long = TODO()
 
 /**
  * Add multiple sorted sets and store the resulting sorted set in a new key
