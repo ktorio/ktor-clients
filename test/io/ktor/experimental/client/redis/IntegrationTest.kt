@@ -517,7 +517,7 @@ class IntegrationTest {
         // rename source doesn't exists
         run {
             del(key1).also { del(key2) }
-            expectException<RedisException>("ERR no such key") { rename(key1, key2) }
+            expectException<RedisException>("ERR no such key processing 'RENAME'") { rename(key1, key2) }
         }
 
         // @TODO: Not working yet: "ERR DUMP payload version or checksum are wrong"
@@ -747,6 +747,101 @@ class IntegrationTest {
                 commandInfo("set", "get")
             )
         }
+    }
+
+    @Test
+    fun testStream() = redisTest {
+        val mystream = "mystream"
+        del(mystream)
+
+        val id = xadd(mystream, "name" to "Sara", "surname" to "OConnor")
+        assertEquals(1, xlen(mystream))
+        Regex("(\\d+)-(\\d+)").matchEntire(id).apply {
+            assertThat(abs(Date().time - this!!.groupValues[1].toLong()), lessThan(60_000L))
+            assertEquals("0", this!!.groupValues[2])
+        }
+        assertEquals(
+            id to mapOf("name" to "Sara", "surname" to "OConnor"),
+            xget(mystream, id)
+        )
+        xdel(mystream, id)
+        assertEquals(0, xlen(mystream))
+
+        run {
+            del(mystream)
+            val firstId = xadd(mystream, "name" to "a")
+            xadd(mystream, "name" to "b")
+            xadd(mystream, "name" to "c")
+            xadd(mystream, "name" to "d")
+            val lastId = xadd(mystream, "name" to "e")
+            assertEquals(
+                listOf(
+                    mapOf("name" to "a"),
+                    mapOf("name" to "b"),
+                    mapOf("name" to "c"),
+                    mapOf("name" to "d"),
+                    mapOf("name" to "e")
+                ),
+                xrange(mystream).map { it.value }.toList()
+            )
+            assertEquals(
+                listOf(
+                    mapOf("name" to "a"),
+                    mapOf("name" to "b"),
+                    mapOf("name" to "c"),
+                    mapOf("name" to "d"),
+                    mapOf("name" to "e")
+                ),
+                xrangeChannel(mystream, chunkSize = 2).map { it.second }.toList()
+            )
+            println(xinfoHelp())
+            val info = xinfoStream(mystream)
+            assertEquals(5, info.length)
+            assertEquals(0, info.groups)
+            assertEquals(lastId, info.lastGeneratedId)
+            assertEquals(firstId, info.firstEntry?.first)
+            assertEquals(lastId, info.lastEntry?.first)
+            assertEquals(mapOf("name" to "a"), info.firstEntry?.second)
+            assertEquals(mapOf("name" to "e"), info.lastEntry?.second)
+            println("xinfoGroups(mystream):")
+            println(xinfoGroups(mystream))
+
+        }
+    }
+
+    @Test
+    fun testStreamConsumer() = redisTest {
+        val mystream = "mystream"
+        val mygroup1 = "mygroup1"
+        val consumer1 = "consumer1"
+        del(mystream)
+        println(xgroupHelp().joinToString("\n"))
+        xcreate(mystream)
+        xgroupCreate(mystream, mygroup1)
+
+        val log = arrayListOf<String>()
+
+        xadd(mystream, "name" to "a")
+        val process1 = async {
+            RedisClient(address, password = REDIS_PASSWORD).apply {
+                xprocessBatch(mystream, mygroup1, consumer1, blockMs = 1_000, batchSize = 3, id = ">") {
+                        stream, id, info ->
+                    log += "$stream :: $info"
+                    println("$stream :: $info")
+                }
+            }
+        }
+        xadd(mystream, "name" to "b")
+        xadd(mystream, "name" to "c")
+        process1.await()
+        assertEquals(
+            listOf(
+                "mystream :: {name=a}",
+                "mystream :: {name=b}",
+                "mystream :: {name=c}"
+            ),
+            log
+        )
     }
 
     @Test

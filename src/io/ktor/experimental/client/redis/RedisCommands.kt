@@ -45,7 +45,8 @@ suspend fun Redis.commandBool(vararg args: Any?): Boolean = commandAnyNotNull(*a
 
 suspend inline fun <reified T> Redis.commandAny(vararg args: Any?): T? = when (T::class) {
     Boolean::class -> (commandLong(*args) != 0L) as T?
-    Unit::class -> run { execute(*args); Unit as T? }
+    Unit::class -> run { executeText(*args); Unit as T? }
+    Any::class -> run { executeText(*args) as T? }
     String::class -> executeText(*args)?.toString() as T?
     Double::class -> executeText(*args)?.toString()?.toDoubleOrNull() as T?
     Int::class -> executeText(*args)?.toString()?.toIntOrNull() as T?
@@ -53,6 +54,10 @@ suspend inline fun <reified T> Redis.commandAny(vararg args: Any?): T? = when (T
     ByteArray::class -> execute(*args) as? T?
     else -> error("Unsupported type")
 }
+
+suspend inline fun <reified T> Redis.commandBuild(
+    initialCapacity: Int = 16, callback: ArrayList<Any?>.() -> Unit
+): T? = commandAny(*ArrayList<Any?>(initialCapacity).apply(callback).toTypedArray())
 
 suspend inline fun <reified T> Redis.commandAnyNotNull(vararg args: Any?): T = commandAny(*args)!!
 
@@ -64,6 +69,9 @@ internal fun <T> List<T>.toListOfPairsString(): List<Pair<String, String>> =
 
 internal fun List<Any?>.listOfPairsToMap(): Map<String, String> =
     (0 until size / 2).map { ("${this[it * 2 + 0]}") to ("${this[it * 2 + 1]}") }.toMap()
+
+internal fun List<Any?>.listOfPairsToMapAny(): Map<Any?, Any?> =
+    (0 until size / 2).map { this[it * 2 + 0] to this[it * 2 + 1] }.toMap()
 
 private val UTF8 = Charsets.UTF_8
 
@@ -130,7 +138,7 @@ internal suspend fun Redis.scanBase(
     } while (cursor > 0L)
 }
 
-private suspend fun <T> Channel<T>.sending(callback: suspend SendChannel<T>.() -> Unit): ReceiveChannel<T> {
+internal suspend fun <T> Channel<T>.sending(callback: suspend SendChannel<T>.() -> Unit): ReceiveChannel<T> {
     launch(start = CoroutineStart.UNDISPATCHED) {
         try {
             callback()
