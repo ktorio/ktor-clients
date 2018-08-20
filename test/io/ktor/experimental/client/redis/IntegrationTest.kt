@@ -988,6 +988,41 @@ class IntegrationTest {
         }
     }
 
+    @Test
+    fun testPubsub() = redisTest {
+        val log = arrayListOf<RedisPubSub.Message>()
+        val completed = CompletableDeferred<Unit>()
+        val listening = CompletableDeferred<Unit>()
+        launch(start = CoroutineStart.UNDISPATCHED) {
+            RedisClient(address, maxConnections = 1, password = REDIS_PASSWORD).apply {
+                val sub = subscribe("mypubsub")
+                val messages = sub.messagesChannel()
+                listening.complete(Unit)
+                repeat(3) {
+                    log += messages.receive()
+                }
+                completed.complete(Unit)
+            }
+        }
+
+        launch(start = CoroutineStart.UNDISPATCHED) {
+            listening.await()
+            publish("mypubsub2", "nope")
+            publish("mypubsub", "hi")
+            publish("mypubsub", "hello")
+            publish("mypubsub", "world")
+            assertEquals(
+                listOf(
+                    RedisPubSub.Message("mypubsub", "hi"),
+                    RedisPubSub.Message("mypubsub", "hello"),
+                    RedisPubSub.Message("mypubsub", "world")
+                ),
+                log
+            )
+            completed.await()
+        }
+    }
+
     private suspend inline fun Redis.cleanSetKeys(vararg keys: String, callback: () -> Unit) {
         val keysMembers = keys.map { it to if (exists(it)) smembers(it) else null }
         del(*keys)
