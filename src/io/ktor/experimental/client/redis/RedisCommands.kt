@@ -22,28 +22,28 @@ suspend fun Redis.commandArrayStringNull(vararg args: Any?): List<String?> =
 suspend fun Redis.commandArrayLong(vararg args: Any?): List<Long> =
     (executeText(*args) as List<Long>?) ?: listOf()
 
-suspend fun Redis.commandLong(vararg args: Any?): Long = command(*args) ?: 0L
-suspend fun Redis.commandInt(vararg args: Any?): Int = command(*args) ?: 0
+suspend fun Redis.commandLong(vararg args: Any?): Long = commandAny(*args) ?: 0L
+suspend fun Redis.commandInt(vararg args: Any?): Int = commandAny(*args) ?: 0
 
 @Deprecated("", ReplaceWith("command(*args)"))
-suspend fun Redis.commandByteArray(vararg args: Any?): ByteArray? = command(*args)
+suspend fun Redis.commandByteArray(vararg args: Any?): ByteArray? = commandAny(*args)
 
 @Deprecated("", ReplaceWith("command(*args)"))
-suspend fun Redis.commandDoubleOrNull(vararg args: Any?): Double? = command(*args)
+suspend fun Redis.commandDoubleOrNull(vararg args: Any?): Double? = commandAny(*args)
 
 @Deprecated("", ReplaceWith("command(*args)"))
-suspend fun Redis.commandDouble(vararg args: Any?): Double = commandNotNull(*args)
+suspend fun Redis.commandDouble(vararg args: Any?): Double = commandAnyNotNull(*args)
 
 @Deprecated("", ReplaceWith("command(*args)"))
-suspend fun Redis.commandString(vararg args: Any?): String? = command(*args)
+suspend fun Redis.commandString(vararg args: Any?): String? = commandAny(*args)
 
 @Deprecated("", ReplaceWith("command(*args)"))
-suspend fun Redis.commandUnit(vararg args: Any?): Unit = commandNotNull(*args)
+suspend fun Redis.commandUnit(vararg args: Any?): Unit = commandAnyNotNull(*args)
 
 @Deprecated("", ReplaceWith("command(*args)"))
-suspend fun Redis.commandBool(vararg args: Any?): Boolean = commandNotNull(*args)
+suspend fun Redis.commandBool(vararg args: Any?): Boolean = commandAnyNotNull(*args)
 
-suspend inline fun <reified T> Redis.command(vararg args: Any?): T? = when (T::class) {
+suspend inline fun <reified T> Redis.commandAny(vararg args: Any?): T? = when (T::class) {
     Boolean::class -> (commandLong(*args) != 0L) as T?
     Unit::class -> run { execute(*args); Unit as T? }
     String::class -> executeText(*args)?.toString() as T?
@@ -54,7 +54,7 @@ suspend inline fun <reified T> Redis.command(vararg args: Any?): T? = when (T::c
     else -> error("Unsupported type")
 }
 
-suspend inline fun <reified T> Redis.commandNotNull(vararg args: Any?): T = command(*args)!!
+suspend inline fun <reified T> Redis.commandAnyNotNull(vararg args: Any?): T = commandAny(*args)!!
 
 internal fun <T> List<T>.toListOfPairs(): List<Pair<T, T>> =
     (0 until size / 2).map { this[it * 2 + 0] to this[it * 2 + 1] }
