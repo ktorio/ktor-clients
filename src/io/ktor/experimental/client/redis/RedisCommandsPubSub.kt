@@ -3,17 +3,38 @@ package io.ktor.experimental.client.redis
 import kotlinx.coroutines.experimental.channels.*
 
 interface RedisPubSub {
-    data class Packet(val pattern: Boolean, val message: Boolean, val channel: String, val content: String)
+    interface Packet
+    data class Subscription(val channel: String, val subscriptions: Long, val subscribe: Boolean, val isPattern: Boolean = false) : Packet
+    data class Message(val channel: String, val message: String, val isPattern: Boolean = false) : Packet
+    //data class Packet(val channel: String, val content: String, val isPattern: Boolean, val isMessage: Boolean)
 }
 
 interface RedisPubSubInternal : RedisPubSub {
     val redis: Redis
 }
 
+internal class RedisPubSubImpl(override val redis: Redis) : RedisPubSubInternal {
+    internal val rawChannel = redis.run { Redis.Ex.run { getMessageChannel() } }
+    internal val channel = rawChannel.map {
+        val list = it as List<Any>
+        val kind = list[0].toString()
+        val channel = list[1].toString()
+        val info = list[2].toString()
+        val isPattern = kind.startsWith("p")
+        val isSubscription = kind.startsWith("psub") || kind.startsWith("sub")
+        val isMessage = kind == "message"
+        if (isMessage) {
+            RedisPubSub.Message(channel, info, isPattern)
+        } else {
+            RedisPubSub.Subscription(channel, info.toLong(), isSubscription, isPattern)
+        }
+    }
+}
+
 /**
  * Starts a new pubsub session.
  */
-internal suspend fun Redis.pubsub(): RedisPubSub = TODO()
+internal suspend fun Redis.pubsub(): RedisPubSub = RedisPubSubImpl(this)
 
 /**
  * Listen for messages published to channels matching the given patterns
@@ -22,7 +43,7 @@ internal suspend fun Redis.pubsub(): RedisPubSub = TODO()
  *
  * @since 2.0.0
  */
-internal suspend fun Redis.psubscribe(vararg patterns: String): RedisPubSub = pubsub().psubscribe(*patterns)
+suspend fun Redis.psubscribe(vararg patterns: String): RedisPubSub = pubsub().psubscribe(*patterns)
 
 /**
  * Listen for messages published to the given channels
@@ -31,12 +52,7 @@ internal suspend fun Redis.psubscribe(vararg patterns: String): RedisPubSub = pu
  *
  * @since 2.0.0
  */
-internal suspend fun Redis.subscribe(vararg channels: String): RedisPubSub = pubsub().psubscribe(*channels)
-
-/**
- * Gets the a channel of packets for this client subscription.
- */
-suspend fun RedisPubSub.channel(): ReceiveChannel<RedisPubSub.Packet> = TODO()
+suspend fun Redis.subscribe(vararg channels: String): RedisPubSub = pubsub().psubscribe(*channels)
 
 /**
  * Listen for messages published to channels matching the given patterns
@@ -45,7 +61,27 @@ suspend fun RedisPubSub.channel(): ReceiveChannel<RedisPubSub.Packet> = TODO()
  *
  * @since 2.0.0
  */
-suspend fun RedisPubSub.psubscribe(vararg patterns: String): RedisPubSub = TODO()
+suspend fun RedisPubSub.psubscribe(vararg patterns: String): RedisPubSub =
+    this.apply { (this as RedisPubSubImpl).redis.commandAnyNotNull("psubscribe", *patterns) }
+
+/**
+ * Listen for messages published to the given channels
+ *
+ * https://redis.io/commands/subscribe
+ *
+ * @since 2.0.0
+ */
+suspend fun RedisPubSub.subscribe(vararg channels: String): RedisPubSub =
+    this.apply { (this as RedisPubSubImpl).redis.commandAnyNotNull("subscribe", *channels) }
+
+/**
+ * Gets the a channel of packets for this client subscription.
+ */
+suspend fun RedisPubSub.channel(): ReceiveChannel<RedisPubSub.Packet> = (this as RedisPubSubImpl).channel
+
+suspend fun RedisPubSub.messagesChannel(): ReceiveChannel<RedisPubSub.Message> = channel().map { it as? RedisPubSub.Message? }.filterNotNull()
+
+suspend fun RedisPubSub.subscriptionChannel(): ReceiveChannel<RedisPubSub.Subscription> = channel().map { it as? RedisPubSub.Subscription? }.filterNotNull()
 
 /**
  * Stop listening for messages posted to channels matching the given patterns
@@ -54,16 +90,8 @@ suspend fun RedisPubSub.psubscribe(vararg patterns: String): RedisPubSub = TODO(
  *
  * @since 2.0.0
  */
-suspend fun RedisPubSub.punsubscribe(vararg patterns: String): RedisPubSub = TODO()
-
-/**
- * Listen for messages published to the given channels
- *
- * https://redis.io/commands/subscribe
- *
- * @since 2.0.0
- */
-suspend fun RedisPubSub.subscribe(vararg channels: String): RedisPubSub = TODO()
+suspend fun RedisPubSub.punsubscribe(vararg patterns: String): RedisPubSub =
+    this.apply { (this as RedisPubSubImpl).redis.commandAnyNotNull("punsubscribe", *patterns) }
 
 /**
  * Stop listening for messages posted to the given channels
@@ -72,7 +100,8 @@ suspend fun RedisPubSub.subscribe(vararg channels: String): RedisPubSub = TODO()
  *
  * @since 2.0.0
  */
-suspend fun RedisPubSub.unsubscribe(vararg channels: String): RedisPubSub = TODO()
+suspend fun RedisPubSub.unsubscribe(vararg channels: String): RedisPubSub =
+    this.apply { (this as RedisPubSubImpl).redis.commandAnyNotNull("unsubscribe", *channels) }
 
 /**
  * Post a message to a channel
@@ -81,7 +110,7 @@ suspend fun RedisPubSub.unsubscribe(vararg channels: String): RedisPubSub = TODO
  *
  * @since 2.0.0
  */
-suspend fun RedisPubSub.publish(channel: String, message: String): Long =
+suspend fun Redis.publish(channel: String, message: String): Long =
     (this as RedisPubSubInternal).redis.commandLong("publish", channel, message)
 
 /**
