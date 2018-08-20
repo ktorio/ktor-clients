@@ -167,4 +167,4 @@ suspend fun Redis.hvals(key: String): Set<String> = commandArrayString("hvals", 
  * @since 2.8.0
  */
 suspend fun Redis.hscan(key: String, pattern: String? = null): ReceiveChannel<Pair<String, String>> =
-    scanBasePairs("hscan", key, pattern)
+    _scanBasePairs("hscan", key, pattern)

@@ -414,7 +414,7 @@ suspend fun Redis.memoryUsage(key: String, samplesCount: Long? = null) =
  *
  * @since 1.0.0
  */
-internal suspend fun Redis.monitor(): ReceiveChannel<String> {
+suspend fun Redis.monitor(): ReceiveChannel<String> {
     commandUnit("MONITOR")
     val stream = Redis.Ex.run { getMessageChannel() }
     return stream.map { it.toString() }

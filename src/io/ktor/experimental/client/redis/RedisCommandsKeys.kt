@@ -268,7 +268,7 @@ suspend fun Redis.renamenx(oldKey: String, newKey: String) = commandBool("rename
  *
  * @since 2.8.0
  */
-suspend fun Redis.scan(pattern: String? = null): ReceiveChannel<String> = scanBaseString("scan", null, pattern)
+suspend fun Redis.scan(pattern: String? = null): ReceiveChannel<String> = _scanBaseString("scan", null, pattern)
 
 data class RedisSortResult(val count: Long, val items: List<String>?)
 

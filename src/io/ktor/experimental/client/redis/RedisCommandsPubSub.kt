@@ -34,7 +34,7 @@ internal class RedisPubSubImpl(override val redis: Redis) : RedisPubSubInternal 
 /**
  * Starts a new pubsub session.
  */
-internal suspend fun Redis.pubsub(): RedisPubSub = RedisPubSubImpl(this)
+private suspend fun Redis._pubsub(): RedisPubSub = RedisPubSubImpl(this)
 
 /**
  * Listen for messages published to channels matching the given patterns
@@ -43,7 +43,7 @@ internal suspend fun Redis.pubsub(): RedisPubSub = RedisPubSubImpl(this)
  *
  * @since 2.0.0
  */
-suspend fun Redis.psubscribe(vararg patterns: String): RedisPubSub = pubsub().psubscribe(*patterns)
+suspend fun Redis.psubscribe(vararg patterns: String): RedisPubSub = _pubsub().psubscribe(*patterns)
 
 /**
  * Listen for messages published to the given channels
@@ -52,7 +52,7 @@ suspend fun Redis.psubscribe(vararg patterns: String): RedisPubSub = pubsub().ps
  *
  * @since 2.0.0
  */
-suspend fun Redis.subscribe(vararg channels: String): RedisPubSub = pubsub().psubscribe(*channels)
+suspend fun Redis.subscribe(vararg channels: String): RedisPubSub = _pubsub().psubscribe(*channels)
 
 /**
  * Listen for messages published to channels matching the given patterns

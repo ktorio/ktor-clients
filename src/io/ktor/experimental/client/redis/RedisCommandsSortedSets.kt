@@ -263,7 +263,7 @@ suspend fun Redis.zrevrank(key: String, member: String): Long = commandLong("zre
  *
  * @since 2.8.0
  */
-suspend fun Redis.zscan(key: String, pattern: String? = null): ReceiveChannel<Pair<String, Double>> = scanBasePairs("zscan", key, pattern).map { it.first to it.second.toDouble() }
+suspend fun Redis.zscan(key: String, pattern: String? = null): ReceiveChannel<Pair<String, Double>> = _scanBasePairs("zscan", key, pattern).map { it.first to it.second.toDouble() }
 
 /**
  * Get the score associated with the given member in a sorted set
