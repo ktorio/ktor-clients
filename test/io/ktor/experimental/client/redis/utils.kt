@@ -7,9 +7,11 @@ import java.net.*
 
 internal fun redisTest(
     address: InetSocketAddress,
-    password: String? = null, block: suspend Redis.() -> Unit
+    password: String? = null,
+    maxConnections: Int = 50,
+    block: suspend Redis.() -> Unit
 ) = runBlocking {
-    RedisClient(address, password = password).use { redis ->
+    RedisClient(address, password = password, maxConnections = maxConnections).use { redis ->
         redis.block()
     }
 }

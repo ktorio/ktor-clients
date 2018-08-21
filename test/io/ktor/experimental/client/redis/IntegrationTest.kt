@@ -1027,6 +1027,25 @@ class IntegrationTest {
         }
     }
 
+    @Test
+    fun testTransaction() = redisTest(maxConnections = 1) {
+        val value = "value"
+        del(key1)
+        del(key2)
+        transaction {
+            set(key1, value)
+            assertEquals("QUEUED", get(key1)) // The same client view QUEUED
+            redisTest(maxConnections = 1) {
+                assertEquals(null, get(key1)) // Other clients doesn't view the changes
+            }
+            set(key2, value)
+        }
+        assertEquals(value, get(key1)) // The same client now views the result
+        redisTest(maxConnections = 1) {
+            assertEquals(value, get(key1)) // As does other clients
+        }
+    }
+
     private suspend inline fun Redis.cleanSetKeys(vararg keys: String, callback: () -> Unit) {
         val keysMembers = keys.map { it to if (exists(it)) smembers(it) else null }
         del(*keys)
@@ -1058,10 +1077,11 @@ class IntegrationTest {
 
     private fun redisTest(
         password: String = REDIS_PASSWORD,
+        maxConnections: Int = 50,
         cleanup: suspend Redis.() -> Unit = {},
         callback: suspend Redis.() -> Unit
     ) =
-        redisTest(address, password) {
+        redisTest(address, password, maxConnections = maxConnections) {
             cleanup()
             try {
                 callback()
