@@ -44,7 +44,7 @@ inline fun geoTools(callback: GeoDistance.Companion.() -> Unit) {
  *
  * @since 3.2.0
  */
-suspend fun Redis.geoadd(key: String, vararg items: Pair<String, GeoPosition>) = commandLong(
+suspend fun Redis.geoadd(key: String, vararg items: Pair<String, GeoPosition>) = executeTyped<Long>(
     "GEOADD", key, *(items.flatMap { listOf(it.second.longitude, it.second.latitude, it.first) }.toTypedArray())
 )
 
@@ -55,9 +55,8 @@ suspend fun Redis.geoadd(key: String, vararg items: Pair<String, GeoPosition>) =
  *
  * @since 3.2.0
  */
-suspend fun Redis.geodist(key: String, member1: String, member2: String, unit: GeoUnit = GeoUnit.METERS): Double? = commandDoubleOrNull(
-    "GEODIST", key, member1, member2, unit.symbol
-)
+suspend fun Redis.geodist(key: String, member1: String, member2: String, unit: GeoUnit = GeoUnit.METERS): Double? =
+    executeTypedNull<Double>("GEODIST", key, member1, member2, unit.symbol)
 
 /**
  * Returns members of a geospatial index as standard geohash strings
@@ -66,9 +65,8 @@ suspend fun Redis.geodist(key: String, member1: String, member2: String, unit: G
  *
  * @since 3.2.0
  */
-suspend fun Redis.geohash(key: String, vararg members: String): List<String> = commandArrayString(
-    "GEOHASH", key, *members
-)
+suspend fun Redis.geohash(key: String, vararg members: String): List<String> =
+    executeArrayString("GEOHASH", key, *members)
 
 /**
  * Returns longitude and latitude of members of a geospatial index
@@ -78,7 +76,7 @@ suspend fun Redis.geohash(key: String, vararg members: String): List<String> = c
  * @since 3.2.0
  */
 suspend fun Redis.geopos(key: String, vararg members: String): List<GeoPosition?> =
-    commandArrayAny("GEOPOS", key, *members).map {
+    executeArrayAny("GEOPOS", key, *members).map {
         if (it != null && it is List<*> && it.size >= 2) {
             GeoPosition(it[0].toString().toDouble(), it[1].toString().toDouble())
         } else {

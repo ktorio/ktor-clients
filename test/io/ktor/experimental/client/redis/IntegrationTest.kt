@@ -1034,13 +1034,13 @@ class IntegrationTest {
         del(key2)
         transaction {
             set(key1, value)
-            assertEquals("QUEUED", get(key1)) // The same client view QUEUED
+            assertEquals("QUEUED", get(key1)) // The same client sees QUEUED
             redisTest(maxConnections = 1) {
-                assertEquals(null, get(key1)) // Other clients doesn't view the changes
+                assertEquals(null, get(key1)) // Other clients doesn't sees the changes
             }
             set(key2, value)
         }
-        assertEquals(value, get(key1)) // The same client now views the result
+        assertEquals(value, get(key1)) // The same client now sees the result
         redisTest(maxConnections = 1) {
             assertEquals(value, get(key1)) // As does other clients
         }

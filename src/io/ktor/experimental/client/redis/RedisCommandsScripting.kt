@@ -55,7 +55,7 @@ suspend fun Redis.evalsha(sha1: String, args: Map<String, Any?>): Any? =
  *
  * @since 2.6.0
  */
-suspend fun Redis.scriptLoad(script: String): String = this.commandString("SCRIPT", "LOAD", script) ?: ""
+suspend fun Redis.scriptLoad(script: String): String = this.executeTypedNull<String>("SCRIPT", "LOAD", script) ?: ""
 
 /**
  * Kill the script currently in execution.
@@ -64,7 +64,7 @@ suspend fun Redis.scriptLoad(script: String): String = this.commandString("SCRIP
  *
  * @since 2.6.0
  */
-suspend fun Redis.scriptKill(): String = this.commandString("SCRIPT", "KILL") ?: ""
+suspend fun Redis.scriptKill(): String = this.executeTypedNull<String>("SCRIPT", "KILL") ?: ""
 
 /**
  * Remove all the scripts from the script cache.
@@ -73,7 +73,7 @@ suspend fun Redis.scriptKill(): String = this.commandString("SCRIPT", "KILL") ?:
  *
  * @since 2.6.0
  */
-suspend fun Redis.scriptFlush(): String = this.commandString("SCRIPT", "FLUSH") ?: ""
+suspend fun Redis.scriptFlush(): String = this.executeTypedNull<String>("SCRIPT", "FLUSH") ?: ""
 
 enum class RedisScriptDebug { Yes, Sync, No }
 
@@ -84,7 +84,12 @@ enum class RedisScriptDebug { Yes, Sync, No }
  *
  * @since 3.2.0
  */
-suspend fun Redis.scriptDebug(kind: RedisScriptDebug): String = this.commandString("SCRIPT", "DEBUG", kind.name.toUpperCase()) ?: ""
+suspend fun Redis.scriptDebug(kind: RedisScriptDebug): String = this.executeTypedNull<String>(
+    "SCRIPT",
+    "DEBUG",
+    kind.name.toUpperCase()
+)
+        ?: ""
 
 /**
  * Check existence of scripts in the script cache.
@@ -94,4 +99,4 @@ suspend fun Redis.scriptDebug(kind: RedisScriptDebug): String = this.commandStri
  * @since 2.6.0
  */
 suspend fun Redis.scriptExists(vararg sha1: String): List<Boolean> =
-    this.commandArrayLong("SCRIPT", "EXISTS", *sha1).map { it != 0L }
+    this.executeArrayLong("SCRIPT", "EXISTS", *sha1).map { it != 0L }

@@ -10,7 +10,7 @@ import java.util.*
  *
  * @since 1.0.0
  */
-suspend fun Redis.bgrewriteaof(): String? = commandString("bgrewriteaof")
+suspend fun Redis.bgrewriteaof(): String? = executeTypedNull<String>("bgrewriteaof")
 
 /**
  * Asynchronously save the dataset to disk
@@ -19,7 +19,7 @@ suspend fun Redis.bgrewriteaof(): String? = commandString("bgrewriteaof")
  *
  * @since 1.0.0
  */
-suspend fun Redis.bgsave(): String? = commandString("bgsave")
+suspend fun Redis.bgsave(): String? = executeTypedNull<String>("bgsave")
 
 /**
  * Get the current connection name.
@@ -28,7 +28,7 @@ suspend fun Redis.bgsave(): String? = commandString("bgsave")
  *
  * @since 2.6.9
  */
-suspend fun Redis.clientGetname(): String? = commandString("client", "getname")
+suspend fun Redis.clientGetname(): String? = executeTypedNull<String>("client", "getname")
 
 /**
  * Kill the connection of a client
@@ -41,7 +41,7 @@ suspend fun Redis.clientGetname(): String? = commandString("client", "getname")
  */
 //[ip:port] [ID client-id] [TYPE normal|master|slave|pubsub] [ADDR ip:port] [SKIPME yes/no]
 suspend fun Redis.clientKill(clientId: String? = null, type: String? = null, addr: String? = null, skipme: Boolean = true): Unit =
-    commandBuildNotNull {
+    executeBuildNotNull {
         if (clientId != null) {
             add("ID")
             add(clientId)
@@ -68,7 +68,7 @@ suspend fun Redis.clientKill(clientId: String? = null, type: String? = null, add
  * @since 2.4.0
  */
 suspend fun Redis.clientList(): List<Map<String, String>> {
-    val res = commandString("client", "list") ?: ""
+    val res = executeTypedNull<String>("client", "list") ?: ""
     return res.lines().map {
         it.split(' ').map {
             val parts = it.split('=', limit = 2)
@@ -84,7 +84,7 @@ suspend fun Redis.clientList(): List<Map<String, String>> {
  *
  * @since 2.9.50
  */
-suspend fun Redis.clientPause(timeoutMs: Int): Unit = commandUnit("client", "pause", timeoutMs)
+suspend fun Redis.clientPause(timeoutMs: Int): Unit = executeTyped("client", "pause", timeoutMs)
 
 
 /**
@@ -99,7 +99,7 @@ private suspend fun Redis.clientReply(mode: Redis.ClientReplyMode): Unit {
     Redis.Ex.apply {
         setReplyMode(mode)
     }
-    commandUnit("client", "reply", mode.name)
+    executeTyped<Unit>("client", "reply", mode.name)
 }
 
 suspend fun Redis.clientReplyOn(): Unit = clientReply(Redis.ClientReplyMode.ON)
@@ -122,7 +122,7 @@ suspend inline fun Redis.clientReplyOff(callback: () -> Unit) {
  *
  * @since 2.6.9
  */
-suspend fun Redis.clientSetname(name: String): Unit = commandUnit("client", "setname", name)
+suspend fun Redis.clientSetname(name: String): Unit = executeTyped("client", "setname", name)
 
 data class CommandInfo(
     /** command name */
@@ -186,7 +186,7 @@ data class CommandInfo(
     val hasMoveableKeys get() = "movablekeys" in flags
 }
 
-private suspend fun Redis._commandInfo(vararg args: String): List<CommandInfo> = commandArrayAny(*args).map {
+private suspend fun Redis._commandInfo(vararg args: String): List<CommandInfo> = executeArrayAny(*args).map {
     val parts = it as List<Any>
     CommandInfo(
         name = parts[0].toString(),
@@ -225,7 +225,7 @@ suspend fun Redis.commandInfo(vararg names: String): List<CommandInfo> =
  *
  * @since 2.8.13
  */
-suspend fun Redis.commandCount(): Int = commandInt("command", "count")
+suspend fun Redis.commandCount(): Int = executeTyped("command", "count")
 
 /**
  * Extract keys given a full Redis command
@@ -235,7 +235,7 @@ suspend fun Redis.commandCount(): Int = commandInt("command", "count")
  * @since 2.8.13
  */
 suspend fun Redis.commandGetKeys(vararg args: Any?): List<String> =
-    commandArrayString("command", "getkeys", *args)
+    executeArrayString("command", "getkeys", *args)
 
 /**
  * Get the value of a configuration parameter
@@ -245,7 +245,7 @@ suspend fun Redis.commandGetKeys(vararg args: Any?): List<String> =
  * @since 2.0.0
  */
 suspend fun Redis.configGet(pattern: String = "*"): Map<String, String> {
-    return commandArrayString("config", "get", pattern).toListOfPairsString().toMap()
+    return executeArrayString("config", "get", pattern).toListOfPairsString().toMap()
 }
 
 /**
@@ -255,7 +255,7 @@ suspend fun Redis.configGet(pattern: String = "*"): Map<String, String> {
  *
  * @since 2.0.0
  */
-suspend fun Redis.configResetStat(): Unit = commandUnit("config", "resetstat")
+suspend fun Redis.configResetStat(): Unit = executeTyped("config", "resetstat")
 
 /**
  * Rewrite the configuration file with the in memory configuration.
@@ -264,7 +264,7 @@ suspend fun Redis.configResetStat(): Unit = commandUnit("config", "resetstat")
  *
  * @since 2.8.0
  */
-suspend fun Redis.configRewrite(): Unit = commandUnit("config", "rewrite")
+suspend fun Redis.configRewrite(): Unit = executeTyped("config", "rewrite")
 
 /**
  * Set a configuration parameter to the given value.
@@ -273,7 +273,7 @@ suspend fun Redis.configRewrite(): Unit = commandUnit("config", "rewrite")
  *
  * @since 2.0.0
  */
-suspend fun Redis.configSet(key: String, value: Any?): Unit = commandUnit("config", "set", key, value)
+suspend fun Redis.configSet(key: String, value: Any?): Unit = executeTyped("config", "set", key, value)
 
 /**
  * Return the number of keys in the selected database.
@@ -282,7 +282,7 @@ suspend fun Redis.configSet(key: String, value: Any?): Unit = commandUnit("confi
  *
  * @since 1.0.0
  */
-suspend fun Redis.dbsize(): Long = commandLong("dbsize")
+suspend fun Redis.dbsize(): Long = executeTyped("dbsize")
 
 /**
  * Get debugging information about a key.
@@ -291,7 +291,7 @@ suspend fun Redis.dbsize(): Long = commandLong("dbsize")
  *
  * @since 1.0.0
  */
-suspend fun Redis.debugObject(key: String): String? = commandString("debug", "object", key)
+suspend fun Redis.debugObject(key: String): String? = executeTypedNull<String>("debug", "object", key)
 
 /**
  * Make the server crash.
@@ -300,7 +300,7 @@ suspend fun Redis.debugObject(key: String): String? = commandString("debug", "ob
  *
  * @since 1.0.0
  */
-suspend fun Redis.debugSegfault(): String? = commandString("debug", "segfault")
+suspend fun Redis.debugSegfault(): String? = executeTypedNull<String>("debug", "segfault")
 
 /**
  * Remove all keys from all databases.
@@ -311,7 +311,7 @@ suspend fun Redis.debugSegfault(): String? = commandString("debug", "segfault")
  * @since 4.0.0 (async)
  */
 suspend fun Redis.flushall(async: Boolean = false) =
-    commandUnit("flushall", *arrayOfNotNull(if (async) "async" else null))
+    executeTyped<Unit>("flushall", *arrayOfNotNull(if (async) "async" else null))
 
 /**
  * Remove all keys from the current database.
@@ -322,7 +322,7 @@ suspend fun Redis.flushall(async: Boolean = false) =
  * @since 4.0.0 (async)
  */
 suspend fun Redis.flushdb(async: Boolean = false) =
-    commandUnit("flushdb", *arrayOfNotNull(if (async) "async" else null))
+    executeTyped<Unit>("flushdb", *arrayOfNotNull(if (async) "async" else null))
 
 /**
  * Get information and statistics about the server.
@@ -331,7 +331,7 @@ suspend fun Redis.flushdb(async: Boolean = false) =
  *
  * @since 1.0.0
  */
-suspend fun Redis.info(section: String? = null) = commandString("info", *arrayOfNotNull(section))
+suspend fun Redis.info(section: String? = null) = executeTypedNull<String>("info", *arrayOfNotNull(section))
 
 /**
  * Get the UNIX time stamp of the last successful save to disk.
@@ -340,7 +340,7 @@ suspend fun Redis.info(section: String? = null) = commandString("info", *arrayOf
  *
  * @since 1.0.0
  */
-suspend fun Redis.lastsave() = Date(commandLong("lastsave") * 1000L)
+suspend fun Redis.lastsave() = Date(executeTyped<Long>("lastsave") * 1000L)
 
 /**
  * Reports about different memory-related issues that the Redis server experiences,
@@ -350,7 +350,7 @@ suspend fun Redis.lastsave() = Date(commandLong("lastsave") * 1000L)
  *
  * @since 4.0.0
  */
-suspend fun Redis.memoryDoctor() = commandString("memory", "doctor")
+suspend fun Redis.memoryDoctor() = executeTypedNull<String>("memory", "doctor")
 
 /**
  * Returns a helpful text describing the different subcommands.
@@ -359,7 +359,7 @@ suspend fun Redis.memoryDoctor() = commandString("memory", "doctor")
  *
  * @since 4.0.0
  */
-suspend fun Redis.memoryHelp() = commandArrayString("memory", "help")
+suspend fun Redis.memoryHelp() = executeArrayString("memory", "help")
 
 /**
  * Provides an internal statistics report from the memory allocator.
@@ -371,7 +371,7 @@ suspend fun Redis.memoryHelp() = commandArrayString("memory", "help")
  *
  * @since 4.0.0
  */
-suspend fun Redis.memoryMallocStats() = commandArrayString("memory", "malloc-stats")
+suspend fun Redis.memoryMallocStats() = executeArrayString("memory", "malloc-stats")
 
 /**
  * Attempts to purge dirty pages so these can be reclaimed by the allocator.
@@ -383,7 +383,7 @@ suspend fun Redis.memoryMallocStats() = commandArrayString("memory", "malloc-sta
  *
  * @since 4.0.0
  */
-suspend fun Redis.memoryPurge() = commandString("memory", "purge")
+suspend fun Redis.memoryPurge() = executeTypedNull<String>("memory", "purge")
 
 /**
  * Returns an Array reply about the memory usage of the server.
@@ -402,7 +402,12 @@ suspend fun Redis.memoryStats(): Any? = executeText("memory", "stats")
  * @since 4.0.0
  */
 suspend fun Redis.memoryUsage(key: String, samplesCount: Long? = null) =
-    commandLong("memory", "usage", key, *(if (samplesCount != null) arrayOf("samples", samplesCount) else arrayOf()))
+    executeTyped<Long>(
+        "memory",
+        "usage",
+        key,
+        *(if (samplesCount != null) arrayOf("samples", samplesCount) else arrayOf())
+    )
 
 // @TODO: This changes the client state too
 /**
@@ -415,7 +420,7 @@ suspend fun Redis.memoryUsage(key: String, samplesCount: Long? = null) =
  * @since 1.0.0
  */
 suspend fun Redis.monitor(): ReceiveChannel<String> {
-    commandUnit("MONITOR")
+    executeTyped<Unit>("MONITOR")
     val stream = Redis.Ex.run { getMessageChannel() }
     return stream.map { it.toString() }
 }
@@ -441,7 +446,7 @@ suspend fun Redis.role(): Any? = executeText("ROLE")
  *
  * @since 1.0.0
  */
-suspend fun Redis.save(): Long = commandLong("SAVE")
+suspend fun Redis.save(): Long = executeTyped("SAVE")
 
 /**
  * Internal command used for replication
@@ -450,7 +455,7 @@ suspend fun Redis.save(): Long = commandLong("SAVE")
  *
  * @since 1.0.0
  */
-suspend fun Redis.sync(): Unit = commandUnit("SYNC")
+suspend fun Redis.sync(): Unit = executeTyped("SYNC")
 
 /**
  * Returns the current server time as a two items lists: a Unix timestamp and the
@@ -462,7 +467,7 @@ suspend fun Redis.sync(): Unit = commandUnit("SYNC")
  * @since 2.6.0
  */
 suspend fun Redis.time(): Pair<Date, Long> {
-    val res = commandArrayString("TIME")
+    val res = executeArrayString("TIME")
     val unixSeconds = res.getOrElse(0) { "0" }.toLong()
     val microSeconds = res.getOrElse(1) { "0" }.toLong()
     return Date(unixSeconds * 1000L + (microSeconds / 1000L)) to (microSeconds % 1000L)
@@ -475,7 +480,7 @@ suspend fun Redis.time(): Pair<Date, Long> {
  *
  * @since 1.0.0
  */
-suspend fun Redis.shutdown(save: Boolean = true): Unit = commandUnit("SHUTDOWN", if (save) "SAVE" else "NOSAVE")
+suspend fun Redis.shutdown(save: Boolean = true): Unit = executeTyped("SHUTDOWN", if (save) "SAVE" else "NOSAVE")
 
 /**
  * Make the server a slave of another instance, or promote it as master.
@@ -484,7 +489,7 @@ suspend fun Redis.shutdown(save: Boolean = true): Unit = commandUnit("SHUTDOWN",
  *
  * @since 1.0.0
  */
-suspend fun Redis.slaveof(host: String, port: Int): Unit = commandUnit("SLAVEOF", host, port)
+suspend fun Redis.slaveof(host: String, port: Int): Unit = executeTyped("SLAVEOF", host, port)
 
 /**
  * Manages the Redis slow queries log.
