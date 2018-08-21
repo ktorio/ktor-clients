@@ -9,7 +9,7 @@ import kotlinx.coroutines.experimental.channels.*
  *
  * @since 2.0.0
  */
-suspend fun Redis.hdel(key: String, field: String): Boolean = commandBool("hdel", key, field)
+suspend fun Redis.hdel(key: String, field: String): Boolean = commandBool("HDEL", key, field)
 
 /**
  * Delete one or more hash fields
@@ -18,7 +18,7 @@ suspend fun Redis.hdel(key: String, field: String): Boolean = commandBool("hdel"
  *
  * @since 2.4.0
  */
-suspend fun Redis.hdel(key: String, field: String, vararg fields: String): Long = commandLong("hdel", key, field, *fields)
+suspend fun Redis.hdel(key: String, field: String, vararg fields: String): Long = commandLong("HDEL", key, field, *fields)
 
 /**
  * Determine if a hash field exists
@@ -27,7 +27,7 @@ suspend fun Redis.hdel(key: String, field: String, vararg fields: String): Long 
  *
  * @since 2.0.0
  */
-suspend fun Redis.hexists(key: String, field: String): Boolean = commandBool("hexists", key, field)
+suspend fun Redis.hexists(key: String, field: String): Boolean = commandBool("HEXISTS", key, field)
 
 /**
  * Get the value of a hash field
@@ -36,7 +36,7 @@ suspend fun Redis.hexists(key: String, field: String): Boolean = commandBool("he
  *
  * @since 2.0.0
  */
-suspend fun Redis.hget(key: String, field: String): String? = commandString("hget", key, field)
+suspend fun Redis.hget(key: String, field: String): String? = commandString("HGET", key, field)
 
 /**
  * Get all the fields and values in a hash
@@ -45,7 +45,7 @@ suspend fun Redis.hget(key: String, field: String): String? = commandString("hge
  *
  * @since 2.0.0
  */
-suspend fun Redis.hgetall(key: String): Map<String, String> = commandArrayString("hgetall", key).listOfPairsToMap()
+suspend fun Redis.hgetall(key: String): Map<String, String> = commandArrayString("HGETALL", key).listOfPairsToMap()
 
 /**
  * Increment the integer value of a hash field by the given number
@@ -55,7 +55,7 @@ suspend fun Redis.hgetall(key: String): Map<String, String> = commandArrayString
  * @since 2.0.0
  */
 suspend fun Redis.hincrby(key: String, field: String, increment: Long): Long =
-    commandLong("hincrby", key, field, "$increment")
+    commandLong("HINCRBY", key, field, "$increment")
 
 /**
  * Increment the float value of a hash field by the given amount
@@ -65,7 +65,7 @@ suspend fun Redis.hincrby(key: String, field: String, increment: Long): Long =
  * @since 2.0.0
  */
 suspend fun Redis.hincrbyfloat(key: String, field: String, increment: Double): Double =
-    commandDouble("hincrbyfloat", key, field, "$increment")
+    commandDouble("HINCRBYFLOAT", key, field, "$increment")
 
 /**
  * Get all the fields in a hash
@@ -74,7 +74,7 @@ suspend fun Redis.hincrbyfloat(key: String, field: String, increment: Double): D
  *
  * @since 2.0.0
  */
-suspend fun Redis.hkeys(key: String): Set<String> = commandArrayString("hkeys", key).toSet()
+suspend fun Redis.hkeys(key: String): Set<String> = commandArrayString("HKEYS", key).toSet()
 
 /**
  * Get the number of fields in a hash
@@ -83,7 +83,7 @@ suspend fun Redis.hkeys(key: String): Set<String> = commandArrayString("hkeys", 
  *
  * @since 2.0.0
  */
-suspend fun Redis.hlen(key: String): Long = commandLong("hlen", key)
+suspend fun Redis.hlen(key: String): Long = commandLong("HLEN", key)
 
 /**
  * Get the values of all the given hash fields
@@ -92,7 +92,7 @@ suspend fun Redis.hlen(key: String): Long = commandLong("hlen", key)
  *
  * @since 2.0.0
  */
-suspend fun Redis.hmget(key: String, vararg fields: String): List<String> = if (fields.isNotEmpty()) commandArrayString("hmget", key, *fields) else listOf()
+suspend fun Redis.hmget(key: String, vararg fields: String): List<String> = if (fields.isNotEmpty()) commandArrayString("HMGET", key, *fields) else listOf()
 
 /**
  * Set multiple hash fields to multiple values
@@ -101,7 +101,7 @@ suspend fun Redis.hmget(key: String, vararg fields: String): List<String> = if (
  *
  * @since 2.0.0
  */
-suspend fun Redis.hmset(key: String, vararg pairs: Pair<String, String>) = if (pairs.isNotEmpty()) commandUnit("hmset", key, *pairs.flatMap { listOf(it.first, it.second) }.toTypedArray()) else Unit
+suspend fun Redis.hmset(key: String, vararg pairs: Pair<String, String>) = if (pairs.isNotEmpty()) commandUnit("HMSET", key, *pairs.flatMap { listOf(it.first, it.second) }.toTypedArray()) else Unit
 
 /**
  * Set multiple hash fields to multiple values
@@ -119,7 +119,7 @@ suspend fun Redis.hmset(key: String, map: Map<String, String>) = hmset(key, *map
  *
  * @since 2.0.0
  */
-suspend fun Redis.hset(key: String, field: String, value: String): Boolean = commandBool("hset", key, field, value)
+suspend fun Redis.hset(key: String, field: String, value: String): Boolean = commandBool("HSET", key, field, value)
 
 /**
  * Set the string value of a hash field
@@ -139,7 +139,7 @@ suspend fun Redis.hset(key: String, vararg pairs: Pair<String, String>): Int {
  *
  * @since 2.0.0
  */
-suspend fun Redis.hsetnx(key: String, field: String, value: String): Boolean = commandBool("hsetnx", key, field, value)
+suspend fun Redis.hsetnx(key: String, field: String, value: String): Boolean = commandBool("HSETNX", key, field, value)
 
 /**
  * Get the length of the value of a hash field
@@ -148,7 +148,7 @@ suspend fun Redis.hsetnx(key: String, field: String, value: String): Boolean = c
  *
  * @since 3.2.0
  */
-suspend fun Redis.hstrlen(key: String, field: String): Long = commandLong("hstrlen", key, field)
+suspend fun Redis.hstrlen(key: String, field: String): Long = commandLong("HSTRLEN", key, field)
 
 /**
  * Get all the values in a hash
@@ -157,7 +157,7 @@ suspend fun Redis.hstrlen(key: String, field: String): Long = commandLong("hstrl
  *
  * @since 2.0.0
  */
-suspend fun Redis.hvals(key: String): Set<String> = commandArrayString("hvals", key).toSet()
+suspend fun Redis.hvals(key: String): Set<String> = commandArrayString("HVALS", key).toSet()
 
 /**
  * Incrementally iterate hash fields and associated values
@@ -167,4 +167,4 @@ suspend fun Redis.hvals(key: String): Set<String> = commandArrayString("hvals", 
  * @since 2.8.0
  */
 suspend fun Redis.hscan(key: String, pattern: String? = null): ReceiveChannel<Pair<String, String>> =
-    _scanBasePairs("hscan", key, pattern)
+    _scanBasePairs("HSCAN", key, pattern)

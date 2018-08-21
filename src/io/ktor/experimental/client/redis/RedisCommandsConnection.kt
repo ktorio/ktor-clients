@@ -7,7 +7,7 @@ package io.ktor.experimental.client.redis
  *
  * @since 1.0.0
  */
-suspend fun Redis.auth(password: String) = commandString("auth", password)
+suspend fun Redis.auth(password: String) = commandString("AUTH", password)
 
 /**
  * Echo the given string
@@ -16,7 +16,7 @@ suspend fun Redis.auth(password: String) = commandString("auth", password)
  *
  * @since 1.0.0
  */
-suspend fun Redis.echo(msg: String) = commandString("echo", msg)
+suspend fun Redis.echo(msg: String) = commandString("ECHO", msg)
 
 /**
  * Ping the server
@@ -25,7 +25,7 @@ suspend fun Redis.echo(msg: String) = commandString("echo", msg)
  *
  * @since 1.0.0
  */
-suspend fun Redis.ping(msg: String) = commandString("ping", msg)
+suspend fun Redis.ping(msg: String) = commandString("PING", msg)
 
 /**
  * Ping the server
@@ -34,7 +34,7 @@ suspend fun Redis.ping(msg: String) = commandString("ping", msg)
  *
  * @since 1.0.0
  */
-suspend fun Redis.ping(): String? = commandString("ping")
+suspend fun Redis.ping(): String? = commandString("PING")
 
 /**
  * Change the selected database for the current connection
@@ -43,7 +43,7 @@ suspend fun Redis.ping(): String? = commandString("ping")
  *
  * @since 1.0.0
  */
-suspend fun Redis.select(db: Int): Redis = this.apply { commandString("select", db) }
+suspend fun Redis.select(db: Int): Redis = this.apply { commandString("SELECT", db) }
 
 /**
  * This command swaps two Redis databases, so that immediately all the clients connected
@@ -53,7 +53,7 @@ suspend fun Redis.select(db: Int): Redis = this.apply { commandString("select", 
  *
  * @since 4.0.0
  */
-suspend fun Redis.swapdb(db1: Int, db2: Int) = this.apply { commandString("swapdb", db1, db2) }
+suspend fun Redis.swapdb(db1: Int, db2: Int) = this.apply { commandString("SWAPDB", db1, db2) }
 
 /**
  * Close the connection
@@ -62,4 +62,4 @@ suspend fun Redis.swapdb(db1: Int, db2: Int) = this.apply { commandString("swapd
  *
  * @since 1.0.0
  */
-suspend fun Redis.quit() = commandUnit("quit")
+suspend fun Redis.quit() = commandUnit("QUIT")

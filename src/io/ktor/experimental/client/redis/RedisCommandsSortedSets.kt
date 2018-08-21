@@ -8,7 +8,7 @@ data class RedisBzPopResult(val key: String, val member: String, val score: Doub
  * @since 5.0.0
  */
 suspend fun Redis.bzpopmax(vararg keys: String, timeout: Long = 0): RedisBzPopResult? {
-    val parts = commandArrayString("bzpopmax", *keys, timeout)
+    val parts = commandArrayString("BZPOPMAX", *keys, timeout)
     return if (parts.size >= 3) RedisBzPopResult(parts[0], parts[2], parts[1].toDouble()) else null
 }
 
@@ -16,7 +16,7 @@ suspend fun Redis.bzpopmax(vararg keys: String, timeout: Long = 0): RedisBzPopRe
  * @since 5.0.0
  */
 suspend fun Redis.bzpopmin(vararg keys: String, timeout: Long = 0): RedisBzPopResult? {
-    val parts = commandArrayString("bzpopmax", *keys, timeout)
+    val parts = commandArrayString("BZPOPMAX", *keys, timeout)
     return if (parts.size >= 3) RedisBzPopResult(parts[0], parts[2], parts[1].toDouble()) else null
 }
 
@@ -33,7 +33,7 @@ suspend fun Redis.zadd(key: String, vararg scores: Pair<String, Double>): Long {
         args += score.second
         args += score.first
     }
-    return commandLong("zadd", key, *args.toTypedArray())
+    return commandLong("ZADD", key, *args.toTypedArray())
 }
 
 /**
@@ -53,7 +53,7 @@ suspend fun Redis.zadd(key: String, scores: Map<String, Double>): Long =
  *
  * @since 1.2.0
  */
-suspend fun Redis.zadd(key: String, member: String, score: Double): Long = commandLong("zadd", key, score, member)
+suspend fun Redis.zadd(key: String, member: String, score: Double): Long = commandLong("ZADD", key, score, member)
 
 /**
  * Get the number of members in a sorted set
@@ -62,7 +62,7 @@ suspend fun Redis.zadd(key: String, member: String, score: Double): Long = comma
  *
  * @since 1.2.0
  */
-suspend fun Redis.zcard(key: String): Long = commandLong("zcard", key)
+suspend fun Redis.zcard(key: String): Long = commandLong("ZCARD", key)
 
 /**
  * Count the members in a sorted set with scores within the given values
@@ -77,7 +77,7 @@ suspend fun Redis.zcount(
     max: Double = Double.POSITIVE_INFINITY,
     includeMin: Boolean = true,
     includeMax: Boolean = true
-): Long = commandLong("zcount", key, min.toRedisRange(includeMin), max.toRedisRange(includeMax))
+): Long = commandLong("ZCOUNT", key, min.toRedisRange(includeMin), max.toRedisRange(includeMax))
 
 /**
  * Increment the score of a member in a sorted set
@@ -87,7 +87,7 @@ suspend fun Redis.zcount(
  * @since 1.2.0
  */
 suspend fun Redis.zincrby(key: String, member: String, increment: Double) =
-    commandString("zincrby", key, increment, member)!!
+    commandString("ZINCRBY", key, increment, member)!!
 
 /**
  * Count the number of members in a sorted set between a given lexicographical range
@@ -96,7 +96,7 @@ suspend fun Redis.zincrby(key: String, member: String, increment: Double) =
  *
  * @since 2.8.9
  */
-suspend fun Redis.zlexcount(key: String, min: String, max: String): Long = commandLong("zlexcount", key, min, max)
+suspend fun Redis.zlexcount(key: String, min: String, max: String): Long = commandLong("ZLEXCOUNT", key, min, max)
 
 /**
  * Removes and returns up to count members with the highest scores in the sorted set stored at key.
@@ -106,7 +106,7 @@ suspend fun Redis.zlexcount(key: String, min: String, max: String): Long = comma
  * @since 5.0.0
  */
 suspend fun Redis.zpopmax(key: String, count: Long = 1): Map<String, Double> =
-    commandArrayString("zpopmax", key, count).listOfPairsToMap().map { it.value to it.key.toDouble() }.toMap()
+    commandArrayString("ZPOPMAX", key, count).listOfPairsToMap().map { it.value to it.key.toDouble() }.toMap()
 
 /**
  * Removes and returns up to count members with the lowest scores in the sorted set stored at key.
@@ -116,7 +116,7 @@ suspend fun Redis.zpopmax(key: String, count: Long = 1): Map<String, Double> =
  * @since 5.0.0
  */
 suspend fun Redis.zpopmin(key: String, count: Long = 1): Map<String, Double> =
-    commandArrayString("zpopmin", key, count).listOfPairsToMap().map { it.value to it.key.toDouble() }.toMap()
+    commandArrayString("ZPOPMIN", key, count).listOfPairsToMap().map { it.value to it.key.toDouble() }.toMap()
 
 /**
  * Return a range of members in a sorted set, by index
@@ -126,7 +126,7 @@ suspend fun Redis.zpopmin(key: String, count: Long = 1): Map<String, Double> =
  * @since 1.2.0
  */
 suspend fun Redis.zrange(key: String, start: Long, stop: Long): Map<String, Double> =
-    commandArrayString("zrange", key, start, stop, "WITHSCORES").listOfPairsToMap()
+    commandArrayString("ZRANGE", key, start, stop, "WITHSCORES").listOfPairsToMap()
         .mapValues { it.value.toDouble() }
 
 /**
@@ -142,7 +142,7 @@ suspend fun Redis.zgetall(key: String): Map<String, Double> = zrange(key, 0L, In
  * @since 2.8.9
  */
 suspend fun Redis.zrangebylex(key: String, min: String, max: String, limit: LongRange? = null): List<String> =
-    commandArrayString(*arrayOf("zrangebylex", key, min, max) + (if (limit != null) arrayOf("LIMIT", "${limit.start}", "${limit.endInclusive - limit.start + 1}") else arrayOf()))
+    commandArrayString(*arrayOf("ZRANGEBYLEX", key, min, max) + (if (limit != null) arrayOf("LIMIT", "${limit.start}", "${limit.endInclusive - limit.start + 1}") else arrayOf()))
 
 /**
  * Return a range of members in a sorted set, by score
@@ -152,7 +152,7 @@ suspend fun Redis.zrangebylex(key: String, min: String, max: String, limit: Long
  * @since 1.0.5
  */
 suspend fun Redis.zrangebyscore(key: String, min: Double, max: Double, limit: LongRange? = null): Map<String, Double> =
-    commandArrayString(*arrayOf("zrangebyscore", key, min.toRedisString(), min.toRedisString(), "WITHSCORES") + (if (limit != null) arrayOf("LIMIT", "${limit.start}", "${limit.endInclusive - limit.start + 1}") else arrayOf()))
+    commandArrayString(*arrayOf("ZRANGEBYSCORE", key, min.toRedisString(), min.toRedisString(), "WITHSCORES") + (if (limit != null) arrayOf("LIMIT", "${limit.start}", "${limit.endInclusive - limit.start + 1}") else arrayOf()))
         .listOfPairsToMap()
         .mapValues { it.value.toDouble() }
 
@@ -164,7 +164,7 @@ suspend fun Redis.zrangebyscore(key: String, min: Double, max: Double, limit: Lo
  *
  * @since 2.0.0
  */
-suspend fun Redis.zrank(key: String, member: String): Long = commandLong("zrank", key, member)
+suspend fun Redis.zrank(key: String, member: String): Long = commandLong("ZRANK", key, member)
 
 /**
  * Remove one or more members from a sorted set
@@ -173,7 +173,7 @@ suspend fun Redis.zrank(key: String, member: String): Long = commandLong("zrank"
  *
  * @since 1.2.0
  */
-suspend fun Redis.zrem(key: String, member: String): Boolean = commandBool("zrem", key, member)
+suspend fun Redis.zrem(key: String, member: String): Boolean = commandBool("ZREM", key, member)
 
 /**
  * Remove one or more members from a sorted set
@@ -183,7 +183,7 @@ suspend fun Redis.zrem(key: String, member: String): Boolean = commandBool("zrem
  * @since 1.2.0
  */
 suspend fun Redis.zrem(key: String, vararg members: String): Map<String, Double> =
-    commandArrayString("zrem", *members).toListOfPairsString().map { it.first to it.second.toDouble() }.toMap()
+    commandArrayString("ZREM", *members).toListOfPairsString().map { it.first to it.second.toDouble() }.toMap()
 
 /**
  * Remove all members in a sorted set between the given lexicographical range
@@ -193,7 +193,7 @@ suspend fun Redis.zrem(key: String, vararg members: String): Map<String, Double>
  * @since 2.8.9
  */
 suspend fun Redis.zremrangebylex(key: String, min: String, max: String): Long =
-    commandLong("zremrangebylex", key, min ,max)
+    commandLong("ZREMRANGEBYLEX", key, min ,max)
 
 /**
  * Remove all members in a sorted set within the given indexes
@@ -203,7 +203,7 @@ suspend fun Redis.zremrangebylex(key: String, min: String, max: String): Long =
  * @since 2.8.9
  */
 suspend fun Redis.zremrangebyrank(key: String, start: Long, stop: Long): Long =
-    commandLong("zremrangebyrank", key, start, stop)
+    commandLong("ZREMRANGEBYRANK", key, start, stop)
 
 /**
  * Remove all members in a sorted set within the given scores
@@ -213,7 +213,7 @@ suspend fun Redis.zremrangebyrank(key: String, start: Long, stop: Long): Long =
  * @since 1.2.0
  */
 suspend fun Redis.zremrangebyscore(key: String, min: Double, max: Double): Long =
-    commandLong("zremrangebyscore", key, min.toRedisString(), max.toRedisString())
+    commandLong("ZREMRANGEBYSCORE", key, min.toRedisString(), max.toRedisString())
 
 /**
  * Return a range of members in a sorted set, by index, with scores ordered from high to low (with scores)
@@ -223,7 +223,7 @@ suspend fun Redis.zremrangebyscore(key: String, min: Double, max: Double): Long 
  * @since 1.2.0
  */
 suspend fun Redis.zrevrange(key: String, start: Long, stop: Long): Map<String, Double> =
-    commandArrayString("zrevrange", key, start, stop, "WITHSCORES").listOfPairsToMap()
+    commandArrayString("ZREVRANGE", key, start, stop, "WITHSCORES").listOfPairsToMap()
         .mapValues { it.value.toDouble() }
 
 /**
@@ -234,7 +234,7 @@ suspend fun Redis.zrevrange(key: String, start: Long, stop: Long): Map<String, D
  * @since 2.8.9
  */
 suspend fun Redis.zrevrangebylex(key: String, min: String, max: String, limit: LongRange? = null): List<String> =
-    commandArrayString(*arrayOf("zrevrangebylex", key, min, max) + (if (limit != null) arrayOf("LIMIT", "${limit.start}", "${limit.endInclusive - limit.start + 1}") else arrayOf()))
+    commandArrayString(*arrayOf("ZREVRANGEBYLEX", key, min, max) + (if (limit != null) arrayOf("LIMIT", "${limit.start}", "${limit.endInclusive - limit.start + 1}") else arrayOf()))
 
 /**
  * Return a range of members in a sorted set, by score, with scores ordered from high to low
@@ -244,7 +244,7 @@ suspend fun Redis.zrevrangebylex(key: String, min: String, max: String, limit: L
  * @since 2.2.0
  */
 suspend fun Redis.zrevrangebyscore(key: String, min: Double, max: Double, limit: LongRange? = null): Map<String, Double> =
-    commandArrayString(*arrayOf("zrevrangebyscore", key, min.toRedisString(), min.toRedisString(), "WITHSCORES") + (if (limit != null) arrayOf("LIMIT", "${limit.start}", "${limit.endInclusive - limit.start + 1}") else arrayOf()))
+    commandArrayString(*arrayOf("ZREVRANGEBYSCORE", key, min.toRedisString(), min.toRedisString(), "WITHSCORES") + (if (limit != null) arrayOf("LIMIT", "${limit.start}", "${limit.endInclusive - limit.start + 1}") else arrayOf()))
         .listOfPairsToMap()
         .mapValues { it.value.toDouble() }
 /**
@@ -254,7 +254,7 @@ suspend fun Redis.zrevrangebyscore(key: String, min: Double, max: Double, limit:
  *
  * @since 2.0.0
  */
-suspend fun Redis.zrevrank(key: String, member: String): Long = commandLong("zrevrank", key, member)
+suspend fun Redis.zrevrank(key: String, member: String): Long = commandLong("ZREVRANK", key, member)
 
 /**
  * Incrementally iterate sorted sets elements and associated scores
@@ -263,7 +263,7 @@ suspend fun Redis.zrevrank(key: String, member: String): Long = commandLong("zre
  *
  * @since 2.8.0
  */
-suspend fun Redis.zscan(key: String, pattern: String? = null): ReceiveChannel<Pair<String, Double>> = _scanBasePairs("zscan", key, pattern).map { it.first to it.second.toDouble() }
+suspend fun Redis.zscan(key: String, pattern: String? = null): ReceiveChannel<Pair<String, Double>> = _scanBasePairs("ZSCAN", key, pattern).map { it.first to it.second.toDouble() }
 
 /**
  * Get the score associated with the given member in a sorted set
@@ -272,7 +272,7 @@ suspend fun Redis.zscan(key: String, pattern: String? = null): ReceiveChannel<Pa
  *
  * @since 1.2.0
  */
-suspend fun Redis.zscore(key: String, member: String): Double = commandDouble("zscore", key, member)
+suspend fun Redis.zscore(key: String, member: String): Double = commandDouble("ZSCORE", key, member)
 
 /**
  * Intersect multiple sorted sets and store the resulting sorted set in a new key

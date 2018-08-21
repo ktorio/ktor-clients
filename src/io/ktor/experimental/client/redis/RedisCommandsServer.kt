@@ -431,7 +431,7 @@ suspend fun Redis.monitor(): ReceiveChannel<String> {
  *
  * @since 2.8.12
  */
-suspend fun Redis.role(): Any? = executeText("role")
+suspend fun Redis.role(): Any? = executeText("ROLE")
 
 /**
  * Performs a synchronous save of the dataset producing a point in time snapshot of all the data inside
@@ -441,7 +441,7 @@ suspend fun Redis.role(): Any? = executeText("role")
  *
  * @since 1.0.0
  */
-suspend fun Redis.save(): Long = commandLong("save")
+suspend fun Redis.save(): Long = commandLong("SAVE")
 
 /**
  * Internal command used for replication
@@ -450,7 +450,7 @@ suspend fun Redis.save(): Long = commandLong("save")
  *
  * @since 1.0.0
  */
-suspend fun Redis.sync(): Unit = commandUnit("sync")
+suspend fun Redis.sync(): Unit = commandUnit("SYNC")
 
 /**
  * Returns the current server time as a two items lists: a Unix timestamp and the
@@ -462,7 +462,7 @@ suspend fun Redis.sync(): Unit = commandUnit("sync")
  * @since 2.6.0
  */
 suspend fun Redis.time(): Pair<Date, Long> {
-    val res = commandArrayString("time")
+    val res = commandArrayString("TIME")
     val unixSeconds = res.getOrElse(0) { "0" }.toLong()
     val microSeconds = res.getOrElse(1) { "0" }.toLong()
     return Date(unixSeconds * 1000L + (microSeconds / 1000L)) to (microSeconds % 1000L)
@@ -475,7 +475,7 @@ suspend fun Redis.time(): Pair<Date, Long> {
  *
  * @since 1.0.0
  */
-suspend fun Redis.shutdown(save: Boolean = true): Unit = commandUnit("shutdown", if (save) "save" else "nosave")
+suspend fun Redis.shutdown(save: Boolean = true): Unit = commandUnit("SHUTDOWN", if (save) "SAVE" else "NOSAVE")
 
 /**
  * Make the server a slave of another instance, or promote it as master.
@@ -484,7 +484,7 @@ suspend fun Redis.shutdown(save: Boolean = true): Unit = commandUnit("shutdown",
  *
  * @since 1.0.0
  */
-suspend fun Redis.slaveof(host: String, port: Int): Unit = commandUnit("slaveof", host, port)
+suspend fun Redis.slaveof(host: String, port: Int): Unit = commandUnit("SLAVEOF", host, port)
 
 /**
  * Manages the Redis slow queries log.
@@ -493,4 +493,4 @@ suspend fun Redis.slaveof(host: String, port: Int): Unit = commandUnit("slaveof"
  *
  * @since 2.2.12
  */
-suspend fun Redis.slowlog(subcommand: String, vararg args: Any?): Any? = executeText("slowlog", subcommand, *args)
+suspend fun Redis.slowlog(subcommand: String, vararg args: Any?): Any? = executeText("SLOWLOG", subcommand, *args)

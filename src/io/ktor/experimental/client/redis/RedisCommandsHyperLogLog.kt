@@ -7,7 +7,7 @@ package io.ktor.experimental.client.redis
  *
  * @since 2.8.9
  */
-suspend fun Redis.pfadd(key: String, vararg elements: String): Long = commandLong("pfadd", key, *elements)
+suspend fun Redis.pfadd(key: String, vararg elements: String): Long = commandLong("PFADD", key, *elements)
 
 /**
  * Return the approximated cardinality of the set(s) observed by the HyperLogLog at key(s).
@@ -16,7 +16,7 @@ suspend fun Redis.pfadd(key: String, vararg elements: String): Long = commandLon
  *
  * @since 2.8.9
  */
-suspend fun Redis.pfcount(vararg keys: String): Long = commandLong("pfcount", *keys)
+suspend fun Redis.pfcount(vararg keys: String): Long = commandLong("PFCOUNT", *keys)
 
 /**
  * Merge N different HyperLogLogs into a single one.
@@ -25,4 +25,4 @@ suspend fun Redis.pfcount(vararg keys: String): Long = commandLong("pfcount", *k
  *
  * @since 2.8.9
  */
-suspend fun Redis.pfmerge(destKey: String, vararg sourceKeys: String): Unit = commandUnit("pfmerge", destKey, *sourceKeys)
+suspend fun Redis.pfmerge(destKey: String, vararg sourceKeys: String): Unit = commandUnit("PFMERGE", destKey, *sourceKeys)
