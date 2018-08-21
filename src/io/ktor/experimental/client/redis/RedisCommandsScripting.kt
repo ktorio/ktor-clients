@@ -84,12 +84,8 @@ enum class RedisScriptDebug { Yes, Sync, No }
  *
  * @since 3.2.0
  */
-suspend fun Redis.scriptDebug(kind: RedisScriptDebug): String = this.executeTypedNull<String>(
-    "SCRIPT",
-    "DEBUG",
-    kind.name.toUpperCase()
-)
-        ?: ""
+suspend fun Redis.scriptDebug(kind: RedisScriptDebug): String =
+    this.executeTypedNull<String>("SCRIPT", "DEBUG", kind.name.toUpperCase()) ?: ""
 
 /**
  * Check existence of scripts in the script cache.

@@ -10,7 +10,7 @@ package io.ktor.experimental.client.redis
  *
  * @since 2.0.0
  */
-suspend fun Redis.discard() = executeTyped<Unit>("DISCARD")
+suspend fun Redis.discard(): Unit = executeTyped("DISCARD")
 
 /**
  * Execute all commands issued after MULTI
@@ -19,7 +19,7 @@ suspend fun Redis.discard() = executeTyped<Unit>("DISCARD")
  *
  * @since 1.2.0
  */
-suspend fun Redis.exec() = executeTyped<Unit>("EXEC")
+suspend fun Redis.exec(): Unit = executeTyped("EXEC")
 
 /**
  * Mark the start of a transaction block
@@ -28,7 +28,7 @@ suspend fun Redis.exec() = executeTyped<Unit>("EXEC")
  *
  * @since 1.2.0
  */
-suspend fun Redis.multi() = executeTyped<Unit>("MULTI")
+suspend fun Redis.multi(): Unit = executeTyped("MULTI")
 
 /**
  * Forget about all watched keys
@@ -37,7 +37,7 @@ suspend fun Redis.multi() = executeTyped<Unit>("MULTI")
  *
  * @since 2.2.0
  */
-suspend fun Redis.unwatch() = executeTyped<Unit>("UNWATCH")
+suspend fun Redis.unwatch(): Unit = executeTyped("UNWATCH")
 
 /**
  * Watch the given keys to determine execution of the MULTI/EXEC block
@@ -46,7 +46,7 @@ suspend fun Redis.unwatch() = executeTyped<Unit>("UNWATCH")
  *
  * @since 2.2.0
  */
-suspend fun Redis.watch(vararg keys: String) = executeTyped<Unit>("WATCH", *keys)
+suspend fun Redis.watch(vararg keys: String): Unit = executeTyped("WATCH", *keys)
 
 /**
  * Executes a transaction.

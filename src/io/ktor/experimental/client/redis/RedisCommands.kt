@@ -2,6 +2,7 @@ package io.ktor.experimental.client.redis
 
 import kotlinx.coroutines.experimental.*
 import kotlinx.coroutines.experimental.channels.*
+import kotlin.reflect.*
 
 enum class SortDirection { ASC, DESC }
 
@@ -23,7 +24,9 @@ suspend fun Redis.executeArrayStringNull(vararg args: Any?): List<String?> =
 suspend fun Redis.executeArrayLong(vararg args: Any?): List<Long> =
     (executeText(*args) as List<Long>?) ?: listOf()
 
-suspend inline fun <reified T> Redis.executeTypedNull(vararg args: Any?): T? = when (T::class) {
+// @TODO: Kotlin-JVM doesn't resolve when when inlining, so do not inline it
+@Suppress("UNCHECKED_CAST")
+suspend fun <T : Any> Redis.executeTypedNull(vararg args: Any?, clazz: KClass<T>): T? = when (clazz) {
     Boolean::class -> ((executeText(*args)?.toString()?.toLongOrNull() ?: 0L) != 0L) as T?
     Unit::class -> run { executeText(*args); Unit as T? }
     Any::class -> run { executeText(*args) as T? }
@@ -35,7 +38,9 @@ suspend inline fun <reified T> Redis.executeTypedNull(vararg args: Any?): T? = w
     else -> error("Unsupported type")
 }
 
-suspend inline fun <reified T> Redis.executeTyped(vararg args: Any?): T = when (T::class) {
+// @TODO: Kotlin-JVM doesn't resolve when when inlining, so do not inline it
+@Suppress("UNCHECKED_CAST")
+suspend fun <T : Any> Redis.executeTyped(vararg args: Any?, clazz: KClass<T>): T = when (clazz) {
     Boolean::class -> ((executeText(*args)?.toString()?.toLongOrNull() ?: 0L) != 0L) as T
     Unit::class -> run { executeText(*args); Unit as T }
     Any::class -> run { (executeText(*args) ?: Unit) as T }
@@ -47,11 +52,15 @@ suspend inline fun <reified T> Redis.executeTyped(vararg args: Any?): T = when (
     else -> error("Unsupported type")
 }
 
-suspend inline fun <reified T> Redis.executeBuildNull(
+suspend inline fun <reified T : Any> Redis.executeTypedNull(vararg args: Any?): T? = executeTypedNull(*args, clazz = T::class)
+
+suspend inline fun <reified T : Any> Redis.executeTyped(vararg args: Any?): T = executeTyped(*args, clazz = T::class)
+
+suspend inline fun <reified T : Any> Redis.executeBuildNull(
     initialCapacity: Int = 16, callback: ArrayList<Any?>.() -> Unit
 ): T? = executeTypedNull(*ArrayList<Any?>(initialCapacity).apply(callback).toTypedArray())
 
-suspend inline fun <reified T> Redis.executeBuildNotNull(
+suspend inline fun <reified T : Any> Redis.executeBuildNotNull(
     initialCapacity: Int = 16, callback: ArrayList<Any?>.() -> Unit
 ): T = executeTyped(*ArrayList<Any?>(initialCapacity).apply(callback).toTypedArray())
 
