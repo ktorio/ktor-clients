@@ -51,7 +51,7 @@ suspend inline fun <reified T> Redis.commandAny(vararg args: Any?): T? = when (T
     Double::class -> executeText(*args)?.toString()?.toDoubleOrNull() as T?
     Int::class -> executeText(*args)?.toString()?.toIntOrNull() as T?
     Long::class -> executeText(*args)?.toString()?.toLongOrNull() as T?
-    ByteArray::class -> execute(*args) as? T?
+    ByteArray::class -> executeBinary(*args) as? T?
     else -> error("Unsupported type")
 }
 
