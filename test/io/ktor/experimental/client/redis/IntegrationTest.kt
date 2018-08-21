@@ -522,20 +522,6 @@ class IntegrationTest {
             expectException<RedisException>("ERR no such key processing 'RENAME'") { rename(key1, key2) }
         }
 
-        // @TODO: Not working yet: "ERR DUMP payload version or checksum are wrong"
-        // dump/restore
-        //run {
-        //    val mykey = "mykey"
-        //    val myvalue = "10"
-        //    set(mykey, myvalue)
-        //    val mykeyDump = dump(mykey)
-        //    println(mykeyDump!!.size)
-        //    expectException<RedisException>("BUSYKEY Target key name already exists.") { restore(mykey, mykeyDump) }
-        //    del(mykey)
-        //    assertEquals("OK", restore(mykey, mykeyDump))
-        //    assertEquals(value1, get(mykey))
-        //}
-
         // object
         run {
             del("mylist")
@@ -545,6 +531,24 @@ class IntegrationTest {
             assertEquals(0L, objectIdletime("mylist"))
             // assertEquals(0L, objectFreq("mylist")) // Requires LFU: ERR An LFU maxmemory policy is not selected, access frequency not tracked. Please note that when switching between policies at runtime LRU and LFU data will take some time to adjust.
             assertTrue(objectHelp()!!.isNotBlank())
+        }
+    }
+
+    @Test
+    fun testDumpRestore() = redisTest {
+        // dump/restore
+        run {
+            val mykey = "mykey"
+            val myvalue = "10"
+            set(mykey, myvalue)
+            val mykeyDump = dump(mykey)
+            println(mykeyDump!!.size)
+            expectException<RedisException>("BUSYKEY Target key name already exists. processing 'RESTORE'") {
+                restore(mykey, mykeyDump)
+            }
+            del(mykey)
+            assertEquals("OK", restore(mykey, mykeyDump))
+            assertEquals(myvalue, get(mykey))
         }
     }
 

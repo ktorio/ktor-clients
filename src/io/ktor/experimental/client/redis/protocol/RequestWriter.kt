@@ -13,8 +13,8 @@ internal fun BytePacketBuilder.writeRedisValue(
 ): Unit = when {
     value is List<*> -> writeListValue(value, forceBulk, charset)
     value is Array<*> -> writeArrayValue(value, forceBulk, charset)
-    forceBulk -> writeBulk(value, charset)
     value is ByteArray -> writeByteArray(value)
+    forceBulk -> writeBulk(value, charset)
     value is String -> writeString(value, charset)
     value is Int || value is Long -> writeIntegral(value)
     value == null -> writeNull()
