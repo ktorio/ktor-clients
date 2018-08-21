@@ -7,7 +7,7 @@ package io.ktor.experimental.client.redis
  *
  * @since 2.0.0
  */
-suspend fun Redis.append(key: String, value: String): String? = commandString("APPEND", key, value)
+suspend fun Redis.append(key: String, value: String): String? = executeTypedNull<String>("APPEND", key, value)
 
 /**
  * Count set bits in a string
@@ -16,7 +16,7 @@ suspend fun Redis.append(key: String, value: String): String? = commandString("A
  *
  * @since 2.6.0
  */
-suspend fun Redis.bitcount(key: String): String? = commandString("BITCOUNT", key)
+suspend fun Redis.bitcount(key: String): String? = executeTypedNull<String>("BITCOUNT", key)
 
 /**
  * Count set bits in a string
@@ -25,7 +25,12 @@ suspend fun Redis.bitcount(key: String): String? = commandString("BITCOUNT", key
  *
  * @since 2.6.0
  */
-suspend fun Redis.bitcount(key: String, start: Int, end: Int): String? = commandString("BITCOUNT", key, start, end)
+suspend fun Redis.bitcount(key: String, start: Int, end: Int): String? = executeTypedNull<String>(
+    "BITCOUNT",
+    key,
+    start,
+    end
+)
 
 /**
  * Count set bits in a string
@@ -35,7 +40,7 @@ suspend fun Redis.bitcount(key: String, start: Int, end: Int): String? = command
  * @since 2.6.0
  */
 suspend fun Redis.bitcount(key: String, range: LongRange): Long =
-    commandLong("BITCOUNT", key, *arrayOfNotNull(range?.start, range?.endInclusive))
+    executeTyped("BITCOUNT", key, *arrayOfNotNull(range?.start, range?.endInclusive))
 
 class RedisBitFieldBuilder {
     val cmds = arrayListOf<Any?>()
@@ -92,7 +97,7 @@ class RedisBitFieldBuilder {
 suspend fun Redis.bitfield(key: String, callback: RedisBitFieldBuilder.() -> Unit): List<Long?> {
     val builder = RedisBitFieldBuilder()
     callback(builder)
-    return commandArrayAny(*((listOf("BITFIELD", key) + builder.cmds).toTypedArray())).map { (it as? Number?)?.toLong() }
+    return executeArrayAny(*((listOf("BITFIELD", key) + builder.cmds).toTypedArray())).map { (it as? Number?)?.toLong() }
 }
 
 enum class RedisBitop { AND, OR, XOR, NOT }
@@ -105,7 +110,7 @@ enum class RedisBitop { AND, OR, XOR, NOT }
  * @since 2.6.0
  */
 suspend fun Redis.bitop(op: RedisBitop, destKey: String, vararg srcKeys: String): Long =
-    commandLong(op.name, destKey, *srcKeys)
+    executeTyped(op.name, destKey, *srcKeys)
 
 /**
  * Perform an AND operation between two or more strings.
@@ -152,7 +157,7 @@ suspend fun Redis.bitopNot(destKey: String, srcKey: String): Long = bitop(RedisB
  * @since 2.8.7
  */
 suspend fun Redis.bitpos(key: String, bit: Int, range: LongRange?): Long =
-    commandLong("BITPOS", key, bit, *arrayOfNotNull(range?.start, range?.endInclusive))
+    executeTyped("BITPOS", key, bit, *arrayOfNotNull(range?.start, range?.endInclusive))
 
 /**
  * Decrement the integer value of a key by one
@@ -161,7 +166,7 @@ suspend fun Redis.bitpos(key: String, bit: Int, range: LongRange?): Long =
  *
  * @since 1.0.0
  */
-suspend fun Redis.decr(key: String): Long = commandLong("DECR", key)
+suspend fun Redis.decr(key: String): Long = executeTyped("DECR", key)
 
 /**
  * Decrement the integer value of a key by the given number
@@ -170,7 +175,7 @@ suspend fun Redis.decr(key: String): Long = commandLong("DECR", key)
  *
  * @since 1.0.0
  */
-suspend fun Redis.decrby(key: String, decrement: Long): Long = commandLong("DECRBY", key, decrement)
+suspend fun Redis.decrby(key: String, decrement: Long): Long = executeTyped("DECRBY", key, decrement)
 
 /**
  * Increment the integer value of a key by one
@@ -179,7 +184,7 @@ suspend fun Redis.decrby(key: String, decrement: Long): Long = commandLong("DECR
  *
  * @since 1.0.0
  */
-suspend fun Redis.incr(key: String): Long = commandLong("INCR", key)
+suspend fun Redis.incr(key: String): Long = executeTyped("INCR", key)
 
 /**
  * Increment the integer value of a key by the given amount
@@ -188,7 +193,7 @@ suspend fun Redis.incr(key: String): Long = commandLong("INCR", key)
  *
  * @since 1.0.0
  */
-suspend fun Redis.incrby(key: String, increment: Long): Long = commandLong("INCRBY", key, increment)
+suspend fun Redis.incrby(key: String, increment: Long): Long = executeTyped("INCRBY", key, increment)
 
 /**
  * Increment the float value of a key by the given amount
@@ -197,7 +202,7 @@ suspend fun Redis.incrby(key: String, increment: Long): Long = commandLong("INCR
  *
  * @since 2.6.0
  */
-suspend fun Redis.incrbyfloat(key: String, increment: Double): Double = commandDouble("INCRBYFLOAT", key, increment)
+suspend fun Redis.incrbyfloat(key: String, increment: Double): Double = executeTyped("INCRBYFLOAT", key, increment)
 
 /**
  * Get the value of a key
@@ -206,7 +211,7 @@ suspend fun Redis.incrbyfloat(key: String, increment: Double): Double = commandD
  *
  * @since 2.6.0
  */
-suspend fun Redis.get(key: String): String? = commandString("GET", key)
+suspend fun Redis.get(key: String): String? = executeTypedNull<String>("GET", key)
 
 /**
  * Returns the bit value at offset in the string value stored at key
@@ -215,7 +220,7 @@ suspend fun Redis.get(key: String): String? = commandString("GET", key)
  *
  * @since 2.2.0
  */
-suspend fun Redis.getbit(key: String, offset: Int): Int = commandInt("GETBIT", key, offset)
+suspend fun Redis.getbit(key: String, offset: Int): Int = executeTyped("GETBIT", key, offset)
 
 /**
  * Get a substring of the string stored at a key
@@ -224,7 +229,12 @@ suspend fun Redis.getbit(key: String, offset: Int): Int = commandInt("GETBIT", k
  *
  * @since 2.4.0
  */
-suspend fun Redis.getrange(key: String, start: Int, end: Int): String? = commandString("GETRANGE", key, start, end)
+suspend fun Redis.getrange(key: String, start: Int, end: Int): String? = executeTypedNull<String>(
+    "GETRANGE",
+    key,
+    start,
+    end
+)
 
 /**
  * Set the string value of a key
@@ -233,7 +243,7 @@ suspend fun Redis.getrange(key: String, start: Int, end: Int): String? = command
  *
  * @since 1.0.0
  */
-suspend fun Redis.set(key: String, value: String): Unit = commandUnit("SET", key, value)
+suspend fun Redis.set(key: String, value: String): Unit = executeTyped("SET", key, value)
 
 enum class RedisSetMode(val v: String?) {
     SET_ONLY_IF_NOT_EXISTS("NX"),
@@ -250,9 +260,8 @@ enum class RedisSetMode(val v: String?) {
  */
 suspend fun Redis.set(
     key: String, value: String, expirationMs: Long? = null, mode: RedisSetMode = RedisSetMode.SET_ALWAYS
-): Unit = commandUnit(
-    *((listOf("SET", key, value) + (if (expirationMs != null) listOf("PX", expirationMs) else listOf()) + mode.v
-            ).filterNotNull().toTypedArray())
+): Unit = executeTyped(*((listOf("SET", key, value) + (if (expirationMs != null) listOf("PX", expirationMs) else listOf()) + mode.v
+        ).filterNotNull().toTypedArray())
 )
 
 /**
@@ -262,7 +271,7 @@ suspend fun Redis.set(
  *
  * @since 1.0.0
  */
-suspend fun Redis.getset(key: String, value: String): String? = commandString("SET", key, value)
+suspend fun Redis.getset(key: String, value: String): String? = executeTypedNull<String>("SET", key, value)
 
 /**
  * Set multiple keys to multiple values
@@ -271,7 +280,7 @@ suspend fun Redis.getset(key: String, value: String): String? = commandString("S
  *
  * @since 1.0.0
  */
-suspend fun Redis.mget(vararg keys: String): List<String?> = commandArrayStringNull("MGET", *keys)
+suspend fun Redis.mget(vararg keys: String): List<String?> = executeArrayStringNull("MGET", *keys)
 
 /**
  * Set multiple keys to multiple values
@@ -281,7 +290,7 @@ suspend fun Redis.mget(vararg keys: String): List<String?> = commandArrayStringN
  * @since 1.0.1
  */
 suspend fun Redis.mset(vararg pairs: Pair<String, String>): Unit =
-    commandUnit("MSET", *pairs.flatMap { listOf(it.first, it.second) }.toTypedArray())
+    executeTyped("MSET", *pairs.flatMap { listOf(it.first, it.second) }.toTypedArray())
 
 /**
  * Set multiple keys to multiple values
@@ -291,7 +300,7 @@ suspend fun Redis.mset(vararg pairs: Pair<String, String>): Unit =
  * @since 1.0.1
  */
 suspend fun Redis.mset(map: Map<String, String>): Unit =
-    commandUnit("MSET", *map.flatMap { listOf(it.key, it.value) }.toTypedArray())
+    executeTyped("MSET", *map.flatMap { listOf(it.key, it.value) }.toTypedArray())
 
 /**
  * Set multiple keys to multiple values, only if none of the keys exist
@@ -301,7 +310,7 @@ suspend fun Redis.mset(map: Map<String, String>): Unit =
  * @since 1.0.1
  */
 suspend fun Redis.msetnx(vararg pairs: Pair<String, String>): Boolean =
-    commandBool("MSET", *pairs.flatMap { listOf(it.first, it.second) }.toTypedArray())
+    executeTyped("MSET", *pairs.flatMap { listOf(it.first, it.second) }.toTypedArray())
 
 /**
  * Set multiple keys to multiple values, only if none of the keys exist
@@ -311,7 +320,7 @@ suspend fun Redis.msetnx(vararg pairs: Pair<String, String>): Boolean =
  * @since 1.0.1
  */
 suspend fun Redis.msetnx(map: Map<String, String>): Boolean =
-    commandBool("MSET", *map.flatMap { listOf(it.key, it.value) }.toTypedArray())
+    executeTyped("MSET", *map.flatMap { listOf(it.key, it.value) }.toTypedArray())
 
 /**
  * Set the value of a key, only if the key does not exist
@@ -320,7 +329,7 @@ suspend fun Redis.msetnx(map: Map<String, String>): Boolean =
  *
  * @since 1.0.0
  */
-suspend fun Redis.setnx(key: String, value: String): Boolean = commandBool("SETNX", key, value)
+suspend fun Redis.setnx(key: String, value: String): Boolean = executeTyped("SETNX", key, value)
 
 /**
  * Set the value and expiration of a key
@@ -329,7 +338,7 @@ suspend fun Redis.setnx(key: String, value: String): Boolean = commandBool("SETN
  *
  * @since 2.0.0
  */
-suspend fun Redis.setex(key: String, seconds: Long, value: String): Unit = commandUnit("SETEX", key, seconds, value)
+suspend fun Redis.setex(key: String, seconds: Long, value: String): Unit = executeTyped("SETEX", key, seconds, value)
 
 /**
  * Set the value and expiration in milliseconds of a key
@@ -338,7 +347,7 @@ suspend fun Redis.setex(key: String, seconds: Long, value: String): Unit = comma
  *
  * @since 2.6.0
  */
-suspend fun Redis.psetex(key: String, ms: Long, value: String): Unit = commandUnit("PSETEX", key, ms, value)
+suspend fun Redis.psetex(key: String, ms: Long, value: String): Unit = executeTyped("PSETEX", key, ms, value)
 
 /**
  * Sets or clears the bit at offset in the string value stored at key
@@ -348,7 +357,7 @@ suspend fun Redis.psetex(key: String, ms: Long, value: String): Unit = commandUn
  * @since 2.2.0
  */
 suspend fun Redis.setbit(key: String, offset: Int, value: Boolean): Unit =
-    commandUnit("SETBIT", key, offset, if (value) 1 else 0)
+    executeTyped("SETBIT", key, offset, if (value) 1 else 0)
 
 /**
  * Overwrite part of a string at key starting at the specified offset
@@ -357,7 +366,7 @@ suspend fun Redis.setbit(key: String, offset: Int, value: Boolean): Unit =
  *
  * @since 2.2.0
  */
-suspend fun Redis.setrange(key: String, offset: Int, value: String): Long = commandLong("SETRANGE", key, offset, value)
+suspend fun Redis.setrange(key: String, offset: Int, value: String): Long = executeTyped("SETRANGE", key, offset, value)
 
 /**
  * Get the length of the value stored in a key
@@ -366,4 +375,4 @@ suspend fun Redis.setrange(key: String, offset: Int, value: String): Long = comm
  *
  * @since 2.2.0
  */
-suspend fun Redis.strlen(key: String): Long = commandLong("STRLEN", key)
+suspend fun Redis.strlen(key: String): Long = executeTyped("STRLEN", key)

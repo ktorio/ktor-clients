@@ -12,7 +12,7 @@ import kotlinx.coroutines.experimental.channels.*
  * @since 5.0.0
  */
 suspend fun Redis.xadd(stream: String, vararg values: Pair<String, String>, id: String = "*", maxlen: Long? = null, maxlenApproximate: Boolean = true): String =
-    commandString(*arrayListOf<Any?>().apply {
+    executeTypedNull<String>(*arrayListOf<Any?>().apply {
         check(values.isNotEmpty())
         add("XADD")
         add(stream)
@@ -34,7 +34,7 @@ suspend fun Redis.xadd(stream: String, vararg values: Pair<String, String>, id: 
  * @since 5.0.0
  */
 suspend fun Redis.xtrim(stream: String, maxlen: Long, approximate: Boolean = true): Unit {
-    commandBuild<Unit> {
+    executeBuildNull<Unit> {
         add("XTRIM")
         add(stream)
         add("MAXLEN")
@@ -54,7 +54,7 @@ suspend fun Redis.xcreate(stream: String) = xdel(stream, xadd(stream, "dummy" to
  * @since 5.0.0
  */
 suspend fun Redis.xdel(stream: String, id: String): Unit =
-    commandUnit("XDEL", stream, id)
+    executeTyped("XDEL", stream, id)
 
 /**
  * Returns the number of entries inside a stream.
@@ -63,7 +63,7 @@ suspend fun Redis.xdel(stream: String, id: String): Unit =
  *
  * @since 5.0.0
  */
-suspend fun Redis.xlen(stream: String): Long = commandLong("XLEN", stream)
+suspend fun Redis.xlen(stream: String): Long = executeTyped("XLEN", stream)
 
 /**
  * https://redis.io/commands/xrange
@@ -122,7 +122,7 @@ suspend fun Redis.xget(stream: String, item: String): Pair<String, Map<String, S
  * @since 5.0.0
  */
 suspend fun Redis.xack(stream: String, group: String, vararg items: String): Int =
-    commandInt("XACK", stream, group, *items)
+    executeTyped("XACK", stream, group, *items)
 
 /**
  * https://redis.io/commands/xpending
@@ -174,7 +174,7 @@ suspend fun Redis.xread(
     count: Int? = null,
     blockMs: Int? = null
 ): Map<String, Map<String, Map<String, String>>> {
-    return xparseListGroup(commandBuild<Any> {
+    return xparseListGroup(executeBuildNull<Any> {
         add("XREAD")
         if (blockMs != null) {
             add("BLOCK")
@@ -202,7 +202,7 @@ suspend fun Redis.xreadgroup(
     count: Int? = null,
     blockMs: Int? = null
 ): Map<String, Map<String, Map<String, String>>> {
-    return xparseListGroup(commandBuild<Any> {
+    return xparseListGroup(executeBuildNull<Any> {
         add("XREADGROUP")
         add("GROUP")
         add(group)
@@ -226,7 +226,7 @@ suspend fun Redis.xreadgroup(
  *
  * @since 5.0.0
  */
-suspend fun Redis.xinfoHelp(): List<String> = commandArrayString("XINFO", "HELP")
+suspend fun Redis.xinfoHelp(): List<String> = executeArrayString("XINFO", "HELP")
 
 /**
  * https://redis.io/commands/xinfo-stream
@@ -234,7 +234,7 @@ suspend fun Redis.xinfoHelp(): List<String> = commandArrayString("XINFO", "HELP"
  * @since 5.0.0
  */
 suspend fun Redis.xinfoStream(stream: String): RedisStreamInfo =
-    RedisStreamInfo(commandArrayAny("XINFO", "STREAM", stream).listOfPairsToMapAny() as Map<String, Any?>)
+    RedisStreamInfo(executeArrayAny("XINFO", "STREAM", stream).listOfPairsToMapAny() as Map<String, Any?>)
 
 /**
  * https://redis.io/commands/xinfo-groups
@@ -242,7 +242,7 @@ suspend fun Redis.xinfoStream(stream: String): RedisStreamInfo =
  * @since 5.0.0
  */
 suspend fun Redis.xinfoGroups(stream: String): List<RedisStreamGroupInfo> =
-    commandArrayAny("XINFO", "GROUPS", stream).map {
+    executeArrayAny("XINFO", "GROUPS", stream).map {
         RedisStreamGroupInfo((it as List<Any?>).listOfPairsToMapAny() as Map<String, Any?>)
     }
 
@@ -252,7 +252,7 @@ suspend fun Redis.xinfoGroups(stream: String): List<RedisStreamGroupInfo> =
  * @since 5.0.0
  */
 suspend fun Redis.xinfoConsumers(stream: String, group :String): List<RedisStreamConsumerInfo> =
-    commandArrayAny("XINFO", "CONSUMERS", stream, group).map {
+    executeArrayAny("XINFO", "CONSUMERS", stream, group).map {
         RedisStreamConsumerInfo((it as List<Any?>).listOfPairsToMapAny() as Map<String, Any?>)
     }
 
@@ -296,7 +296,7 @@ suspend fun Redis.xprocessLoop(
  * @since 5.0.0
  */
 suspend fun Redis.xgroupHelp(): List<String> {
-    return commandAnyNotNull<Any>("XGROUP", "HELP") as List<String>
+    return executeTyped<Any>("XGROUP", "HELP") as List<String>
 }
 
 /**
@@ -305,7 +305,7 @@ suspend fun Redis.xgroupHelp(): List<String> {
  * @since 5.0.0
  */
 suspend fun Redis.xgroupCreate(stream: String, group: String, id: String = "\$"): Unit {
-    return commandAnyNotNull("XGROUP", "CREATE", stream, group, id)
+    return executeTyped("XGROUP", "CREATE", stream, group, id)
 }
 
 /**
@@ -314,7 +314,7 @@ suspend fun Redis.xgroupCreate(stream: String, group: String, id: String = "\$")
  * @since 5.0.0
  */
 suspend fun Redis.xgroupSetId(stream: String, group: String, id: String = "\$"): Unit {
-    return commandAnyNotNull("XGROUP", "SETID", stream, group, id)
+    return executeTyped("XGROUP", "SETID", stream, group, id)
 }
 
 /**
@@ -323,7 +323,7 @@ suspend fun Redis.xgroupSetId(stream: String, group: String, id: String = "\$"):
  * @since 5.0.0
  */
 suspend fun Redis.xgroupDestroy(stream: String, group: String): Unit {
-    return commandAnyNotNull("XGROUP", "DESTROY", stream, group)
+    return executeTyped("XGROUP", "DESTROY", stream, group)
 }
 
 /**
@@ -332,7 +332,7 @@ suspend fun Redis.xgroupDestroy(stream: String, group: String): Unit {
  * @since 5.0.0
  */
 suspend fun Redis.xgroupDelConsumer(stream: String, group: String, consumer: String): Unit {
-    return commandAnyNotNull("XGROUP", "DELCONSUMER", stream, group, consumer)
+    return executeTyped("XGROUP", "DELCONSUMER", stream, group, consumer)
 }
 
 data class RedisStreamConsumerInfo(
@@ -391,7 +391,7 @@ private fun redisXnextId(id: String, incr: Int = +1): String {
 }
 
 internal suspend fun Redis._xrange(args: List<Any?>): Map<String, Map<String, String>> {
-    return xparseList(commandArrayAny(*(args.toTypedArray())))
+    return xparseList(executeArrayAny(*(args.toTypedArray())))
 }
 
 internal suspend fun Redis._xrange(

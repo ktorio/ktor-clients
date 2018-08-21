@@ -9,7 +9,7 @@ import kotlinx.coroutines.experimental.channels.*
  *
  * @since 1.0.0
  */
-suspend fun Redis.scard(key: String): Long = commandLong("SCARD", key)
+suspend fun Redis.scard(key: String): Long = executeTyped("SCARD", key)
 
 /**
  * Add one or more members to a set
@@ -18,7 +18,7 @@ suspend fun Redis.scard(key: String): Long = commandLong("SCARD", key)
  *
  * @since 1.0.0
  */
-suspend fun Redis.sadd(key: String, vararg members: String): Long = commandLong("SADD", key, *members)
+suspend fun Redis.sadd(key: String, vararg members: String): Long = executeTyped("SADD", key, *members)
 
 /**
  * Remove one or more members from a set
@@ -27,7 +27,7 @@ suspend fun Redis.sadd(key: String, vararg members: String): Long = commandLong(
  *
  * @since 1.0.0
  */
-suspend fun Redis.srem(key: String, vararg members: String): Boolean = commandBool("SREM", key, *members)
+suspend fun Redis.srem(key: String, vararg members: String): Boolean = executeTyped("SREM", key, *members)
 
 /**
  * Determine if a given value is a member of a set
@@ -36,7 +36,7 @@ suspend fun Redis.srem(key: String, vararg members: String): Boolean = commandBo
  *
  * @since 1.0.0
  */
-suspend fun Redis.sismember(key: String, member: String): Boolean = commandBool("SISMEMBER", key, member)
+suspend fun Redis.sismember(key: String, member: String): Boolean = executeTyped("SISMEMBER", key, member)
 
 /**
  * Get all the members in a set
@@ -45,7 +45,7 @@ suspend fun Redis.sismember(key: String, member: String): Boolean = commandBool(
  *
  * @since 1.0.0
  */
-suspend fun Redis.smembers(key: String): Set<String> = commandArrayString("SMEMBERS", key).toSet()
+suspend fun Redis.smembers(key: String): Set<String> = executeArrayString("SMEMBERS", key).toSet()
 
 /**
  * Subtract multiple sets
@@ -56,7 +56,7 @@ suspend fun Redis.smembers(key: String): Set<String> = commandArrayString("SMEMB
  *
  * @since 1.0.0
  */
-suspend fun Redis.sdiff(key: String, vararg keys: String): Set<String> = commandArrayString("SDIFF", key, *keys).toSet()
+suspend fun Redis.sdiff(key: String, vararg keys: String): Set<String> = executeArrayString("SDIFF", key, *keys).toSet()
 
 /**
  * Subtract multiple sets and store the resulting set in a key
@@ -65,7 +65,12 @@ suspend fun Redis.sdiff(key: String, vararg keys: String): Set<String> = command
  *
  * @since 1.0.0
  */
-suspend fun Redis.sdiffstore(destination: String, key: String, vararg keys: String): Long = commandLong("SDIFFSTORE", destination, key, *keys)
+suspend fun Redis.sdiffstore(destination: String, key: String, vararg keys: String): Long = executeTyped(
+    "SDIFFSTORE",
+    destination,
+    key,
+    *keys
+)
 
 /**
  * Intersect multiple sets
@@ -74,7 +79,7 @@ suspend fun Redis.sdiffstore(destination: String, key: String, vararg keys: Stri
  *
  * @since 1.0.0
  */
-suspend fun Redis.sinter(key: String, vararg keys: String): Set<String> = commandArrayString("SINTER", key, *keys).toSet()
+suspend fun Redis.sinter(key: String, vararg keys: String): Set<String> = executeArrayString("SINTER", key, *keys).toSet()
 
 /**
  * Intersect multiple sets and store the resulting set in a key
@@ -83,7 +88,12 @@ suspend fun Redis.sinter(key: String, vararg keys: String): Set<String> = comman
  *
  * @since 1.0.0
  */
-suspend fun Redis.sinterstore(destination: String, key: String, vararg keys: String): Long = commandLong("SINTERSTORE", destination, key, *keys)
+suspend fun Redis.sinterstore(destination: String, key: String, vararg keys: String): Long = executeTyped(
+    "SINTERSTORE",
+    destination,
+    key,
+    *keys
+)
 
 /**
  * Add multiple sets
@@ -92,7 +102,7 @@ suspend fun Redis.sinterstore(destination: String, key: String, vararg keys: Str
  *
  * @since 1.0.0
  */
-suspend fun Redis.sunion(key: String, vararg keys: String): Set<String> = commandArrayString("SUNION", key, *keys).toSet()
+suspend fun Redis.sunion(key: String, vararg keys: String): Set<String> = executeArrayString("SUNION", key, *keys).toSet()
 
 /**
  * Add multiple sets and store the resulting set in a key
@@ -101,7 +111,12 @@ suspend fun Redis.sunion(key: String, vararg keys: String): Set<String> = comman
  *
  * @since 1.0.0
  */
-suspend fun Redis.sunionstore(destination: String, key: String, vararg keys: String): Long = commandLong("SUNIONSTORE", destination, key, *keys)
+suspend fun Redis.sunionstore(destination: String, key: String, vararg keys: String): Long = executeTyped(
+    "SUNIONSTORE",
+    destination,
+    key,
+    *keys
+)
 
 /**
  * Move a member from one set to another
@@ -110,7 +125,12 @@ suspend fun Redis.sunionstore(destination: String, key: String, vararg keys: Str
  *
  * @since 1.0.0
  */
-suspend fun Redis.smove(source: String, destination: String, member: String): Boolean = commandBool("SMOVE", source, destination, member)
+suspend fun Redis.smove(source: String, destination: String, member: String): Boolean = executeTyped(
+    "SMOVE",
+    source,
+    destination,
+    member
+)
 
 /**
  * Remove and return one or multiple random members from a set
@@ -119,7 +139,7 @@ suspend fun Redis.smove(source: String, destination: String, member: String): Bo
  *
  * @since 1.0.0
  */
-suspend fun Redis.spop(key: String): String? = commandString("SPOP", key)
+suspend fun Redis.spop(key: String): String? = executeTypedNull<String>("SPOP", key)
 
 /**
  * Remove and return one or multiple random members from a set
@@ -128,7 +148,7 @@ suspend fun Redis.spop(key: String): String? = commandString("SPOP", key)
  *
  * @since 1.0.0
  */
-suspend fun Redis.spop(key: String, count: Long): Set<String> = commandArrayString("SPOP", key, count).toSet()
+suspend fun Redis.spop(key: String, count: Long): Set<String> = executeArrayString("SPOP", key, count).toSet()
 
 /**
  * Get one or multiple random members from a set
@@ -137,7 +157,7 @@ suspend fun Redis.spop(key: String, count: Long): Set<String> = commandArrayStri
  *
  * @since 1.0.0
  */
-suspend fun Redis.srandmember(key: String): String? = commandString("SRANDMEMBER", key)
+suspend fun Redis.srandmember(key: String): String? = executeTypedNull<String>("SRANDMEMBER", key)
 
 /**
  * Get one or multiple random members from a set
@@ -146,7 +166,7 @@ suspend fun Redis.srandmember(key: String): String? = commandString("SRANDMEMBER
  *
  * @since 1.0.0
  */
-suspend fun Redis.srandmember(key: String, count: Long): Set<String> = commandArrayString("SRANDMEMBER", key, count).toSet()
+suspend fun Redis.srandmember(key: String, count: Long): Set<String> = executeArrayString("SRANDMEMBER", key, count).toSet()
 
 /**
  * Incrementally iterate Set elements

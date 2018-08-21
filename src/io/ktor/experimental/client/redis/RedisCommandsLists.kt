@@ -45,7 +45,7 @@ package io.ktor.experimental.client.redis
  * @since 2.0.0
  */
 suspend fun Redis.blpop(vararg keys: String, timeout: Int = 0): Pair<String, String>? {
-    val result = commandArrayString("BLPOP", *keys, timeout)
+    val result = executeArrayString("BLPOP", *keys, timeout)
     return if (result.size >= 2) result[0] to result[1] else null
 }
 
@@ -57,7 +57,7 @@ suspend fun Redis.blpop(vararg keys: String, timeout: Int = 0): Pair<String, Str
  * @since 2.0.0
  */
 suspend fun Redis.brpop(vararg keys: String, timeout: Int = 0): Pair<String, String>? {
-    val result = commandArrayString("BRPOP", *keys, timeout)
+    val result = executeArrayString("BRPOP", *keys, timeout)
     return if (result.size >= 2) result[0] to result[1] else null
 }
 
@@ -80,7 +80,7 @@ suspend fun Redis.brpoplpush(src: String, dst: String, timeout: Int = 0): String
  *
  * @since 1.2.0
  */
-suspend fun Redis.rpoplpush(src: String, dst: String): String? = commandString("RPOPLPUSH", src, dst)
+suspend fun Redis.rpoplpush(src: String, dst: String): String? = executeTypedNull<String>("RPOPLPUSH", src, dst)
 
 /**
  * Get an element from a list by its index
@@ -89,7 +89,7 @@ suspend fun Redis.rpoplpush(src: String, dst: String): String? = commandString("
  *
  * @since 1.0.0
  */
-suspend fun Redis.lindex(key: String, index: Int): String? = commandString("LINDEX", key, index)
+suspend fun Redis.lindex(key: String, index: Int): String? = executeTypedNull<String>("LINDEX", key, index)
 
 /**
  * Insert an element before another element in a list
@@ -98,7 +98,13 @@ suspend fun Redis.lindex(key: String, index: Int): String? = commandString("LIND
  *
  * @since 2.2.0
  */
-suspend fun Redis.linsertBefore(key: String, pivot: String, value: Any?): Long = commandLong("LINSERT", key, "BEFORE", pivot, value)
+suspend fun Redis.linsertBefore(key: String, pivot: String, value: Any?): Long = executeTyped(
+    "LINSERT",
+    key,
+    "BEFORE",
+    pivot,
+    value
+)
 
 /**
  * Insert an element after another element in a list
@@ -107,7 +113,13 @@ suspend fun Redis.linsertBefore(key: String, pivot: String, value: Any?): Long =
  *
  * @since 2.2.0
  */
-suspend fun Redis.linsertAfter(key: String, pivot: String, value: Any?): Long = commandLong("LINSERT", key, "AFTER", pivot, value)
+suspend fun Redis.linsertAfter(key: String, pivot: String, value: Any?): Long = executeTyped(
+    "LINSERT",
+    key,
+    "AFTER",
+    pivot,
+    value
+)
 
 /**
  * Get the length of a list
@@ -116,7 +128,7 @@ suspend fun Redis.linsertAfter(key: String, pivot: String, value: Any?): Long = 
  *
  * @since 1.0.0
  */
-suspend fun Redis.llen(key: String): Long = commandLong("LLEN", key)
+suspend fun Redis.llen(key: String): Long = executeTyped("LLEN", key)
 
 /**
  * Remove and get the first element in a list
@@ -125,7 +137,7 @@ suspend fun Redis.llen(key: String): Long = commandLong("LLEN", key)
  *
  * @since 1.0.0
  */
-suspend fun Redis.lpop(key: String): String? = commandString("LPOP", key)
+suspend fun Redis.lpop(key: String): String? = executeTypedNull<String>("LPOP", key)
 
 /**
  * Remove and get the last element in a list
@@ -134,7 +146,7 @@ suspend fun Redis.lpop(key: String): String? = commandString("LPOP", key)
  *
  * @since 1.0.0
  */
-suspend fun Redis.rpop(key: String): String? = commandString("RPOP", key)
+suspend fun Redis.rpop(key: String): String? = executeTypedNull<String>("RPOP", key)
 
 /**
  * Insert all the specified values at the head of the list stored at key.
@@ -143,7 +155,12 @@ suspend fun Redis.rpop(key: String): String? = commandString("RPOP", key)
  *
  * @since 1.0.0
  */
-suspend fun Redis.lpush(key: String, value: String, vararg extraValues: String): Long = commandLong("LPUSH", key, value, *extraValues)
+suspend fun Redis.lpush(key: String, value: String, vararg extraValues: String): Long = executeTyped(
+    "LPUSH",
+    key,
+    value,
+    *extraValues
+)
 
 /**
  * Prepend a value to a list, only if the list exists
@@ -152,7 +169,7 @@ suspend fun Redis.lpush(key: String, value: String, vararg extraValues: String):
  *
  * @since 2.2.0
  */
-suspend fun Redis.lpushx(key: String, value: String): Long = commandLong("LPUSHX", key, value)
+suspend fun Redis.lpushx(key: String, value: String): Long = executeTyped("LPUSHX", key, value)
 
 /**
  * Append one or multiple values to a list
@@ -161,7 +178,12 @@ suspend fun Redis.lpushx(key: String, value: String): Long = commandLong("LPUSHX
  *
  * @since 1.0.0
  */
-suspend fun Redis.rpush(key: String, value: String, vararg extraValues: String): Long = commandLong("RPUSH", key, value, *extraValues)
+suspend fun Redis.rpush(key: String, value: String, vararg extraValues: String): Long = executeTyped(
+    "RPUSH",
+    key,
+    value,
+    *extraValues
+)
 
 /**
  * Append a value to a list, only if the list exists
@@ -170,7 +192,7 @@ suspend fun Redis.rpush(key: String, value: String, vararg extraValues: String):
  *
  * @since 2.2.0
  */
-suspend fun Redis.rpushx(key: String, value: String): Long = commandLong("RPUSHX", key, value)
+suspend fun Redis.rpushx(key: String, value: String): Long = executeTyped("RPUSHX", key, value)
 
 /**
  * Get a range of elements from a list
@@ -179,7 +201,7 @@ suspend fun Redis.rpushx(key: String, value: String): Long = commandLong("RPUSHX
  *
  * @since 1.0.0
  */
-suspend fun Redis.lrange(key: String, range: LongRange): List<String> = commandArrayString("LRANGE", key, range.start, range.endInclusive)
+suspend fun Redis.lrange(key: String, range: LongRange): List<String> = executeArrayString("LRANGE", key, range.start, range.endInclusive)
 
 /**
  * Returns the whole list. (Shortcut of lrange(key, 0L until 4294967295L))
@@ -193,7 +215,7 @@ suspend fun Redis.lgetall(key: String): List<String> = lrange(key, 0L until 4294
  *
  * @since 1.0.0
  */
-suspend fun Redis.lrem(key: String, count: Long, value: String): Long = commandLong("LREM", key, count, value)
+suspend fun Redis.lrem(key: String, count: Long, value: String): Long = executeTyped("LREM", key, count, value)
 
 /**
  * Set the value of an element in a list by its index
@@ -202,7 +224,7 @@ suspend fun Redis.lrem(key: String, count: Long, value: String): Long = commandL
  *
  * @since 1.0.0
  */
-suspend fun Redis.lset(key: String, index: Long, value: String) = commandUnit("LSET", key, index, value)
+suspend fun Redis.lset(key: String, index: Long, value: String) = executeTyped<Unit>("LSET", key, index, value)
 
 /**
  * Trim a list to the specified range
@@ -211,4 +233,4 @@ suspend fun Redis.lset(key: String, index: Long, value: String) = commandUnit("L
  *
  * @since 1.0.0
  */
-suspend fun Redis.ltrim(key: String, range: LongRange) = commandUnit("LTRIM", key, range.start, range.endInclusive)
+suspend fun Redis.ltrim(key: String, range: LongRange) = executeTyped<Unit>("LTRIM", key, range.start, range.endInclusive)

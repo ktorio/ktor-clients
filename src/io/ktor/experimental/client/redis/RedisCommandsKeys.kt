@@ -10,7 +10,7 @@ import java.util.*
  *
  * @since 1.0.0
  */
-suspend fun Redis.del(vararg keys: String): Long = commandLong("DEL", *keys)
+suspend fun Redis.del(vararg keys: String): Long = executeTyped("DEL", *keys)
 
 /**
  * This command is very similar to DEL: it removes the specified keys.
@@ -24,7 +24,7 @@ suspend fun Redis.del(vararg keys: String): Long = commandLong("DEL", *keys)
  *
  * @since 4.0.0
  */
-suspend fun Redis.unlink(vararg keys: String): Long = commandLong("UNLINK", *keys)
+suspend fun Redis.unlink(vararg keys: String): Long = executeTyped("UNLINK", *keys)
 
 /**
  * Return a serialized version of the value stored at the specified key.
@@ -33,7 +33,7 @@ suspend fun Redis.unlink(vararg keys: String): Long = commandLong("UNLINK", *key
  *
  * @since 2.6.0
  */
-suspend fun Redis.dump(key: String): ByteArray? = commandAny("DUMP", key)
+suspend fun Redis.dump(key: String): ByteArray? = executeTypedNull("DUMP", key)
 
 /**
  * Create a key using the provided serialized value, previously obtained using DUMP.
@@ -43,7 +43,7 @@ suspend fun Redis.dump(key: String): ByteArray? = commandAny("DUMP", key)
  * @since 2.6.0
  */
 suspend fun Redis.restore(key: String, serializedValue: ByteArray?, ttl: Long = 0L, replace: Boolean = false): String =
-    commandAny(
+    executeTypedNull(
         "RESTORE", key, ttl, serializedValue,
         *(if (replace) arrayOf("REPLACE") else arrayOf())
     ) ?: ""
@@ -55,7 +55,7 @@ suspend fun Redis.restore(key: String, serializedValue: ByteArray?, ttl: Long = 
  *
  * @since 1.0.0
  */
-suspend fun Redis.exists(key: String): Boolean = commandBool("EXISTS", key)
+suspend fun Redis.exists(key: String): Boolean = executeTyped("EXISTS", key)
 
 /**
  * Determine if a key exists
@@ -64,7 +64,7 @@ suspend fun Redis.exists(key: String): Boolean = commandBool("EXISTS", key)
  *
  * @since 1.0.0
  */
-suspend fun Redis.exists(vararg keys: String): Long = commandLong("EXISTS", *keys)
+suspend fun Redis.exists(vararg keys: String): Long = executeTyped("EXISTS", *keys)
 
 /**
  * Set a key's time to live in seconds
@@ -73,7 +73,7 @@ suspend fun Redis.exists(vararg keys: String): Long = commandLong("EXISTS", *key
  *
  * @since 1.0.0
  */
-suspend fun Redis.expire(key: String, time: Int) = commandString("EXPIRE", key, "$time")
+suspend fun Redis.expire(key: String, time: Int) = executeTypedNull<String>("EXPIRE", key, "$time")
 
 /**
  * Set the expiration for a key as a UNIX timestamp
@@ -82,7 +82,7 @@ suspend fun Redis.expire(key: String, time: Int) = commandString("EXPIRE", key, 
  *
  * @since 1.2.0
  */
-suspend fun Redis.expireat(key: String, date: Date) = commandString("EXPIREAT", key, "${date.time / 1000L}")
+suspend fun Redis.expireat(key: String, date: Date) = executeTypedNull<String>("EXPIREAT", key, "${date.time / 1000L}")
 
 /**
  * Find all keys matching the given pattern
@@ -91,7 +91,7 @@ suspend fun Redis.expireat(key: String, date: Date) = commandString("EXPIREAT", 
  *
  * @since 1.0.0
  */
-suspend fun Redis.keys(pattern: String) = commandArrayString("KEYS", pattern)
+suspend fun Redis.keys(pattern: String) = executeArrayString("KEYS", pattern)
 
 /**
  * Atomically transfer a key from a Redis instance to another one.
@@ -103,7 +103,7 @@ suspend fun Redis.keys(pattern: String) = commandArrayString("KEYS", pattern)
 suspend fun Redis.migrate(host: String, port: Int, vararg keys: String, destinationDb: Int = 0, timeoutMs: Int = 0, copy: Boolean = false, replace: Boolean = false) {
     check(keys.isNotEmpty()) { "Keys must not be empty" }
 
-    commandUnit(arrayListOf<Any?>().apply {
+    executeTyped<Unit>(arrayListOf<Any?>().apply {
         this += "MIGRATE"
         this += host
         this += port
@@ -124,7 +124,7 @@ suspend fun Redis.migrate(host: String, port: Int, vararg keys: String, destinat
  *
  * @since 1.0.0
  */
-suspend fun Redis.move(key: String, db: Int) = commandString("MOVE", key, db)
+suspend fun Redis.move(key: String, db: Int) = executeTypedNull<String>("MOVE", key, db)
 
 /**
  * Returns the number of references of the value associated with the specified key.
@@ -134,7 +134,7 @@ suspend fun Redis.move(key: String, db: Int) = commandString("MOVE", key, db)
  *
  * @since 2.2.3
  */
-suspend fun Redis.objectRefcount(key: String) = commandLong("OBJECT", "REFCOUNT", key)
+suspend fun Redis.objectRefcount(key: String) = executeTyped<Long>("OBJECT", "REFCOUNT", key)
 
 /**
  * Returns the kind of internal representation used in order to store the value associated with a key.
@@ -143,7 +143,7 @@ suspend fun Redis.objectRefcount(key: String) = commandLong("OBJECT", "REFCOUNT"
  *
  * @since 2.2.3
  */
-suspend fun Redis.objectEncoding(key: String) = commandString("OBJECT", "ENCODING", key)
+suspend fun Redis.objectEncoding(key: String) = executeTypedNull<String>("OBJECT", "ENCODING", key)
 
 /**
  * Returns the number of seconds since the object stored at the specified key is idle
@@ -156,7 +156,7 @@ suspend fun Redis.objectEncoding(key: String) = commandString("OBJECT", "ENCODIN
  *
  * @since 2.2.3
  */
-suspend fun Redis.objectIdletime(key: String) = commandLong("OBJECT", "IDLETIME", key)
+suspend fun Redis.objectIdletime(key: String) = executeTyped<Long>("OBJECT", "IDLETIME", key)
 
 /**
  * Returns the logarithmic access frequency counter of the object stored at the specified key.
@@ -166,7 +166,7 @@ suspend fun Redis.objectIdletime(key: String) = commandLong("OBJECT", "IDLETIME"
  *
  * @since 2.2.3
  */
-suspend fun Redis.objectFreq(key: String) = commandLong("OBJECT", "FREQ", key)
+suspend fun Redis.objectFreq(key: String) = executeTyped<Long>("OBJECT", "FREQ", key)
 
 /**
  * Returns a succint help text.
@@ -175,7 +175,7 @@ suspend fun Redis.objectFreq(key: String) = commandLong("OBJECT", "FREQ", key)
  *
  * @since 2.2.3
  */
-suspend fun Redis.objectHelp() = commandString("OBJECT", "HELP")
+suspend fun Redis.objectHelp() = executeTypedNull<String>("OBJECT", "HELP")
 
 /**
  * Remove the existing timeout on key, turning the key from volatile (a key with an expire set)
@@ -185,7 +185,7 @@ suspend fun Redis.objectHelp() = commandString("OBJECT", "HELP")
  *
  * @since 2.2.0
  */
-suspend fun Redis.persist(key: String) = commandString("PERSIST", key)
+suspend fun Redis.persist(key: String) = executeTypedNull<String>("PERSIST", key)
 
 /**
  * This command works exactly like EXPIRE but the time to live
@@ -195,7 +195,7 @@ suspend fun Redis.persist(key: String) = commandString("PERSIST", key)
  *
  * @since 2.6.0
  */
-suspend fun Redis.pexpire(key: String, ms: Long) = commandString("PEXPIRE", key, ms)
+suspend fun Redis.pexpire(key: String, ms: Long) = executeTypedNull<String>("PEXPIRE", key, ms)
 
 /**
  * PEXPIREAT has the same effect and semantic as EXPIREAT,
@@ -205,7 +205,7 @@ suspend fun Redis.pexpire(key: String, ms: Long) = commandString("PEXPIRE", key,
  *
  * @since 2.6.0
  */
-suspend fun Redis.pexpireat(key: String, date: Date) = commandString("PEXPIREAT", key, "${date.time}")
+suspend fun Redis.pexpireat(key: String, date: Date) = executeTypedNull<String>("PEXPIREAT", key, "${date.time}")
 
 /**
  * This commands returns the remaining time in milliseconds to live of a key that has an expire set.
@@ -216,7 +216,7 @@ suspend fun Redis.pexpireat(key: String, date: Date) = commandString("PEXPIREAT"
  *
  * @since 2.6.0
  */
-suspend fun Redis.pttl(key: String): Long = commandLong("PTTL", key)
+suspend fun Redis.pttl(key: String): Long = executeTyped("PTTL", key)
 
 /**
  * This commands returns the remaining time in seconds to live of a key that has an expire set.
@@ -227,7 +227,7 @@ suspend fun Redis.pttl(key: String): Long = commandLong("PTTL", key)
  *
  * @since 1.0.0
  */
-suspend fun Redis.ttl(key: String): Long = commandLong("TTL", key)
+suspend fun Redis.ttl(key: String): Long = executeTyped("TTL", key)
 
 /**
  * Return a random key from the currently selected database.
@@ -236,7 +236,7 @@ suspend fun Redis.ttl(key: String): Long = commandLong("TTL", key)
  *
  * @since 1.0.0
  */
-suspend fun Redis.randomkey(): String? = commandString("RANDOMKEY")
+suspend fun Redis.randomkey(): String? = executeTypedNull<String>("RANDOMKEY")
 
 /**
  * Renames oldKey to newKey.
@@ -247,7 +247,7 @@ suspend fun Redis.randomkey(): String? = commandString("RANDOMKEY")
  *
  * @since 1.0.0
  */
-suspend fun Redis.rename(oldKey: String, newKey: String) = commandUnit("RENAME", oldKey, newKey)
+suspend fun Redis.rename(oldKey: String, newKey: String) = executeTyped<Unit>("RENAME", oldKey, newKey)
 
 /**
  * Renames oldKey to newKey.
@@ -258,7 +258,7 @@ suspend fun Redis.rename(oldKey: String, newKey: String) = commandUnit("RENAME",
  *
  * @since 1.0.0
  */
-suspend fun Redis.renamenx(oldKey: String, newKey: String) = commandBool("RENAMENX", oldKey, newKey)
+suspend fun Redis.renamenx(oldKey: String, newKey: String) = executeTyped<Boolean>("RENAMENX", oldKey, newKey)
 
 /**
  * Incrementally iterate the keys space
@@ -289,7 +289,7 @@ suspend fun Redis.sort(
     vararg getPatterns: String,
     sortDirection: Int = 0, alpha: Boolean = true, storeDestination: String? = null
 ): RedisSortResult {
-    val result = commandBuildNotNull<Any> {
+    val result = executeBuildNotNull<Any> {
         add("SORT")
         add(key)
         if (pattern != null) {
@@ -332,7 +332,7 @@ suspend fun Redis.sort(
  *
  * @since 3.2.1
  */
-suspend fun Redis.touch(vararg keys: String): Long = commandLong("TOUCH", *keys)
+suspend fun Redis.touch(vararg keys: String): Long = executeTyped("TOUCH", *keys)
 
 /**
  * Returns the string representation of the type of the value stored at key.
@@ -342,7 +342,7 @@ suspend fun Redis.touch(vararg keys: String): Long = commandLong("TOUCH", *keys)
  *
  * @since 1.0.0
  */
-suspend fun Redis.type(key: String): String? = commandString("TYPE", key)
+suspend fun Redis.type(key: String): String? = executeTypedNull<String>("TYPE", key)
 
 /**
  * This command blocks the current client until all the previous write commands are successfully
@@ -354,4 +354,8 @@ suspend fun Redis.type(key: String): String? = commandString("TYPE", key)
  *
  * @since 3.0.0
  */
-suspend fun Redis.wait(numslaves: Int, timeoutMs: Int = 0): String? = commandString("WAIT", numslaves, timeoutMs)
+suspend fun Redis.wait(numslaves: Int, timeoutMs: Int = 0): String? = executeTypedNull<String>(
+    "WAIT",
+    numslaves,
+    timeoutMs
+)

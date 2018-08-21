@@ -7,7 +7,7 @@ package io.ktor.experimental.client.redis
  *
  * @since 1.0.0
  */
-suspend fun Redis.auth(password: String) = commandString("AUTH", password)
+suspend fun Redis.auth(password: String): Unit = executeTyped("AUTH", password)
 
 /**
  * Echo the given string
@@ -16,7 +16,7 @@ suspend fun Redis.auth(password: String) = commandString("AUTH", password)
  *
  * @since 1.0.0
  */
-suspend fun Redis.echo(msg: String) = commandString("ECHO", msg)
+suspend fun Redis.echo(msg: String) = executeTypedNull<String>("ECHO", msg)
 
 /**
  * Ping the server
@@ -25,7 +25,7 @@ suspend fun Redis.echo(msg: String) = commandString("ECHO", msg)
  *
  * @since 1.0.0
  */
-suspend fun Redis.ping(msg: String) = commandString("PING", msg)
+suspend fun Redis.ping(msg: String) = executeTypedNull<String>("PING", msg)
 
 /**
  * Ping the server
@@ -34,7 +34,7 @@ suspend fun Redis.ping(msg: String) = commandString("PING", msg)
  *
  * @since 1.0.0
  */
-suspend fun Redis.ping(): String? = commandString("PING")
+suspend fun Redis.ping(): String? = executeTypedNull<String>("PING")
 
 /**
  * Change the selected database for the current connection
@@ -43,7 +43,7 @@ suspend fun Redis.ping(): String? = commandString("PING")
  *
  * @since 1.0.0
  */
-suspend fun Redis.select(db: Int): Redis = this.apply { commandString("SELECT", db) }
+suspend fun Redis.select(db: Int): Redis = this.apply { executeTypedNull<String>("SELECT", db) }
 
 /**
  * This command swaps two Redis databases, so that immediately all the clients connected
@@ -53,7 +53,7 @@ suspend fun Redis.select(db: Int): Redis = this.apply { commandString("SELECT", 
  *
  * @since 4.0.0
  */
-suspend fun Redis.swapdb(db1: Int, db2: Int) = this.apply { commandString("SWAPDB", db1, db2) }
+suspend fun Redis.swapdb(db1: Int, db2: Int) = this.apply { executeTypedNull<String>("SWAPDB", db1, db2) }
 
 /**
  * Close the connection
@@ -62,4 +62,4 @@ suspend fun Redis.swapdb(db1: Int, db2: Int) = this.apply { commandString("SWAPD
  *
  * @since 1.0.0
  */
-suspend fun Redis.quit() = commandUnit("QUIT")
+suspend fun Redis.quit(): Unit = executeTyped("QUIT")

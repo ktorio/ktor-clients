@@ -7,7 +7,8 @@ package io.ktor.experimental.client.redis
  *
  * @since 3.0.0
  */
-suspend fun Redis.clusterAddSlots(vararg slots: Long) = commandUnit("CLUSTER", "ADDSLOTS", *slots.toTypedArray())
+suspend fun Redis.clusterAddSlots(vararg slots: Long): Unit =
+    executeTyped("CLUSTER", "ADDSLOTS", *slots.toTypedArray())
 
 /**
  * Return the number of failure reports active for a given node
@@ -17,7 +18,7 @@ suspend fun Redis.clusterAddSlots(vararg slots: Long) = commandUnit("CLUSTER", "
  * @since 3.0.0
  */
 suspend fun Redis.clusterCountFailureReports(nodeId: Int): Long =
-    commandLong("CLUSTER", "COUNT-FAILURE-REPORTS", nodeId)
+    executeTyped("CLUSTER", "COUNT-FAILURE-REPORTS", nodeId)
 
 /**
  * Return the number of local keys in the specified hash slot
@@ -27,7 +28,7 @@ suspend fun Redis.clusterCountFailureReports(nodeId: Int): Long =
  * @since 3.0.0
  */
 suspend fun Redis.clusterCountKeysInSlot(slot: Long): Long =
-    commandLong("CLUSTER", "COUNTKEYSINSLOT", slot)
+    executeTyped("CLUSTER", "COUNTKEYSINSLOT", slot)
 
 /**
  * Set hash slots as unbound in receiving node
@@ -36,8 +37,8 @@ suspend fun Redis.clusterCountKeysInSlot(slot: Long): Long =
  *
  * @since 3.0.0
  */
-suspend fun Redis.clusterDelSlots(vararg slots: Long) =
-    commandUnit("CLUSTER", "DELSLOTS", *slots.toTypedArray())
+suspend fun Redis.clusterDelSlots(vararg slots: Long): Unit =
+    executeTyped("CLUSTER", "DELSLOTS", *slots.toTypedArray())
 
 enum class RedisClusterFailOverMode { FORCE, TAKEOVER }
 
@@ -48,8 +49,8 @@ enum class RedisClusterFailOverMode { FORCE, TAKEOVER }
  *
  * @since 3.0.0
  */
-suspend fun Redis.clusterFailover(mode: RedisClusterFailOverMode = RedisClusterFailOverMode.FORCE) =
-    commandUnit("CLUSTER", "FAILOVER", mode.name)
+suspend fun Redis.clusterFailover(mode: RedisClusterFailOverMode = RedisClusterFailOverMode.FORCE): Unit =
+    executeTyped("CLUSTER", "FAILOVER", mode.name)
 
 /**
  * Remove a node from the nodes table
@@ -59,7 +60,7 @@ suspend fun Redis.clusterFailover(mode: RedisClusterFailOverMode = RedisClusterF
  * @since 3.0.0
  */
 suspend fun Redis.clusterForget(nodeId: Int): Unit =
-    commandUnit("CLUSTER", "FORGET", nodeId)
+    executeTyped("CLUSTER", "FORGET", nodeId)
 
 /**
  * Return local key names in the specified hash slot
@@ -69,7 +70,7 @@ suspend fun Redis.clusterForget(nodeId: Int): Unit =
  * @since 3.0.0
  */
 suspend fun Redis.clusterGetKeysInSlot(slot: Long, count: Int): List<String> =
-    commandArrayString("CLUSTER", "GETKEYSINSLOT", slot, count)
+    executeArrayString("CLUSTER", "GETKEYSINSLOT", slot, count)
 
 /**
  * Provides info about Redis Cluster node state
@@ -79,7 +80,7 @@ suspend fun Redis.clusterGetKeysInSlot(slot: Long, count: Int): List<String> =
  * @since 3.0.0
  */
 suspend fun Redis.clusterInfo(): String =
-    commandString("CLUSTER", "INFO") ?: ""
+    executeTypedNull<String>("CLUSTER", "INFO") ?: ""
 
 /**
  * Returns the hash slot of the specified key
@@ -89,7 +90,7 @@ suspend fun Redis.clusterInfo(): String =
  * @since 3.0.0
  */
 suspend fun Redis.clusterKeyslot(key: String): Long =
-    commandLong("CLUSTER", "KEYSLOT", key)
+    executeTyped("CLUSTER", "KEYSLOT", key)
 
 /**
  * Force a node cluster to handshake with another node
@@ -99,7 +100,7 @@ suspend fun Redis.clusterKeyslot(key: String): Long =
  * @since 3.0.0
  */
 suspend fun Redis.clusterMeet(ip: String, port: Int): Unit =
-    commandUnit("CLUSTER", "MEET", ip, port)
+    executeTyped("CLUSTER", "MEET", ip, port)
 
 /**
  * Get Cluster config for the node
@@ -109,7 +110,7 @@ suspend fun Redis.clusterMeet(ip: String, port: Int): Unit =
  * @since 3.0.0
  */
 suspend fun Redis.clusterNodes(): String? =
-    commandString("CLUSTER", "NODES")
+    executeTypedNull<String>("CLUSTER", "NODES")
 
 /**
  * Reconfigure a node as a slave of the specified master node
@@ -119,7 +120,7 @@ suspend fun Redis.clusterNodes(): String? =
  * @since 3.0.0
  */
 suspend fun Redis.clusterReplicate(nodeId: Long): Unit =
-    commandUnit("CLUSTER", "REPLICATE", nodeId)
+    executeTyped("CLUSTER", "REPLICATE", nodeId)
 
 /**
  * Reset a Redis Cluster node
@@ -129,7 +130,7 @@ suspend fun Redis.clusterReplicate(nodeId: Long): Unit =
  * @since 3.0.0
  */
 suspend fun Redis.clusterReset(hard: Boolean = false): Unit =
-    commandUnit("CLUSTER", "RESET", if (hard) "HARD" else "SOFT")
+    executeTyped("CLUSTER", "RESET", if (hard) "HARD" else "SOFT")
 
 /**
  * Forces the node to save cluster state on disk
@@ -139,7 +140,7 @@ suspend fun Redis.clusterReset(hard: Boolean = false): Unit =
  * @since 3.0.0
  */
 suspend fun Redis.clusterSaveconfig(): Unit =
-    commandUnit("CLUSTER", "SAVECONFIG")
+    executeTyped("CLUSTER", "SAVECONFIG")
 
 /**
  * Set the configuration epoch in a new node
@@ -148,7 +149,8 @@ suspend fun Redis.clusterSaveconfig(): Unit =
  *
  * @since 3.0.0
  */
-suspend fun Redis.clusterSetConfigEpoch(epoch: Long): Unit = commandAnyNotNull("CLUSTER", "SET-CONFIG-EPOCH", epoch)
+suspend fun Redis.clusterSetConfigEpoch(epoch: Long): Unit =
+    executeTyped("CLUSTER", "SET-CONFIG-EPOCH", epoch)
 
 /**
  * Bind a hash slot to a specific node
@@ -158,7 +160,7 @@ suspend fun Redis.clusterSetConfigEpoch(epoch: Long): Unit = commandAnyNotNull("
  * @since 3.0.0
  */
 suspend fun Redis.clusterSetSlotImporting(slot: Long, sourceNodeId: Long): Unit =
-    commandAnyNotNull("CLUSTER", "SETSLOT", slot, "IMPORTING", sourceNodeId)
+    executeTyped("CLUSTER", "SETSLOT", slot, "IMPORTING", sourceNodeId)
 
 /**
  * Bind a hash slot to a specific node
@@ -168,7 +170,7 @@ suspend fun Redis.clusterSetSlotImporting(slot: Long, sourceNodeId: Long): Unit 
  * @since 3.0.0
  */
 suspend fun Redis.clusterSetSlotMigrating(slot: Long, destNodeId: Long): Unit =
-    commandAnyNotNull("CLUSTER", "SETSLOT", slot, "MIGRATING", destNodeId)
+    executeTyped("CLUSTER", "SETSLOT", slot, "MIGRATING", destNodeId)
 
 /**
  * Bind a hash slot to a specific node
@@ -178,7 +180,7 @@ suspend fun Redis.clusterSetSlotMigrating(slot: Long, destNodeId: Long): Unit =
  * @since 3.0.0
  */
 suspend fun Redis.clusterSetSlotStable(slot: Long): Unit =
-    commandAnyNotNull("CLUSTER", "SETSLOT", slot, "STABLE")
+    executeTyped("CLUSTER", "SETSLOT", slot, "STABLE")
 
 /**
  * Bind a hash slot to a specific node
@@ -188,7 +190,7 @@ suspend fun Redis.clusterSetSlotStable(slot: Long): Unit =
  * @since 3.0.0
  */
 suspend fun Redis.clusterSetSlotNode(slot: Long, nodeId: Long): Unit =
-    commandAnyNotNull("CLUSTER", "SETSLOT", slot, "NODE", nodeId)
+    executeTyped("CLUSTER", "SETSLOT", slot, "NODE", nodeId)
 
 /**
  * List slave nodes of the specified master node
@@ -197,7 +199,8 @@ suspend fun Redis.clusterSetSlotNode(slot: Long, nodeId: Long): Unit =
  *
  * @since 3.0.0
  */
-suspend fun Redis.clusterSlaves(nodeId: Long): String? = commandString("CLUSTER", "SLAVES", nodeId)
+suspend fun Redis.clusterSlaves(nodeId: Long): String? =
+    executeTypedNull<String>("CLUSTER", "SLAVES", nodeId)
 
 /**
  * Get array of Cluster slot to node mappings
@@ -206,7 +209,8 @@ suspend fun Redis.clusterSlaves(nodeId: Long): String? = commandString("CLUSTER"
  *
  * @since 3.0.0
  */
-suspend fun Redis.clusterSlots(nodeId: Long): Any? = executeText("CLUSTER", "SLOTS")
+suspend fun Redis.clusterSlots(nodeId: Long): Any? =
+    executeText("CLUSTER", "SLOTS")
 
 /**
  * Enables read queries for a connection to a cluster slave node
@@ -215,7 +219,8 @@ suspend fun Redis.clusterSlots(nodeId: Long): Any? = executeText("CLUSTER", "SLO
  *
  * @since 3.0.0
  */
-suspend fun Redis.readonly(): Unit = commandUnit("READONLY")
+suspend fun Redis.readonly(): Unit =
+    executeTyped("READONLY")
 
 /**
  * Disables read queries for a connection to a cluster slave node
@@ -224,5 +229,6 @@ suspend fun Redis.readonly(): Unit = commandUnit("READONLY")
  *
  * @since 3.0.0
  */
-suspend fun Redis.readwrite(): Unit = commandUnit("READWRITE")
+suspend fun Redis.readwrite(): Unit =
+    executeTyped("READWRITE")
 
