@@ -77,7 +77,7 @@ internal class ConnectionPipeline(
 
     private suspend fun auth(password: String) {
         output.writePacket {
-            writeRedisValue(listOf("auth", password), charset = charset)
+            writeRedisValue(listOf("AUTH", password), charset = charset)
         }
         output.flush()
 

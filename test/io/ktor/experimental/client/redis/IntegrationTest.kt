@@ -980,10 +980,10 @@ class IntegrationTest {
             complete.await()
             assertEquals(
                 listOf(
-                    "'auth' '$REDIS_PASSWORD'",
-                    "'del' 'key1'",
-                    "'set' 'key1' 'value1'",
-                    "'get' 'key1'"
+                    "'AUTH' '$REDIS_PASSWORD'",
+                    "'DEL' 'key1'",
+                    "'SET' 'key1' 'value1'",
+                    "'GET' 'key1'"
                 ),
                 log.map {
                     it.replace(Regex("^\\d+\\.\\d+\\s*\\[.*?\\]\\s*"), "").replace('"', '\'')

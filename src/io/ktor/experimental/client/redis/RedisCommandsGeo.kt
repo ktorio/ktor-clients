@@ -45,7 +45,7 @@ inline fun geoTools(callback: GeoDistance.Companion.() -> Unit) {
  * @since 3.2.0
  */
 suspend fun Redis.geoadd(key: String, vararg items: Pair<String, GeoPosition>) = commandLong(
-    "geoadd", key, *(items.flatMap { listOf(it.second.longitude, it.second.latitude, it.first) }.toTypedArray())
+    "GEOADD", key, *(items.flatMap { listOf(it.second.longitude, it.second.latitude, it.first) }.toTypedArray())
 )
 
 /**
@@ -56,7 +56,7 @@ suspend fun Redis.geoadd(key: String, vararg items: Pair<String, GeoPosition>) =
  * @since 3.2.0
  */
 suspend fun Redis.geodist(key: String, member1: String, member2: String, unit: GeoUnit = GeoUnit.METERS): Double? = commandDoubleOrNull(
-    "geodist", key, member1, member2, unit.symbol
+    "GEODIST", key, member1, member2, unit.symbol
 )
 
 /**
@@ -67,7 +67,7 @@ suspend fun Redis.geodist(key: String, member1: String, member2: String, unit: G
  * @since 3.2.0
  */
 suspend fun Redis.geohash(key: String, vararg members: String): List<String> = commandArrayString(
-    "geohash", key, *members
+    "GEOHASH", key, *members
 )
 
 /**
@@ -78,7 +78,7 @@ suspend fun Redis.geohash(key: String, vararg members: String): List<String> = c
  * @since 3.2.0
  */
 suspend fun Redis.geopos(key: String, vararg members: String): List<GeoPosition?> =
-    commandArrayAny("geopos", key, *members).map {
+    commandArrayAny("GEOPOS", key, *members).map {
         if (it != null && it is List<*> && it.size >= 2) {
             GeoPosition(it[0].toString().toDouble(), it[1].toString().toDouble())
         } else {
@@ -152,7 +152,7 @@ private suspend fun Redis.geoRadiusCommon(
     val radiusValue = radius.value
     val radiusUnit = radius.unit
     val cmds = arrayListOf<Any?>()
-    cmds += if (reference is GeoPosition) "georadius" else "georadiusbymember"
+    cmds += if (reference is GeoPosition) "GEORADIUS" else "GEORADIUSBYMEMBER"
     cmds += key
     if (reference is GeoPosition) {
         cmds += reference.longitude

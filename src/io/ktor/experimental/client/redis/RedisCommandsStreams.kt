@@ -14,7 +14,7 @@ import kotlinx.coroutines.experimental.channels.*
 suspend fun Redis.xadd(stream: String, vararg values: Pair<String, String>, id: String = "*", maxlen: Long? = null, maxlenApproximate: Boolean = true): String =
     commandString(*arrayListOf<Any?>().apply {
         check(values.isNotEmpty())
-        add("xadd")
+        add("XADD")
         add(stream)
         if (maxlen != null) {
             add("MAXLEN")
@@ -35,7 +35,7 @@ suspend fun Redis.xadd(stream: String, vararg values: Pair<String, String>, id: 
  */
 suspend fun Redis.xtrim(stream: String, maxlen: Long, approximate: Boolean = true): Unit {
     commandBuild<Unit> {
-        add("xtrim")
+        add("XTRIM")
         add(stream)
         add("MAXLEN")
         if (approximate) add("~")
@@ -54,7 +54,7 @@ suspend fun Redis.xcreate(stream: String) = xdel(stream, xadd(stream, "dummy" to
  * @since 5.0.0
  */
 suspend fun Redis.xdel(stream: String, id: String): Unit =
-    commandUnit("xdel", stream, id)
+    commandUnit("XDEL", stream, id)
 
 /**
  * Returns the number of entries inside a stream.
@@ -63,7 +63,7 @@ suspend fun Redis.xdel(stream: String, id: String): Unit =
  *
  * @since 5.0.0
  */
-suspend fun Redis.xlen(stream: String): Long = commandLong("xlen", stream)
+suspend fun Redis.xlen(stream: String): Long = commandLong("XLEN", stream)
 
 /**
  * https://redis.io/commands/xrange
@@ -71,7 +71,7 @@ suspend fun Redis.xlen(stream: String): Long = commandLong("xlen", stream)
  * @since 5.0.0
  */
 suspend fun Redis.xrange(stream: String, start: String = "-", end: String = "+", count: Int? = null): Map<String, Map<String, String>> =
-    _xrange("xrange", stream, start, end, count)
+    _xrange("XRANGE", stream, start, end, count)
 
 /**
  * https://redis.io/commands/xrevrange
@@ -79,7 +79,7 @@ suspend fun Redis.xrange(stream: String, start: String = "-", end: String = "+",
  * @since 5.0.0
  */
 suspend fun Redis.xrevrange(stream: String, end: String = "+", start: String = "-", count: Int? = null): Map<String, Map<String, String>> =
-    _xrange("xrevrange", stream, end, start, count)
+    _xrange("XREVRANGE", stream, end, start, count)
 
 /**
  * Reads in normal or reverse direction a range of items in a channel as a stream reading it in chunks
@@ -122,7 +122,7 @@ suspend fun Redis.xget(stream: String, item: String): Pair<String, Map<String, S
  * @since 5.0.0
  */
 suspend fun Redis.xack(stream: String, group: String, vararg items: String): Int =
-    commandInt("xack", stream, group, *items)
+    commandInt("XACK", stream, group, *items)
 
 /**
  * https://redis.io/commands/xpending
@@ -132,7 +132,7 @@ suspend fun Redis.xack(stream: String, group: String, vararg items: String): Int
 suspend fun Redis.xpending(
     stream: String, group: String, start: String = "-", end: String = "+", count: Int = 10, consumer: String? = null
 ) = _xrange(arrayListOf<Any?>().apply {
-    add("xpending")
+    add("XPENDING")
     add(stream)
     add(group)
     add(start)
@@ -155,7 +155,7 @@ suspend fun Redis.xclaim(
     minIdleTime: Int,
     vararg ids: String
 ) = _xrange(arrayListOf<Any?>().apply {
-    add("xclaim")
+    add("XCLAIM")
     add(stream)
     add(group)
     add(consumer)
@@ -226,7 +226,7 @@ suspend fun Redis.xreadgroup(
  *
  * @since 5.0.0
  */
-suspend fun Redis.xinfoHelp(): List<String> = commandArrayString("xinfo", "help")
+suspend fun Redis.xinfoHelp(): List<String> = commandArrayString("XINFO", "HELP")
 
 /**
  * https://redis.io/commands/xinfo-stream
@@ -234,7 +234,7 @@ suspend fun Redis.xinfoHelp(): List<String> = commandArrayString("xinfo", "help"
  * @since 5.0.0
  */
 suspend fun Redis.xinfoStream(stream: String): RedisStreamInfo =
-    RedisStreamInfo(commandArrayAny("xinfo", "stream", stream).listOfPairsToMapAny() as Map<String, Any?>)
+    RedisStreamInfo(commandArrayAny("XINFO", "STREAM", stream).listOfPairsToMapAny() as Map<String, Any?>)
 
 /**
  * https://redis.io/commands/xinfo-groups
@@ -242,7 +242,7 @@ suspend fun Redis.xinfoStream(stream: String): RedisStreamInfo =
  * @since 5.0.0
  */
 suspend fun Redis.xinfoGroups(stream: String): List<RedisStreamGroupInfo> =
-    commandArrayAny("xinfo", "groups", stream).map {
+    commandArrayAny("XINFO", "GROUPS", stream).map {
         RedisStreamGroupInfo((it as List<Any?>).listOfPairsToMapAny() as Map<String, Any?>)
     }
 
@@ -252,7 +252,7 @@ suspend fun Redis.xinfoGroups(stream: String): List<RedisStreamGroupInfo> =
  * @since 5.0.0
  */
 suspend fun Redis.xinfoConsumers(stream: String, group :String): List<RedisStreamConsumerInfo> =
-    commandArrayAny("xinfo", "consumers", stream, group).map {
+    commandArrayAny("XINFO", "CONSUMERS", stream, group).map {
         RedisStreamConsumerInfo((it as List<Any?>).listOfPairsToMapAny() as Map<String, Any?>)
     }
 

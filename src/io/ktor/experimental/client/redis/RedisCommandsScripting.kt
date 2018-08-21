@@ -8,7 +8,7 @@ package io.ktor.experimental.client.redis
  * @since 2.6.0
  */
 suspend fun Redis.eval(script: String, vararg args: Pair<String, Any?>): Any? = executeText(
-    "eval", script, args.size,
+    "EVAL", script, args.size,
     *(args.map { it.first }.toTypedArray()),
     *(args.map { it.second }.toTypedArray())
 )
@@ -32,7 +32,7 @@ suspend fun Redis.eval(script: String, args: Map<String, Any?>): Any? =
  */
 suspend fun Redis.evalsha(sha1: String, vararg args: Pair<String, Any?>): Any? {
     return executeText(
-        "evalsha", sha1, args.size,
+        "EVALSHA", sha1, args.size,
         *(args.map { it.first }.toTypedArray()),
         *(args.map { it.second }.toTypedArray())
     )
