@@ -10,7 +10,7 @@ import java.util.*
  *
  * @since 1.0.0
  */
-suspend fun Redis.del(vararg keys: String) = commandString("del", *keys)
+suspend fun Redis.del(vararg keys: String): Long = commandLong("del", *keys)
 
 /**
  * This command is very similar to DEL: it removes the specified keys.
@@ -24,7 +24,7 @@ suspend fun Redis.del(vararg keys: String) = commandString("del", *keys)
  *
  * @since 4.0.0
  */
-suspend fun Redis.unlink(vararg keys: String) = commandString("unlink", *keys)
+suspend fun Redis.unlink(vararg keys: String): Long = commandLong("unlink", *keys)
 
 /**
  * Return a serialized version of the value stored at the specified key.
@@ -33,7 +33,7 @@ suspend fun Redis.unlink(vararg keys: String) = commandString("unlink", *keys)
  *
  * @since 2.6.0
  */
-suspend fun Redis.dump(key: String): ByteArray? = commandByteArray("dump", key)
+suspend fun Redis.dump(key: String): ByteArray? = commandAny("DUMP", key)
 
 /**
  * Create a key using the provided serialized value, previously obtained using DUMP.
@@ -42,12 +42,11 @@ suspend fun Redis.dump(key: String): ByteArray? = commandByteArray("dump", key)
  *
  * @since 2.6.0
  */
-suspend fun Redis.restore(key: String, serializedValue: ByteArray?, ttl: Long = 0L, replace: Boolean = false): String {
-    return commandString(
-        "restore", key, ttl, serializedValue,
-        *(if (replace) arrayOf("replace") else arrayOf())
+suspend fun Redis.restore(key: String, serializedValue: ByteArray?, ttl: Long = 0L, replace: Boolean = false): String =
+    commandAny(
+        "RESTORE", key, ttl, serializedValue,
+        *(if (replace) arrayOf("REPLACE") else arrayOf())
     ) ?: ""
-}
 
 /**
  * Determine if a key exists
