@@ -30,13 +30,11 @@ suspend fun Redis.eval(script: String, args: Map<String, Any?>): Any? =
  *
  * @since 2.6.0
  */
-suspend fun Redis.evalsha(sha1: String, vararg args: Pair<String, Any?>): Any? {
-    return executeText(
-        "EVALSHA", sha1, args.size,
-        *(args.map { it.first }.toTypedArray()),
-        *(args.map { it.second }.toTypedArray())
-    )
-}
+suspend fun Redis.evalsha(sha1: String, vararg args: Pair<String, Any?>): Any? = executeText(
+    "EVALSHA", sha1, args.size,
+    *(args.map { it.first }.toTypedArray()),
+    *(args.map { it.second }.toTypedArray())
+)
 
 /**
  * Execute a Lua script server side.
