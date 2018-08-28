@@ -40,14 +40,16 @@ interface Redis : Closeable {
      */
     suspend fun execute(vararg args: Any?): Any?
 
-    object InternalChannel
+    fun RedisInternalChannel.setReplyMode(mode: RedisClientReplyMode) = Unit
 
-    fun InternalChannel.setReplyMode(mode: ClientReplyMode) = Unit
-
-    fun InternalChannel.getMessageChannel(): ReceiveChannel<Any> = Channel<Any>(0).apply { close() }
-
-    enum class ClientReplyMode { ON, OFF, SKIP }
+    fun RedisInternalChannel.getMessageChannel(): ReceiveChannel<Any> = Channel<Any>(0).apply { close() }
 }
+
+@Deprecated("Do not use for now")
+object RedisInternalChannel
+
+@Deprecated("Do not use for now")
+enum class RedisClientReplyMode { ON, OFF, SKIP }
 
 /**
  * TODO
@@ -119,10 +121,10 @@ class RedisClient(
 
     override suspend fun execute(vararg args: Any?): Any? {
         return when (rmode) {
-            Redis.ClientReplyMode.ON, Redis.ClientReplyMode.SKIP -> {
+            RedisClientReplyMode.ON, RedisClientReplyMode.SKIP -> {
                 val result = CompletableDeferred<Any?>()
                 postmanService.send(RedisRequest(args, result))
-                if (rmode != Redis.ClientReplyMode.SKIP) {
+                if (rmode != RedisClientReplyMode.SKIP) {
                     try {
                         result.await()
                     } catch (e: RedisException) {
@@ -156,14 +158,14 @@ class RedisClient(
         }
     }
 
-    private var rmode = Redis.ClientReplyMode.ON
+    private var rmode = RedisClientReplyMode.ON
 
-    override fun Redis.InternalChannel.setReplyMode(mode: Redis.ClientReplyMode) {
+    override fun RedisInternalChannel.setReplyMode(mode: RedisClientReplyMode) {
         rmode = mode
     }
 
-    override fun Redis.InternalChannel.getMessageChannel(): ReceiveChannel<Any> {
-        setReplyMode(Redis.ClientReplyMode.OFF)
+    override fun RedisInternalChannel.getMessageChannel(): ReceiveChannel<Any> {
+        setReplyMode(RedisClientReplyMode.OFF)
         return produce(context) {
             while (true) {
                 val result = CompletableDeferred<Any?>()

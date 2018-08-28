@@ -14,7 +14,7 @@ interface RedisPubSubInternal : RedisPubSub {
 }
 
 internal class RedisPubSubImpl(override val redis: Redis) : RedisPubSubInternal {
-    internal val rawChannel = redis.run { Redis.InternalChannel.run { getMessageChannel() } }
+    internal val rawChannel = redis.run { RedisInternalChannel.run { getMessageChannel() } }
     internal val channel = rawChannel.map {
         val list = it as List<Any>
         val kind = list[0].toString()

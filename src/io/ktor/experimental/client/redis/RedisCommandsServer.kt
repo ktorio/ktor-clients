@@ -94,16 +94,16 @@ suspend fun Redis.clientPause(timeoutMs: Int): Unit = executeTyped("client", "pa
  *
  * @since 3.2
  */
-private suspend fun Redis.clientReply(mode: Redis.ClientReplyMode): Unit {
-    Redis.InternalChannel.apply {
+private suspend fun Redis.clientReply(mode: RedisClientReplyMode): Unit {
+    RedisInternalChannel.apply {
         setReplyMode(mode)
     }
     executeTyped<Unit>("client", "reply", mode.name)
 }
 
-internal suspend fun Redis.clientReplyOn(): Unit = clientReply(Redis.ClientReplyMode.ON)
-internal suspend fun Redis.clientReplyOff(): Unit = clientReply(Redis.ClientReplyMode.OFF)
-internal suspend fun Redis.clientReplySkip(): Unit = clientReply(Redis.ClientReplyMode.SKIP)
+internal suspend fun Redis.clientReplyOn(): Unit = clientReply(RedisClientReplyMode.ON)
+internal suspend fun Redis.clientReplyOff(): Unit = clientReply(RedisClientReplyMode.OFF)
+internal suspend fun Redis.clientReplySkip(): Unit = clientReply(RedisClientReplyMode.SKIP)
 
 internal suspend inline fun Redis.clientReplyOff(callback: () -> Unit) {
     clientReplyOff()
@@ -420,7 +420,7 @@ suspend fun Redis.memoryUsage(key: String, samplesCount: Long? = null) =
  */
 suspend inline fun Redis.monitor(): ReceiveChannel<String> {
     executeTyped<Unit>("MONITOR")
-    val stream = Redis.InternalChannel.run { getMessageChannel() }
+    val stream = RedisInternalChannel.run { getMessageChannel() }
     return stream.map { it.toString() }
 }
 
