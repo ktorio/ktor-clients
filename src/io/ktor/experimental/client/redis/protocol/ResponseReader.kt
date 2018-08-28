@@ -20,9 +20,9 @@ internal suspend fun ByteReadChannel.readRedisMessage(
         RedisType.BULK -> {
             val size = line.toInt()
             if (size < 0) return null
-            readPacket(size).readBytes().apply {
-                readShort() // Skip CRLF
-            }
+            val content = readPacket(size).readBytes()
+            readShort() // Skip CRLF
+            content
         }
         RedisType.ARRAY -> {
             val arraySize = line.toInt()
