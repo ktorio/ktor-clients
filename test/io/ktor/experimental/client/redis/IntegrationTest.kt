@@ -579,36 +579,36 @@ class IntegrationTest {
 
             assertEquals(
                 listOf(
-                    GeoRadiusResult(name = "Palermo", distance = 190.4424.km, coords = null, hash = null),
-                    GeoRadiusResult(name = "Catania", distance = 56.4413.km, coords = null, hash = null)
-                ), georadius(key, GeoPosition(15, 37), 200.km, withDist = true)
+                    GeoRadiusResult(name = "Palermo", distance = 190.4424.kilometers, coords = null, hash = null),
+                    GeoRadiusResult(name = "Catania", distance = 56.4413.kilometers, coords = null, hash = null)
+                ), georadius(key, GeoPosition(15, 37), 200.kilometers, withDist = true)
             )
 
             assertEquals(
                 listOf(
                     GeoRadiusResult(
-                        "Palermo", 190.4424.km, GeoPosition(13.361389338970184, 38.1155563954963), 3479099956230698
+                        "Palermo", 190.4424.kilometers, GeoPosition(13.361389338970184, 38.1155563954963), 3479099956230698
                     ),
                     GeoRadiusResult(
-                        "Catania", 56.4413.km, GeoPosition(15.087267458438873, 37.50266842333162), 3479447370796909
+                        "Catania", 56.4413.kilometers, GeoPosition(15.087267458438873, 37.50266842333162), 3479447370796909
                     )
-                ), georadius(key, GeoPosition(15, 37), 200.km, withDist = true, withCoord = true, withHash = true)
+                ), georadius(key, GeoPosition(15, 37), 200.kilometers, withDist = true, withCoord = true, withHash = true)
             )
 
             assertEquals(
                 listOf(
-                    GeoRadiusResult("Catania", 166.2742.km, GeoPosition(15.087267458438873, 37.50266842333162))
+                    GeoRadiusResult("Catania", 166.2742.kilometers, GeoPosition(15.087267458438873, 37.50266842333162))
                 ), georadiusbymember(
-                    key, "Palermo", 200.km, withDist = true, withCoord = true, withHash = false,
+                    key, "Palermo", 200.kilometers, withDist = true, withCoord = true, withHash = false,
                     sort = SortDirection.DESC, count = 1L
                 )
             )
 
             assertEquals(
                 listOf(
-                    GeoRadiusResult("Palermo", 0.0.km, GeoPosition(13.361389338970184, 38.1155563954963))
+                    GeoRadiusResult("Palermo", 0.0.kilometers, GeoPosition(13.361389338970184, 38.1155563954963))
                 ), georadiusbymember(
-                    key, "Palermo", 200.km, withDist = true, withCoord = true, withHash = false,
+                    key, "Palermo", 200.kilometers, withDist = true, withCoord = true, withHash = false,
                     sort = SortDirection.ASC, count = 1L
                 )
             )

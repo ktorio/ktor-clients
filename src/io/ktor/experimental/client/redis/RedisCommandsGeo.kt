@@ -10,7 +10,7 @@ enum class GeoUnit(val symbol: String, val nmet: Double) {
     METERS("m", 1.0),
     KILOMETERS("km", 0.001),
     MILES("mi", 0.000621371),
-    FEET("ft", 3.28084);
+    FEETS("ft", 3.28084);
 
     fun convertTo(value: Double, other: GeoUnit) = value * (other.nmet / this.nmet)
 }
@@ -20,16 +20,16 @@ data class GeoDistance(val value: Double, val unit: GeoUnit) {
 
     fun to(unit: GeoUnit) = this.unit.convertTo(value, unit)
 
-    val m get() = unit.convertTo(value, GeoUnit.METERS)
-    val km get() = unit.convertTo(value, GeoUnit.KILOMETERS)
-    val mi get() = unit.convertTo(value, GeoUnit.MILES)
-    val ft get() = unit.convertTo(value, GeoUnit.FEET)
+    val meters get() = unit.convertTo(value, GeoUnit.METERS)
+    val kilometers get() = unit.convertTo(value, GeoUnit.KILOMETERS)
+    val miles get() = unit.convertTo(value, GeoUnit.MILES)
+    val feets get() = unit.convertTo(value, GeoUnit.FEETS)
 
     companion object {
-        val Number.m get() = GeoDistance(this.toDouble(), GeoUnit.METERS)
-        val Number.km get() = GeoDistance(this.toDouble(), GeoUnit.KILOMETERS)
-        val Number.mi get() = GeoDistance(this.toDouble(), GeoUnit.MILES)
-        val Number.gt get() = GeoDistance(this.toDouble(), GeoUnit.FEET)
+        val Number.meters get() = GeoDistance(this.toDouble(), GeoUnit.METERS)
+        val Number.kilometers get() = GeoDistance(this.toDouble(), GeoUnit.KILOMETERS)
+        val Number.miles get() = GeoDistance(this.toDouble(), GeoUnit.MILES)
+        val Number.feets get() = GeoDistance(this.toDouble(), GeoUnit.FEETS)
     }
 }
 
