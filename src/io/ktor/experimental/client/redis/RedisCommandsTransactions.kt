@@ -10,7 +10,7 @@ package io.ktor.experimental.client.redis
  *
  * @since 2.0.0
  */
-suspend fun Redis.discard(): Unit = executeTyped("DISCARD")
+internal suspend fun Redis.discard(): Unit = executeTyped("DISCARD")
 
 /**
  * Execute all commands issued after MULTI
@@ -19,7 +19,7 @@ suspend fun Redis.discard(): Unit = executeTyped("DISCARD")
  *
  * @since 1.2.0
  */
-suspend fun Redis.exec(): Unit = executeTyped("EXEC")
+internal suspend fun Redis.exec(): Unit = executeTyped("EXEC")
 
 /**
  * Mark the start of a transaction block
@@ -28,7 +28,7 @@ suspend fun Redis.exec(): Unit = executeTyped("EXEC")
  *
  * @since 1.2.0
  */
-suspend fun Redis.multi(): Unit = executeTyped("MULTI")
+internal suspend fun Redis.multi(): Unit = executeTyped("MULTI")
 
 /**
  * Forget about all watched keys
@@ -37,7 +37,7 @@ suspend fun Redis.multi(): Unit = executeTyped("MULTI")
  *
  * @since 2.2.0
  */
-suspend fun Redis.unwatch(): Unit = executeTyped("UNWATCH")
+internal suspend fun Redis.unwatch(): Unit = executeTyped("UNWATCH")
 
 /**
  * Watch the given keys to determine execution of the MULTI/EXEC block
@@ -46,7 +46,7 @@ suspend fun Redis.unwatch(): Unit = executeTyped("UNWATCH")
  *
  * @since 2.2.0
  */
-suspend fun Redis.watch(vararg keys: String): Unit = executeTyped("WATCH", *keys)
+internal suspend fun Redis.watch(vararg keys: String): Unit = executeTyped("WATCH", *keys)
 
 /**
  * Executes a transaction.
@@ -57,7 +57,7 @@ suspend fun Redis.watch(vararg keys: String): Unit = executeTyped("WATCH", *keys
  *
  * @since 2.2.0
  */
-suspend inline fun Redis.transaction(vararg keys: String, callback: () -> Unit) {
+internal suspend inline fun Redis.transaction(vararg keys: String, callback: () -> Unit) {
     multi()
     if (keys.isNotEmpty()) watch(*keys)
     try {
