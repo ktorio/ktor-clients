@@ -90,7 +90,7 @@ suspend fun Redis.xrevrange(stream: String, end: String = "+", start: String = "
  * @since 5.0.0
  */
 suspend fun Redis.xrangeChannel(stream: String, start: String = "-", end: String = "+", chunkSize: Int = 32, reverse: Boolean = false): ReceiveChannel<Pair<String, Map<String, String>>> {
-    return Channel<Pair<String, Map<String, String>>>(chunkSize * 2)._sending {
+    return produce(context, chunkSize * 2) {
         var current = if (reverse) end else start
         do {
             val chunk = when (reverse) {
