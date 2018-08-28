@@ -40,11 +40,11 @@ interface Redis : Closeable {
      */
     suspend fun execute(vararg args: Any?): Any?
 
-    object Ex
+    object InternalChannel
 
-    fun Ex.setReplyMode(mode: ClientReplyMode) = Unit
+    fun InternalChannel.setReplyMode(mode: ClientReplyMode) = Unit
 
-    fun Ex.getMessageChannel(): ReceiveChannel<Any> = Channel<Any>(0).apply { close() }
+    fun InternalChannel.getMessageChannel(): ReceiveChannel<Any> = Channel<Any>(0).apply { close() }
 
     enum class ClientReplyMode { ON, OFF, SKIP }
 }
@@ -158,11 +158,11 @@ class RedisClient(
 
     private var rmode = Redis.ClientReplyMode.ON
 
-    override fun Redis.Ex.setReplyMode(mode: Redis.ClientReplyMode) {
+    override fun Redis.InternalChannel.setReplyMode(mode: Redis.ClientReplyMode) {
         rmode = mode
     }
 
-    override fun Redis.Ex.getMessageChannel(): ReceiveChannel<Any> {
+    override fun Redis.InternalChannel.getMessageChannel(): ReceiveChannel<Any> {
         setReplyMode(Redis.ClientReplyMode.OFF)
         return Channel<Any>(1024)._sending {
             while (true) {
