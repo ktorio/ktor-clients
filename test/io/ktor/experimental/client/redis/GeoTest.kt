@@ -1,5 +1,6 @@
 package io.ktor.experimental.client.redis
 
+import io.ktor.experimental.client.redis.geo.*
 import org.junit.Test
 import kotlin.test.*
 

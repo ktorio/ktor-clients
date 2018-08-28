@@ -1,41 +1,6 @@
 package io.ktor.experimental.client.redis
 
-data class GeoPosition(val longitude: Double, val latitude: Double)
-
-@Suppress("NOTHING_TO_INLINE")
-inline fun GeoPosition(longitude: Number, latitude: Number): GeoPosition =
-    GeoPosition(longitude.toDouble(), latitude.toDouble())
-
-enum class GeoUnit(val symbol: String, val nmet: Double) {
-    METERS("m", 1.0),
-    KILOMETERS("km", 0.001),
-    MILES("mi", 0.000621371),
-    FEETS("ft", 3.28084);
-
-    fun convertTo(value: Double, other: GeoUnit) = value * (other.nmet / this.nmet)
-}
-
-data class GeoDistance(val value: Double, val unit: GeoUnit) {
-    override fun toString(): String = "$value ${unit.symbol}"
-
-    fun to(unit: GeoUnit) = this.unit.convertTo(value, unit)
-
-    val meters get() = unit.convertTo(value, GeoUnit.METERS)
-    val kilometers get() = unit.convertTo(value, GeoUnit.KILOMETERS)
-    val miles get() = unit.convertTo(value, GeoUnit.MILES)
-    val feets get() = unit.convertTo(value, GeoUnit.FEETS)
-
-    companion object {
-        val Number.meters get() = GeoDistance(this.toDouble(), GeoUnit.METERS)
-        val Number.kilometers get() = GeoDistance(this.toDouble(), GeoUnit.KILOMETERS)
-        val Number.miles get() = GeoDistance(this.toDouble(), GeoUnit.MILES)
-        val Number.feets get() = GeoDistance(this.toDouble(), GeoUnit.FEETS)
-    }
-}
-
-inline fun geoTools(callback: GeoDistance.Companion.() -> Unit) {
-    callback(GeoDistance.Companion)
-}
+import io.ktor.experimental.client.redis.geo.*
 
 /**
  * Add one or more geospatial items in the geospatial index represented using a sorted set
@@ -189,7 +154,12 @@ private suspend fun Redis.geoRadiusCommon(
             val hash = if (withHash) item[pos++].toString()?.toLongOrNull() else null
             val coords = if (withCoord) (item[pos++] as List<*>).map { it.toString().toDouble() } else null
             GeoRadiusResult(
-                name, dist?.let { GeoDistance(it, radiusUnit) }, coords?.let { GeoPosition(it[0], it[1]) }, hash
+                name, dist?.let { GeoDistance(it, radiusUnit) }, coords?.let {
+                    GeoPosition(
+                        it[0],
+                        it[1]
+                    )
+                }, hash
             )
         }
     }
