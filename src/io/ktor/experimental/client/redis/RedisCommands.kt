@@ -123,7 +123,7 @@ internal suspend fun Redis._scanBase(
     cmd: String, key: String?,
     pattern: String? = null, count: Int? = null,
     pairs: Boolean = false
-): ReceiveChannel<Any> = Channel<Any>((count ?: 10) * 2)._sending {
+): ReceiveChannel<Any> = produce(context, (count ?: 10) * 2) {
     var cursor = 0L
     do {
         val result = _scanBaseStep(cmd, key, cursor, pattern, count)
@@ -139,17 +139,6 @@ internal suspend fun Redis._scanBase(
             }
         }
     } while (cursor > 0L)
-}
-
-internal fun <T> Channel<T>._sending(callback: suspend SendChannel<T>.() -> Unit): ReceiveChannel<T> {
-    launch(start = CoroutineStart.UNDISPATCHED) {
-        try {
-            callback()
-        } finally {
-            close()
-        }
-    }
-    return this
 }
 
 internal suspend fun Redis._scanBaseString(
