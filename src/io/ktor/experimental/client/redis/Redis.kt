@@ -40,10 +40,11 @@ interface Redis : Closeable {
      */
     suspend fun execute(vararg args: Any?): Any?
 
-    fun RedisInternalChannel.getMessageChannel(): ReceiveChannel<Any> = Channel<Any>(0).apply { close() }
+    /**
+     * Stops processing messages at redis, and returns a channel with the received redis messages.
+     */
+    fun getMessageChannel(): ReceiveChannel<Any> = Channel<Any>(0).apply { close() }
 }
-
-object RedisInternalChannel
 
 enum class RedisClientReplyMode { ON, OFF, SKIP }
 
@@ -187,7 +188,7 @@ class RedisClient(
         }
     }
 
-    override fun RedisInternalChannel.getMessageChannel(): ReceiveChannel<Any> {
+    override fun getMessageChannel(): ReceiveChannel<Any> {
         rmode = RedisClientReplyMode.OFF
         return produce(context) {
             while (true) {
