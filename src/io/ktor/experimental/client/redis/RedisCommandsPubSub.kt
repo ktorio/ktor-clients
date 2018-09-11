@@ -3,9 +3,16 @@ package io.ktor.experimental.client.redis
 import kotlinx.coroutines.experimental.channels.*
 
 interface RedisPubSub {
-    interface Packet
-    data class Subscription(val channel: String, val subscriptions: Long, val subscribe: Boolean, val isPattern: Boolean = false) : Packet
-    data class Message(val channel: String, val message: String, val isPattern: Boolean = false) : Packet
+    interface Packet {
+        val channel: String
+        val pattern: String?
+
+        val channelOrPattern: String get() =  pattern ?: channel
+        val isPattern get() = pattern != null
+    }
+
+    data class Message(override val channel: String, val message: String, override val pattern: String? = null) : Packet
+    data class Subscription(override val channel: String, val subscriptions: Long, override val pattern: String? = null) : Packet
     //data class Packet(val channel: String, val content: String, val isPattern: Boolean, val isMessage: Boolean)
 }
 
@@ -18,15 +25,13 @@ internal class RedisPubSubImpl(override val redis: Redis) : RedisPubSubInternal 
     internal val channel = rawChannel.map {
         val list = it as List<Any>
         val kind = list[0].toString()
-        val channel = list[1].toString()
-        val info = list[2].toString()
-        val isPattern = kind.startsWith("p")
-        val isSubscription = kind.startsWith("psub") || kind.startsWith("sub")
-        val isMessage = kind == "message"
-        if (isMessage) {
-            RedisPubSub.Message(channel, info, isPattern)
-        } else {
-            RedisPubSub.Subscription(channel, info.toLong(), isSubscription, isPattern)
+        val info = list.last().toString()
+        when (kind) {
+            "message" -> RedisPubSub.Message(list[1].toString(), info, pattern = null)
+            "pmessage" -> RedisPubSub.Message(list[1].toString(), info, pattern = list[2].toString())
+            "subscribe" -> RedisPubSub.Subscription(list[1].toString(), info.toLong(), pattern = null)
+            "psubscribe" -> RedisPubSub.Subscription(list[1].toString(), info.toLong(), pattern = list[2].toString())
+            else -> error("Unsupporteed kind '$kind'")
         }
     }
 }
@@ -111,7 +116,7 @@ internal suspend fun RedisPubSub.unsubscribe(vararg channels: String): RedisPubS
  * @since 2.0.0
  */
 internal suspend fun Redis.publish(channel: String, message: String): Long =
-    (this as RedisPubSubInternal).redis.executeTyped("PUBLISH", channel, message)
+    executeTyped("PUBLISH", channel, message)
 
 /**
  * Lists the currently active channels.

@@ -78,7 +78,7 @@ internal fun List<Any?>.listOfPairsToMapAny(): Map<Any?, Any?> =
 
 private val UTF8 = Charsets.UTF_8
 
-private val Any?.byteArraysToString: Any?
+internal val Any?.byteArraysToString: Any?
     get() = when (this) {
         is ByteArray -> this.toString(UTF8)
         is List<*> -> { // @TODO: Copy only on different instances

@@ -170,7 +170,7 @@ class RedisClient(
             while (true) {
                 val result = CompletableDeferred<Any?>()
                 postmanService.send(RedisRequest(null, result))
-                send(result.await() ?: Unit)
+                send(result.await()?.byteArraysToString ?: Unit)
             }
         }
     }

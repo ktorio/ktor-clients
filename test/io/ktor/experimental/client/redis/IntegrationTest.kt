@@ -289,7 +289,7 @@ class IntegrationTest {
     @Ignore("ScriptKill doesn't seems to work yet. Disable for now.")
     fun testScriptingKill() = redisTest {
         run {
-            launch(start = CoroutineStart.UNDISPATCHED) {
+            val job = launch(start = CoroutineStart.UNDISPATCHED) {
                 try {
                     eval(
                         """
@@ -303,6 +303,7 @@ class IntegrationTest {
             }
             delay(300)
             scriptKill()
+            job.join()
         }
     }
 
@@ -972,15 +973,13 @@ class IntegrationTest {
     fun testMonitor() = redisTest {
         val log = arrayListOf<String>()
         val prepared = CompletableDeferred<Unit>()
-        val complete = CompletableDeferred<Unit>()
-        launch(start = CoroutineStart.UNDISPATCHED) {
+        val job1 = launch(start = CoroutineStart.UNDISPATCHED) {
             RedisClient(address, maxConnections = 1, password = REDIS_PASSWORD).apply {
                 val channel = monitor()
                 prepared.complete(Unit)
                 repeat(4) {
                     log += channel.receive()
                 }
-                complete.complete(Unit)
             }
         }
         val value1 = "value1"
@@ -989,7 +988,7 @@ class IntegrationTest {
             del(key1)
             set(key1, value1)
             assertEquals(value1, get(key1))
-            complete.await()
+            job1.join()
             assertEquals(
                 listOf(
                     "'AUTH' '$REDIS_PASSWORD'",
@@ -1005,38 +1004,43 @@ class IntegrationTest {
     }
 
     @Test
-    fun testPubsub() = redisTest {
+    fun testPubsub() = redisTest(maxConnections = 1) {
         val log = arrayListOf<RedisPubSub.Message>()
-        val completed = CompletableDeferred<Unit>()
         val listening = CompletableDeferred<Unit>()
-        launch(start = CoroutineStart.UNDISPATCHED) {
-            RedisClient(address, maxConnections = 1, password = REDIS_PASSWORD).apply {
-                val sub = subscribe("mypubsub")
-                val messages = sub.messagesChannel()
-                listening.complete(Unit)
-                repeat(3) {
-                    log += messages.receive()
+        val completed = CompletableDeferred<Unit>()
+        val job1 = launch(start = CoroutineStart.UNDISPATCHED) {
+            try {
+                RedisClient(address, maxConnections = 1, password = REDIS_PASSWORD).apply {
+                    val sub = subscribe("mypubsub")
+                    val messages = sub.messagesChannel()
+                    listening.complete(Unit)
+                    repeat(3) {
+                        log += messages.receive()
+                    }
                 }
+            } catch (e: Throwable) {
+                e.printStackTrace()
+            } finally {
                 completed.complete(Unit)
             }
         }
 
-        launch(start = CoroutineStart.UNDISPATCHED) {
-            listening.await()
-            publish("mypubsub2", "nope")
-            publish("mypubsub", "hi")
-            publish("mypubsub", "hello")
-            publish("mypubsub", "world")
-            assertEquals(
-                listOf(
-                    RedisPubSub.Message("mypubsub", "hi"),
-                    RedisPubSub.Message("mypubsub", "hello"),
-                    RedisPubSub.Message("mypubsub", "world")
-                ),
-                log
-            )
-            completed.await()
-        }
+        listening.await()
+        publish("mypubsub2", "nope")
+        publish("mypubsub", "hi")
+        publish("mypubsub", "hello")
+        publish("mypubsub", "world")
+
+        completed.await()
+
+        assertEquals(
+            listOf(
+                RedisPubSub.Message("mypubsub", "hi", pattern = "mypubsub"),
+                RedisPubSub.Message("mypubsub", "hello", pattern = "mypubsub"),
+                RedisPubSub.Message("mypubsub", "world", pattern = "mypubsub")
+            ),
+            log
+        )
     }
 
     @Test
