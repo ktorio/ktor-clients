@@ -94,12 +94,8 @@ suspend fun Redis.clientPause(timeoutMs: Int): Unit = executeTyped("client", "pa
  *
  * @since 3.2
  */
-private suspend fun Redis.clientReply(mode: RedisClientReplyMode): Unit {
-    RedisInternalChannel.apply {
-        setReplyMode(mode)
-    }
+private suspend fun Redis.clientReply(mode: RedisClientReplyMode): Unit =
     executeTyped<Unit>("client", "reply", mode.name)
-}
 
 suspend fun Redis.clientReplyOn(): Unit = clientReply(RedisClientReplyMode.ON)
 suspend fun Redis.clientReplyOff(): Unit = clientReply(RedisClientReplyMode.OFF)

@@ -40,8 +40,6 @@ interface Redis : Closeable {
      */
     suspend fun execute(vararg args: Any?): Any?
 
-    fun RedisInternalChannel.setReplyMode(mode: RedisClientReplyMode) = Unit
-
     fun RedisInternalChannel.getMessageChannel(): ReceiveChannel<Any> = Channel<Any>(0).apply { close() }
 }
 
@@ -151,6 +149,7 @@ class RedisClient(
     }
 
     override suspend fun execute(vararg args: Any?): Any? {
+        checkSpecialCommands(*args)
         return when (rmode) {
             RedisClientReplyMode.ON, RedisClientReplyMode.SKIP -> {
                 val result = CompletableDeferred<Any?>()
@@ -178,12 +177,20 @@ class RedisClient(
 
     private var rmode = RedisClientReplyMode.ON
 
-    override fun RedisInternalChannel.setReplyMode(mode: RedisClientReplyMode) {
-        rmode = mode
+    private fun checkSpecialCommands(vararg args: Any?) {
+        if (args.getOrNull(0)?.toString()?.equals("client", ignoreCase = true) == true) {
+            if (args.getOrNull(1)?.toString()?.equals("reply", ignoreCase = true) == true) {
+                when (args.getOrNull(2)?.toString()?.toLowerCase() ?: "on") {
+                    "on" -> rmode = RedisClientReplyMode.ON
+                    "off" -> rmode = RedisClientReplyMode.OFF
+                    "skip" -> rmode = RedisClientReplyMode.SKIP
+                }
+            }
+        }
     }
 
     override fun RedisInternalChannel.getMessageChannel(): ReceiveChannel<Any> {
-        setReplyMode(RedisClientReplyMode.OFF)
+        rmode = RedisClientReplyMode.OFF
         return produce(context) {
             while (true) {
                 val result = CompletableDeferred<Any?>()
