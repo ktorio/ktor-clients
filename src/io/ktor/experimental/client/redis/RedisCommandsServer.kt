@@ -101,9 +101,9 @@ private suspend fun Redis.clientReply(mode: RedisClientReplyMode): Unit {
     executeTyped<Unit>("client", "reply", mode.name)
 }
 
-internal suspend fun Redis.clientReplyOn(): Unit = clientReply(RedisClientReplyMode.ON)
-internal suspend fun Redis.clientReplyOff(): Unit = clientReply(RedisClientReplyMode.OFF)
-internal suspend fun Redis.clientReplySkip(): Unit = clientReply(RedisClientReplyMode.SKIP)
+suspend fun Redis.clientReplyOn(): Unit = clientReply(RedisClientReplyMode.ON)
+suspend fun Redis.clientReplyOff(): Unit = clientReply(RedisClientReplyMode.OFF)
+suspend fun Redis.clientReplySkip(): Unit = clientReply(RedisClientReplyMode.SKIP)
 
 internal suspend inline fun Redis.clientReplyOff(callback: () -> Unit) {
     clientReplyOff()

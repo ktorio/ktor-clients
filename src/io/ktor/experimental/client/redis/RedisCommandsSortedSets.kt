@@ -331,7 +331,7 @@ enum class RedisZBoolStoreAggregate {
 }
 
 // ZINTERSTORE destination numkeys key [key ...] [WEIGHTS weight [weight ...]] [AGGREGATE SUM|MIN|MAX]
-internal suspend fun Redis._zboolstore(
+suspend fun Redis._zboolstore(
     kind: String,
     dest: String,
     vararg keys: Pair<String, Double>,

@@ -48,7 +48,7 @@ private suspend fun Redis._pubsub(): RedisPubSub = RedisPubSubImpl(this)
  *
  * @since 2.0.0
  */
-internal suspend fun Redis.psubscribe(vararg patterns: String): RedisPubSub = _pubsub().psubscribe(*patterns)
+suspend fun Redis.psubscribe(vararg patterns: String): RedisPubSub = _pubsub().psubscribe(*patterns)
 
 /**
  * Listen for messages published to the given channels
@@ -57,7 +57,7 @@ internal suspend fun Redis.psubscribe(vararg patterns: String): RedisPubSub = _p
  *
  * @since 2.0.0
  */
-internal suspend fun Redis.subscribe(vararg channels: String): RedisPubSub = _pubsub().psubscribe(*channels)
+suspend fun Redis.subscribe(vararg channels: String): RedisPubSub = _pubsub().psubscribe(*channels)
 
 /**
  * Listen for messages published to channels matching the given patterns
@@ -66,7 +66,7 @@ internal suspend fun Redis.subscribe(vararg channels: String): RedisPubSub = _pu
  *
  * @since 2.0.0
  */
-internal suspend fun RedisPubSub.psubscribe(vararg patterns: String): RedisPubSub =
+suspend fun RedisPubSub.psubscribe(vararg patterns: String): RedisPubSub =
     this.apply { (this as RedisPubSubImpl).redis.executeTyped("PSUBSCRIBE", *patterns) }
 
 /**
@@ -76,17 +76,17 @@ internal suspend fun RedisPubSub.psubscribe(vararg patterns: String): RedisPubSu
  *
  * @since 2.0.0
  */
-internal suspend fun RedisPubSub.subscribe(vararg channels: String): RedisPubSub =
+suspend fun RedisPubSub.subscribe(vararg channels: String): RedisPubSub =
     this.apply { (this as RedisPubSubImpl).redis.executeTyped("SUBSCRIBE", *channels) }
 
 /**
  * Gets the a channel of packets for this client subscription.
  */
-internal suspend fun RedisPubSub.channel(): ReceiveChannel<RedisPubSub.Packet> = (this as RedisPubSubImpl).channel
+suspend fun RedisPubSub.channel(): ReceiveChannel<RedisPubSub.Packet> = (this as RedisPubSubImpl).channel
 
-internal suspend fun RedisPubSub.messagesChannel(): ReceiveChannel<RedisPubSub.Message> = channel().map { it as? RedisPubSub.Message? }.filterNotNull()
+suspend fun RedisPubSub.messagesChannel(): ReceiveChannel<RedisPubSub.Message> = channel().map { it as? RedisPubSub.Message? }.filterNotNull()
 
-internal suspend fun RedisPubSub.subscriptionChannel(): ReceiveChannel<RedisPubSub.Subscription> = channel().map { it as? RedisPubSub.Subscription? }.filterNotNull()
+suspend fun RedisPubSub.subscriptionChannel(): ReceiveChannel<RedisPubSub.Subscription> = channel().map { it as? RedisPubSub.Subscription? }.filterNotNull()
 
 /**
  * Stop listening for messages posted to channels matching the given patterns
@@ -95,7 +95,7 @@ internal suspend fun RedisPubSub.subscriptionChannel(): ReceiveChannel<RedisPubS
  *
  * @since 2.0.0
  */
-internal suspend fun RedisPubSub.punsubscribe(vararg patterns: String): RedisPubSub =
+suspend fun RedisPubSub.punsubscribe(vararg patterns: String): RedisPubSub =
     this.apply { (this as RedisPubSubImpl).redis.executeTyped("PUNSUBSCRIBE", *patterns) }
 
 /**
@@ -105,7 +105,7 @@ internal suspend fun RedisPubSub.punsubscribe(vararg patterns: String): RedisPub
  *
  * @since 2.0.0
  */
-internal suspend fun RedisPubSub.unsubscribe(vararg channels: String): RedisPubSub =
+suspend fun RedisPubSub.unsubscribe(vararg channels: String): RedisPubSub =
     this.apply { (this as RedisPubSubImpl).redis.executeTyped("UNSUBSCRIBE", *channels) }
 
 /**
@@ -115,7 +115,7 @@ internal suspend fun RedisPubSub.unsubscribe(vararg channels: String): RedisPubS
  *
  * @since 2.0.0
  */
-internal suspend fun Redis.publish(channel: String, message: String): Long =
+suspend fun Redis.publish(channel: String, message: String): Long =
     executeTyped("PUBLISH", channel, message)
 
 /**
@@ -128,7 +128,7 @@ internal suspend fun Redis.publish(channel: String, message: String): Long =
  *
  * @since 2.8.0
  */
-internal suspend fun RedisPubSub.pubsubChannels(pattern: String?): List<String> =
+suspend fun RedisPubSub.pubsubChannels(pattern: String?): List<String> =
     (this as RedisPubSubInternal).redis.executeArrayString(*arrayOfNotNull("PUBSUB", "CHANNELS", pattern))
 
 /**
@@ -138,7 +138,7 @@ internal suspend fun RedisPubSub.pubsubChannels(pattern: String?): List<String> 
  *
  * @since 2.8.0
  */
-internal suspend fun RedisPubSub.pubsubNumsub(vararg channels: String): Map<String, Long> =
+suspend fun RedisPubSub.pubsubNumsub(vararg channels: String): Map<String, Long> =
     (this as RedisPubSubInternal).redis.executeArrayString("PUBSUB", "NUMSUB", *channels).toListOfPairsString()
         .map { it.first to it.second.toLong() }.toMap()
 
@@ -151,5 +151,5 @@ internal suspend fun RedisPubSub.pubsubNumsub(vararg channels: String): Map<Stri
  *
  * @since 2.8.0
  */
-internal suspend fun RedisPubSub.pubsubNumpat(): Long =
+suspend fun RedisPubSub.pubsubNumpat(): Long =
     (this as RedisPubSubInternal).redis.executeTyped("PUBSUB", "NUMPAT")

@@ -45,10 +45,8 @@ interface Redis : Closeable {
     fun RedisInternalChannel.getMessageChannel(): ReceiveChannel<Any> = Channel<Any>(0).apply { close() }
 }
 
-@Deprecated("Do not use for now")
 object RedisInternalChannel
 
-@Deprecated("Do not use for now")
 enum class RedisClientReplyMode { ON, OFF, SKIP }
 
 class RedisMultiClient(
