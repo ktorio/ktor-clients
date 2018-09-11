@@ -51,6 +51,48 @@ object RedisInternalChannel
 @Deprecated("Do not use for now")
 enum class RedisClientReplyMode { ON, OFF, SKIP }
 
+class RedisMultiClient(
+    private val addresses: List<SocketAddress> = listOf(InetSocketAddress("127.0.0.1", 6379)),
+    private val maxConnections: Int = 50,
+    private val password: String? = null,
+    val charset: Charset = Charsets.UTF_8,
+    private val dispatcher: CoroutineDispatcher = DefaultDispatcher
+) {
+    private val clients = Channel<Redis>(maxConnections)
+    private val allocatedClients = AtomicInteger()
+    private var addressOffset = 0
+
+    /**
+     * Gets a temporal Redis instance to perform operations on a single redis instance.
+     */
+    suspend fun session(callback: suspend Redis.() -> Unit) {
+        val client = getOrAllocateClient()
+        try {
+            callback(client)
+        } finally {
+            releaseClient(client)
+        }
+    }
+
+    private suspend fun getOrAllocateClient(): Redis {
+        return if (allocatedClients.get() < maxConnections) {
+            clients.poll() ?: allocateClient()
+        } else {
+            clients.receive()
+        }
+    }
+
+    private fun allocateClient(): Redis {
+        allocatedClients.incrementAndGet()
+        return RedisClient(addresses[addressOffset++ % addresses.size], password, charset, dispatcher)
+    }
+
+    private fun releaseClient(client: Redis): Unit {
+        clients.offer(client)
+    }
+
+}
+
 /**
  * TODO
  * 1. add pipeline timeouts
@@ -65,7 +107,6 @@ enum class RedisClientReplyMode { ON, OFF, SKIP }
  */
 class RedisClient(
     private val address: SocketAddress = InetSocketAddress("127.0.0.1", 6379),
-    maxConnections: Int = 50,
     private val password: String? = null,
     override val charset: Charset = Charsets.UTF_8,
     private val dispatcher: CoroutineDispatcher = DefaultDispatcher
@@ -73,13 +114,11 @@ class RedisClient(
     constructor(
         host: String,
         port: Int = Redis.DEFAULT_PORT,
-        maxConnections: Int = 50,
         password: String? = null,
         charset: Charset = Charsets.UTF_8,
         dispatcher: CoroutineDispatcher = DefaultDispatcher
     ) : this(
         InetSocketAddress(host, port),
-        maxConnections,
         password,
         charset,
         dispatcher
@@ -87,24 +126,18 @@ class RedisClient(
 
     override val context: Job = Job()
 
-    private val runningPipelines = AtomicInteger()
     private val selectorManager = ActorSelectorManager(dispatcher)
     private val requestQueue = Channel<RedisRequest>()
+    private lateinit var pipeline: ConnectionPipeline
 
-    private val postmanService = actor<RedisRequest>(
-        dispatcher, parent = context
-    ) {
+    private val postmanService = actor<RedisRequest>(dispatcher, parent = context) {
         channel.consumeEach {
-            if (requestQueue.offer(it)) return@consumeEach
-
-            while (true) {
-                val current = runningPipelines.get()
-                if (current >= maxConnections) break
-
-                if (!runningPipelines.compareAndSet(current, current + 1)) continue
-
-                createNewPipeline()
-                break
+            if (!::pipeline.isInitialized) {
+                val socket = aSocket(selectorManager)
+                    .tcpNoDelay()
+                    .tcp()
+                    .connect(address)
+                pipeline = ConnectionPipeline(socket, requestQueue, password, charset, dispatcher = dispatcher)
             }
 
             requestQueue.send(it)
@@ -143,19 +176,6 @@ class RedisClient(
 
     override fun close() {
         context.cancel()
-    }
-
-    private suspend fun createNewPipeline() {
-        val socket = aSocket(selectorManager)
-            .tcpNoDelay()
-            .tcp()
-            .connect(address)
-
-        val pipeline = ConnectionPipeline(socket, requestQueue, password, charset, dispatcher = dispatcher)
-
-        pipeline.context.invokeOnCompletion {
-            runningPipelines.decrementAndGet()
-        }
     }
 
     private var rmode = RedisClientReplyMode.ON

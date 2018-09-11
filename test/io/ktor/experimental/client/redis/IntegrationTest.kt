@@ -960,7 +960,7 @@ class IntegrationTest {
 
     @Test
     fun testDisableProcessing() = redisTest {
-        RedisClient(address, maxConnections = 1, password = REDIS_PASSWORD).apply {
+        RedisClient(address, password = REDIS_PASSWORD).apply {
             clientReplyOff {
                 del(key1)
                 lpush(key1, "a", "b", "c")
@@ -974,7 +974,7 @@ class IntegrationTest {
         val log = arrayListOf<String>()
         val prepared = CompletableDeferred<Unit>()
         val job1 = launch(start = CoroutineStart.UNDISPATCHED) {
-            RedisClient(address, maxConnections = 1, password = REDIS_PASSWORD).apply {
+            RedisClient(address, password = REDIS_PASSWORD).apply {
                 val channel = monitor()
                 prepared.complete(Unit)
                 repeat(4) {
@@ -984,7 +984,7 @@ class IntegrationTest {
         }
         val value1 = "value1"
         prepared.await()
-        RedisClient(address, maxConnections = 1, password = REDIS_PASSWORD).apply {
+        RedisClient(address, password = REDIS_PASSWORD).apply {
             del(key1)
             set(key1, value1)
             assertEquals(value1, get(key1))
@@ -1004,13 +1004,13 @@ class IntegrationTest {
     }
 
     @Test
-    fun testPubsub() = redisTest(maxConnections = 1) {
+    fun testPubsub() = redisTest {
         val log = arrayListOf<RedisPubSub.Message>()
         val listening = CompletableDeferred<Unit>()
         val completed = CompletableDeferred<Unit>()
         val job1 = launch(start = CoroutineStart.UNDISPATCHED) {
             try {
-                RedisClient(address, maxConnections = 1, password = REDIS_PASSWORD).apply {
+                RedisClient(address, password = REDIS_PASSWORD).apply {
                     val sub = subscribe("mypubsub")
                     val messages = sub.messagesChannel()
                     listening.complete(Unit)
@@ -1044,20 +1044,20 @@ class IntegrationTest {
     }
 
     @Test
-    fun testTransaction() = redisTest(maxConnections = 1) {
+    fun testTransaction() = redisTest {
         val value = "value"
         del(key1)
         del(key2)
         transaction {
             set(key1, value)
             assertEquals("QUEUED", get(key1)) // The same client sees QUEUED
-            redisTest(maxConnections = 1) {
+            redisTest {
                 assertEquals(null, get(key1)) // Other clients doesn't sees the changes
             }
             set(key2, value)
         }
         assertEquals(value, get(key1)) // The same client now sees the result
-        redisTest(maxConnections = 1) {
+        redisTest {
             assertEquals(value, get(key1)) // As does other clients
         }
     }
@@ -1093,11 +1093,10 @@ class IntegrationTest {
 
     private fun redisTest(
         password: String = REDIS_PASSWORD,
-        maxConnections: Int = 50,
         cleanup: suspend Redis.() -> Unit = {},
         callback: suspend Redis.() -> Unit
     ) =
-        redisTest(address, password, maxConnections = maxConnections) {
+        redisTest(address, password) {
             cleanup()
             try {
                 callback()
