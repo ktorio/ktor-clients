@@ -121,29 +121,23 @@ class RedisClient(
 
     override val context: Job = Job()
 
-    private val selectorManager = ActorSelectorManager(dispatcher)
-    private val requestQueue = Channel<RedisRequest>()
-    private lateinit var pipeline: ConnectionPipeline
-
     private val postmanService = actor<RedisRequest>(dispatcher, parent = context) {
-        channel.consumeEach {
-            if (!::pipeline.isInitialized) {
-                val socket = aSocket(selectorManager)
-                    .tcpNoDelay()
-                    .tcp()
-                    .connect(address)
-                pipeline = ConnectionPipeline(socket, requestQueue, password, charset, dispatcher = dispatcher)
-            }
-
-            requestQueue.send(it)
-        }
-
-        requestQueue.close()
-    }
-
-    init {
+        val selectorManager = ActorSelectorManager(dispatcher)
         context.invokeOnCompletion {
             selectorManager.close()
+        }
+
+        val requestQueue = Channel<RedisRequest>()
+        val socket = aSocket(selectorManager).tcpNoDelay().tcp().connect(address)
+        val pipeline = ConnectionPipeline(socket, requestQueue, password, charset, dispatcher = dispatcher)
+
+        try {
+            channel.consumeEach {
+                requestQueue.send(it)
+            }
+        } finally {
+            pipeline.close()
+            requestQueue.close()
         }
     }
 
