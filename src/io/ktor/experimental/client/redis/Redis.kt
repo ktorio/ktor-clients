@@ -127,17 +127,13 @@ class RedisClient(
             selectorManager.close()
         }
 
-        val requestQueue = Channel<RedisRequest>()
         val socket = aSocket(selectorManager).tcpNoDelay().tcp().connect(address)
-        val pipeline = ConnectionPipeline(socket, requestQueue, password, charset, dispatcher = dispatcher)
+        val pipeline = ConnectionPipeline(socket, password, charset, dispatcher = dispatcher)
 
-        try {
+        pipeline.use { pipeline ->
             channel.consumeEach {
-                requestQueue.send(it)
+                pipeline.send(it)
             }
-        } finally {
-            pipeline.close()
-            requestQueue.close()
         }
     }
 

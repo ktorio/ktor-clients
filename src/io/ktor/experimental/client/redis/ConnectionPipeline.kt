@@ -19,12 +19,12 @@ private const val DEFAULT_PIPELINE_SIZE = 10
  */
 internal class ConnectionPipeline(
     socket: Socket,
-    private val requestQueue: Channel<RedisRequest>,
     private val password: String?,
     private val charset: Charset,
     pipelineSize: Int = DEFAULT_PIPELINE_SIZE,
     dispatcher: CoroutineDispatcher = DefaultDispatcher
 ) : Closeable {
+    private val requestQueue: Channel<RedisRequest> = Channel<RedisRequest>()
     private val input = socket.openReadChannel()
     private val output = socket.openWriteChannel()
 
@@ -71,7 +71,12 @@ internal class ConnectionPipeline(
         socket.close()
     }
 
+    suspend fun send(request: RedisRequest) {
+        requestQueue.send(request)
+    }
+
     override fun close() {
+        requestQueue.close()
         context.cancel()
     }
 
