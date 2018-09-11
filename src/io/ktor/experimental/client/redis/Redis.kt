@@ -92,8 +92,6 @@ class RedisMultiClient(
 /**
  * TODO
  * 1. add pipeline timeouts
- * 2. multiple endpoints (since the point of having several connections is mostly multiple endpoints)
- * 3. redis connections are stateful, so the connection pool cannot be done at this level
  */
 
 /**
