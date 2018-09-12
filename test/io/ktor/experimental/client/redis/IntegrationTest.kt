@@ -13,6 +13,7 @@ import org.junit.Ignore
 import org.junit.Test
 import java.net.*
 import java.util.*
+import java.util.concurrent.*
 import kotlin.math.*
 import kotlin.system.*
 import kotlin.test.*
@@ -1106,7 +1107,7 @@ class IntegrationTest {
         password: String = REDIS_PASSWORD,
         cleanup: suspend Redis.() -> Unit = {},
         callback: suspend Redis.() -> Unit
-    ) =
+    ) {
         redisTest(address, password) {
             cleanup()
             try {
@@ -1115,6 +1116,19 @@ class IntegrationTest {
                 cleanup()
             }
         }
+    }
+
+    private fun redisTest(
+        address: InetSocketAddress,
+        password: String? = null,
+        block: suspend Redis.() -> Unit
+    ) = runBlocking {
+        withTimeout(10, TimeUnit.SECONDS) {
+            RedisClient(address, password = password).use { redis ->
+                redis.block()
+            }
+        }
+    }
 
     companion object {
         val REDIS_SERVICE = "redis"
