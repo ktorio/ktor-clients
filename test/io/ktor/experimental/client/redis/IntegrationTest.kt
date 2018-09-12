@@ -841,8 +841,8 @@ class IntegrationTest {
         val log = arrayListOf<String>()
 
         xadd(mystream, "name" to "a")
-        val process1 = async {
-            RedisClient(address, password = REDIS_PASSWORD).apply {
+        val process1 = launch {
+            redisClient {
                 xprocessBatch(mystream, mygroup1, consumer1, blockMs = 1_000, batchSize = 3, id = ">") {
                         stream, id, info ->
                     log += "$stream :: $info"
@@ -852,7 +852,9 @@ class IntegrationTest {
         }
         xadd(mystream, "name" to "b")
         xadd(mystream, "name" to "c")
-        process1.await()
+        println("Waiting redis client to complete...")
+        process1.join()
+        println("Completed")
         assertEquals(
             listOf(
                 "mystream :: {name=a}",
@@ -960,7 +962,7 @@ class IntegrationTest {
 
     @Test
     fun testDisableProcessing() = redisTest {
-        RedisClient(address, password = REDIS_PASSWORD).apply {
+        redisClient {
             clientReplyOff {
                 del(key1)
                 lpush(key1, "a", "b", "c")
@@ -973,8 +975,8 @@ class IntegrationTest {
     fun testMonitor() = redisTest {
         val log = arrayListOf<String>()
         val prepared = CompletableDeferred<Unit>()
-        val job1 = launch(start = CoroutineStart.UNDISPATCHED) {
-            RedisClient(address, password = REDIS_PASSWORD).apply {
+        val job1 = launch {
+            redisClient {
                 val channel = monitor()
                 prepared.complete(Unit)
                 repeat(4) {
@@ -984,7 +986,7 @@ class IntegrationTest {
         }
         val value1 = "value1"
         prepared.await()
-        RedisClient(address, password = REDIS_PASSWORD).apply {
+        redisClient {
             del(key1)
             set(key1, value1)
             assertEquals(value1, get(key1))
@@ -1010,7 +1012,7 @@ class IntegrationTest {
         val completed = CompletableDeferred<Unit>()
         val job1 = launch(start = CoroutineStart.UNDISPATCHED) {
             try {
-                RedisClient(address, password = REDIS_PASSWORD).apply {
+                redisClient {
                     val sub = subscribe("mypubsub")
                     val messages = sub.messagesChannel()
                     listening.complete(Unit)
@@ -1051,13 +1053,13 @@ class IntegrationTest {
         transaction {
             set(key1, value)
             assertEquals("QUEUED", get(key1)) // The same client sees QUEUED
-            redisTest {
+            redisClient {
                 assertEquals(null, get(key1)) // Other clients doesn't sees the changes
             }
             set(key2, value)
         }
         assertEquals(value, get(key1)) // The same client now sees the result
-        redisTest {
+        redisClient {
             assertEquals(value, get(key1)) // As does other clients
         }
     }
@@ -1088,6 +1090,15 @@ class IntegrationTest {
             } else {
                 throw e
             }
+        }
+    }
+
+    private suspend fun redisClient(
+        password: String = REDIS_PASSWORD,
+        block: suspend Redis.() -> Unit
+    ) {
+        RedisClient(address, password = password).use { redis ->
+            redis.block()
         }
     }
 
