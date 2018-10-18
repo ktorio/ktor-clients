@@ -4,7 +4,7 @@
 
 package io.ktor.experimental.client.redis
 
-import kotlinx.coroutines.experimental.channels.*
+import kotlinx.coroutines.channels.*
 
 /**
  * https://redis.io/commands/xadd

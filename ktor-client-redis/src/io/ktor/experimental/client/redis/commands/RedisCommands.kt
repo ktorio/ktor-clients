@@ -1,7 +1,7 @@
 package io.ktor.experimental.client.redis
 
-import kotlinx.coroutines.experimental.*
-import kotlinx.coroutines.experimental.channels.*
+import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.*
 import kotlin.reflect.*
 
 enum class SortDirection { ASC, DESC }

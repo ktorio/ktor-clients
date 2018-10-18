@@ -1,0 +1,11 @@
+version: "2.0"
+
+services:
+  postgre:
+    image: "postgres:11-alpine"
+    restart: always
+    ports:
+      - 5432
+    environment:
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: hello
