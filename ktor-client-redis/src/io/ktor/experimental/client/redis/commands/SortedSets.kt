@@ -1,5 +1,6 @@
-package io.ktor.experimental.client.redis
+package io.ktor.experimental.client.redis.commands
 
+import io.ktor.experimental.client.redis.*
 import kotlinx.coroutines.channels.*
 
 data class RedisBzPopResult(val key: String, val member: String, val score: Double)
@@ -9,7 +10,11 @@ data class RedisBzPopResult(val key: String, val member: String, val score: Doub
  */
 suspend fun Redis.bzpopmax(vararg keys: String, timeout: Long = 0): RedisBzPopResult? {
     val parts = executeArrayString("BZPOPMAX", *keys, timeout)
-    return if (parts.size >= 3) RedisBzPopResult(parts[0], parts[2], parts[1].toDouble()) else null
+    return if (parts.size >= 3) RedisBzPopResult(
+        parts[0],
+        parts[2],
+        parts[1].toDouble()
+    ) else null
 }
 
 /**
@@ -17,7 +22,11 @@ suspend fun Redis.bzpopmax(vararg keys: String, timeout: Long = 0): RedisBzPopRe
  */
 suspend fun Redis.bzpopmin(vararg keys: String, timeout: Long = 0): RedisBzPopResult? {
     val parts = executeArrayString("BZPOPMAX", *keys, timeout)
-    return if (parts.size >= 3) RedisBzPopResult(parts[0], parts[2], parts[1].toDouble()) else null
+    return if (parts.size >= 3) RedisBzPopResult(
+        parts[0],
+        parts[2],
+        parts[1].toDouble()
+    ) else null
 }
 
 /**

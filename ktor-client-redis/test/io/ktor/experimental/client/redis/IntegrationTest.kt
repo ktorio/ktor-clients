@@ -4,10 +4,11 @@ import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.*
 import com.palantir.docker.compose.*
 import com.palantir.docker.compose.connection.waiting.*
+import io.ktor.experimental.client.redis.commands.*
 import io.ktor.experimental.client.redis.geo.*
 import io.ktor.experimental.client.redis.protocol.*
-import kotlinx.coroutines.experimental.*
-import kotlinx.coroutines.experimental.channels.*
+import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.*
 import org.junit.*
 import org.junit.Ignore
 import org.junit.Test
@@ -580,8 +581,18 @@ class IntegrationTest {
 
             assertEquals(
                 listOf(
-                    GeoRadiusResult(name = "Palermo", distance = 190.4424.kilometers, coords = null, hash = null),
-                    GeoRadiusResult(name = "Catania", distance = 56.4413.kilometers, coords = null, hash = null)
+                    GeoRadiusResult(
+                        name = "Palermo",
+                        distance = 190.4424.kilometers,
+                        coords = null,
+                        hash = null
+                    ),
+                    GeoRadiusResult(
+                        name = "Catania",
+                        distance = 56.4413.kilometers,
+                        coords = null,
+                        hash = null
+                    )
                 ), georadius(key, GeoPosition(15, 37), 200.kilometers, withDist = true)
             )
 

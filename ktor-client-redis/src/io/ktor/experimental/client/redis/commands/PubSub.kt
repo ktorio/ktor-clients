@@ -1,11 +1,14 @@
-package io.ktor.experimental.client.redis
+package io.ktor.experimental.client.redis.commands
 
+import io.ktor.experimental.client.redis.*
 import kotlinx.coroutines.channels.*
 
 interface RedisPubSub {
     interface Packet
-    data class Subscription(val channel: String, val subscriptions: Long, val subscribe: Boolean, val isPattern: Boolean = false) : Packet
-    data class Message(val channel: String, val message: String, val isPattern: Boolean = false) : Packet
+    data class Subscription(val channel: String, val subscriptions: Long, val subscribe: Boolean, val isPattern: Boolean = false) :
+        Packet
+    data class Message(val channel: String, val message: String, val isPattern: Boolean = false) :
+        Packet
     //data class Packet(val channel: String, val content: String, val isPattern: Boolean, val isMessage: Boolean)
 }
 
@@ -13,7 +16,8 @@ interface RedisPubSubInternal : RedisPubSub {
     val redis: Redis
 }
 
-internal class RedisPubSubImpl(override val redis: Redis) : RedisPubSubInternal {
+internal class RedisPubSubImpl(override val redis: Redis) :
+    RedisPubSubInternal {
     internal val rawChannel = redis.run { RedisInternalChannel.run { getMessageChannel() } }
     internal val channel = rawChannel.map {
         val list = it as List<Any>
@@ -26,7 +30,12 @@ internal class RedisPubSubImpl(override val redis: Redis) : RedisPubSubInternal 
         if (isMessage) {
             RedisPubSub.Message(channel, info, isPattern)
         } else {
-            RedisPubSub.Subscription(channel, info.toLong(), isSubscription, isPattern)
+            RedisPubSub.Subscription(
+                channel,
+                info.toLong(),
+                isSubscription,
+                isPattern
+            )
         }
     }
 }
@@ -34,7 +43,8 @@ internal class RedisPubSubImpl(override val redis: Redis) : RedisPubSubInternal 
 /**
  * Starts a new pubsub session.
  */
-private suspend fun Redis._pubsub(): RedisPubSub = RedisPubSubImpl(this)
+private suspend fun Redis._pubsub(): RedisPubSub =
+    RedisPubSubImpl(this)
 
 /**
  * Listen for messages published to channels matching the given patterns
@@ -124,7 +134,12 @@ internal suspend fun Redis.publish(channel: String, message: String): Long =
  * @since 2.8.0
  */
 internal suspend fun RedisPubSub.pubsubChannels(pattern: String?): List<String> =
-    (this as RedisPubSubInternal).redis.executeArrayString(*arrayOfNotNull("PUBSUB", "CHANNELS", pattern))
+    (this as RedisPubSubInternal).redis.executeArrayString(*arrayOfNotNull(
+        "PUBSUB",
+        "CHANNELS",
+        pattern
+    )
+    )
 
 /**
  * Returns the number of subscribers (not counting clients subscribed to patterns) for the specified channels.

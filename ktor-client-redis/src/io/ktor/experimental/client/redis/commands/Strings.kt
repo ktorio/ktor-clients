@@ -1,4 +1,6 @@
-package io.ktor.experimental.client.redis
+package io.ktor.experimental.client.redis.commands
+
+import io.ktor.experimental.client.redis.*
 
 /**
  * Append a value to a key
@@ -40,7 +42,11 @@ suspend fun Redis.bitcount(key: String, start: Int, end: Int): String? = execute
  * @since 2.6.0
  */
 suspend fun Redis.bitcount(key: String, range: LongRange): Long =
-    executeTyped("BITCOUNT", key, *arrayOfNotNull(range?.start, range?.endInclusive))
+    executeTyped("BITCOUNT", key, *arrayOfNotNull(
+        range?.start,
+        range?.endInclusive
+    )
+    )
 
 class RedisBitFieldBuilder {
     val cmds = arrayListOf<Any?>()
@@ -157,7 +163,11 @@ suspend fun Redis.bitopNot(destKey: String, srcKey: String): Long = bitop(RedisB
  * @since 2.8.7
  */
 suspend fun Redis.bitpos(key: String, bit: Int, range: LongRange?): Long =
-    executeTyped("BITPOS", key, bit, *arrayOfNotNull(range?.start, range?.endInclusive))
+    executeTyped("BITPOS", key, bit, *arrayOfNotNull(
+        range?.start,
+        range?.endInclusive
+    )
+    )
 
 /**
  * Decrement the integer value of a key by one

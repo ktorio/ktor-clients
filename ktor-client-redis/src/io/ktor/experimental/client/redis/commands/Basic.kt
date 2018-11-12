@@ -1,5 +1,6 @@
-package io.ktor.experimental.client.redis
+package io.ktor.experimental.client.redis.commands
 
+import io.ktor.experimental.client.redis.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import kotlin.reflect.*
@@ -116,14 +117,17 @@ internal suspend fun Redis._scanBaseStep(
             this += count
         }
     }.toTypedArray())
-    return RedisScanStepResult(result[0].toString().toLong(), result[1] as List<String>)
+    return RedisScanStepResult(
+        result[0].toString().toLong(),
+        result[1] as List<String>
+    )
 }
 
 internal suspend fun Redis._scanBase(
     cmd: String, key: String?,
     pattern: String? = null, count: Int? = null,
     pairs: Boolean = false
-): ReceiveChannel<Any> = produce(context, (count ?: 10) * 2) {
+): ReceiveChannel<Any> = GlobalScope.produce(context, (count ?: 10) * 2) {
     var cursor = 0L
     do {
         val result = _scanBaseStep(cmd, key, cursor, pattern, count)

@@ -1,4 +1,6 @@
-package io.ktor.experimental.client.redis
+package io.ktor.experimental.client.redis.commands
+
+import io.ktor.experimental.client.redis.*
 
 /**
  * Adds the specified elements to the specified HyperLogLog.

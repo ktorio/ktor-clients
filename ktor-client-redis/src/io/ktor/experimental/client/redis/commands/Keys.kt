@@ -1,5 +1,6 @@
-package io.ktor.experimental.client.redis
+package io.ktor.experimental.client.redis.commands
 
+import io.ktor.experimental.client.redis.*
 import kotlinx.coroutines.channels.*
 import java.util.*
 

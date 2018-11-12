@@ -2,8 +2,10 @@
  * https://redis.io/topics/streams-intro
  */
 
-package io.ktor.experimental.client.redis
+package io.ktor.experimental.client.redis.commands
 
+import io.ktor.experimental.client.redis.*
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 
 /**
@@ -90,7 +92,7 @@ suspend fun Redis.xrevrange(stream: String, end: String = "+", start: String = "
  * @since 5.0.0
  */
 suspend fun Redis.xrangeChannel(stream: String, start: String = "-", end: String = "+", chunkSize: Int = 32, reverse: Boolean = false): ReceiveChannel<Pair<String, Map<String, String>>> {
-    return produce(context, chunkSize * 2) {
+    return GlobalScope.produce(context, chunkSize * 2) {
         var current = if (reverse) end else start
         do {
             val chunk = when (reverse) {
@@ -234,7 +236,13 @@ suspend fun Redis.xinfoHelp(): List<String> = executeArrayString("XINFO", "HELP"
  * @since 5.0.0
  */
 suspend fun Redis.xinfoStream(stream: String): RedisStreamInfo =
-    RedisStreamInfo(executeArrayAny("XINFO", "STREAM", stream).listOfPairsToMapAny() as Map<String, Any?>)
+    RedisStreamInfo(
+        executeArrayAny(
+            "XINFO",
+            "STREAM",
+            stream
+        ).listOfPairsToMapAny() as Map<String, Any?>
+    )
 
 /**
  * https://redis.io/commands/xinfo-groups
@@ -359,8 +367,16 @@ data class RedisStreamInfo(
     val radixTreeKeys: Long get() = (map["radix-tree-keys"] as Number).toLong()
     val radixTreeNodes: Long get() = (map["radix-tree-nodes"] as Number).toLong()
     val lastGeneratedId: String? get() = map["last-generated-id"] as? String?
-    val firstEntry: Pair<String, Map<String, String>>? get() = map["first-entry"]?.let { xparseEntry(it as List<Any?>) }
-    val lastEntry: Pair<String, Map<String, String>>? get() = map["last-entry"]?.let { xparseEntry(it as List<Any?>) }
+    val firstEntry: Pair<String, Map<String, String>>? get() = map["first-entry"]?.let {
+        xparseEntry(
+            it as List<Any?>
+        )
+    }
+    val lastEntry: Pair<String, Map<String, String>>? get() = map["last-entry"]?.let {
+        xparseEntry(
+            it as List<Any?>
+        )
+    }
 }
 
 private fun xparseListGroup(groups: List<Any?>): Map<String, Map<String, Map<String, String>>> {

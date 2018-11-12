@@ -35,7 +35,9 @@
  * or read the introduction to Redis data types.
  */
 
-package io.ktor.experimental.client.redis
+package io.ktor.experimental.client.redis.commands
+
+import io.ktor.experimental.client.redis.*
 
 /**
  * Remove and get the first element in a list, or block until one is available

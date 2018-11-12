@@ -1,7 +1,7 @@
 package io.ktor.experimental.client.redis
 
-import kotlinx.coroutines.experimental.*
-import kotlinx.coroutines.experimental.io.*
+import kotlinx.coroutines.*
+import kotlinx.coroutines.io.*
 import kotlinx.io.core.*
 import java.net.*
 

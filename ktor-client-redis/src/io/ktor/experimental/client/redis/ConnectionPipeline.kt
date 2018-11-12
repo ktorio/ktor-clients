@@ -3,9 +3,9 @@ package io.ktor.experimental.client.redis
 import io.ktor.experimental.client.redis.protocol.*
 import io.ktor.experimental.client.redis.utils.*
 import io.ktor.network.sockets.*
-import kotlinx.coroutines.experimental.*
-import kotlinx.coroutines.experimental.channels.*
-import kotlinx.coroutines.experimental.io.*
+import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.*
+import kotlinx.coroutines.io.*
 import java.io.*
 import java.nio.charset.*
 
@@ -23,12 +23,12 @@ internal class ConnectionPipeline(
     private val password: String?,
     private val charset: Charset,
     pipelineSize: Int = DEFAULT_PIPELINE_SIZE,
-    dispatcher: CoroutineDispatcher = DefaultDispatcher
+    dispatcher: CoroutineDispatcher = Dispatchers.Default
 ) : Closeable {
     private val input = socket.openReadChannel()
     private val output = socket.openWriteChannel()
 
-    val context: Job = launch(dispatcher) {
+    val context: Job = GlobalScope.launch {
 
         try {
             password?.let { auth(it) }
@@ -56,8 +56,8 @@ internal class ConnectionPipeline(
         }
     }
 
-    private val receiver = actor<CompletableDeferred<Any?>>(
-        dispatcher, capacity = pipelineSize, parent = context
+    private val receiver = GlobalScope.actor<CompletableDeferred<Any?>>(
+        dispatcher + context, capacity = pipelineSize
     ) {
         val decoder = charset.newDecoder()!!
 

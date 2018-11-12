@@ -3,8 +3,8 @@ package io.ktor.experimental.client.redis
 import io.ktor.experimental.client.redis.protocol.*
 import io.ktor.network.selector.*
 import io.ktor.network.sockets.*
-import kotlinx.coroutines.experimental.*
-import kotlinx.coroutines.experimental.channels.*
+import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.*
 import java.io.*
 import java.net.*
 import java.nio.charset.*
@@ -68,7 +68,7 @@ class RedisClient(
     maxConnections: Int = 50,
     private val password: String? = null,
     override val charset: Charset = Charsets.UTF_8,
-    private val dispatcher: CoroutineDispatcher = DefaultDispatcher
+    private val dispatcher: CoroutineDispatcher = Dispatchers.Default
 ) : Redis {
     constructor(
         host: String,
@@ -76,7 +76,7 @@ class RedisClient(
         maxConnections: Int = 50,
         password: String? = null,
         charset: Charset = Charsets.UTF_8,
-        dispatcher: CoroutineDispatcher = DefaultDispatcher
+        dispatcher: CoroutineDispatcher = Dispatchers.Default
     ) : this(
         InetSocketAddress(host, port),
         maxConnections,
@@ -91,8 +91,8 @@ class RedisClient(
     private val selectorManager = ActorSelectorManager(dispatcher)
     private val requestQueue = Channel<RedisRequest>()
 
-    private val postmanService = actor<RedisRequest>(
-        dispatcher, parent = context
+    private val postmanService = GlobalScope.actor<RedisRequest>(
+        dispatcher + context
     ) {
         channel.consumeEach {
             if (requestQueue.offer(it)) return@consumeEach
@@ -166,7 +166,7 @@ class RedisClient(
 
     override fun RedisInternalChannel.getMessageChannel(): ReceiveChannel<Any> {
         setReplyMode(RedisClientReplyMode.OFF)
-        return produce(context) {
+        return GlobalScope.produce(context) {
             while (true) {
                 val result = CompletableDeferred<Any?>()
                 postmanService.send(RedisRequest(null, result))
