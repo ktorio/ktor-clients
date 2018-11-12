@@ -28,7 +28,7 @@ internal fun ByteReadPacket.readColumns(): List<PostgreColumn> {
         PostgreColumn(
             name = readCString(),
             tableOID = readInt(),
-            columnIndex = readShort().toInt() and 0xffff,
+            id = readShort().toInt() and 0xffff,
             typeOID = readInt(),
             typeSize = readShort().toInt(), /* typeSize could be negative*/
             typeMod = readInt(),

@@ -1,4 +1,4 @@
-package io.ktor.experimental.client.postgre.util
+package io.ktor.experimental.client.util
 
 import kotlinx.coroutines.*
 
@@ -11,4 +11,10 @@ inline fun <T> CompletableDeferred<T>.completeWith(block: () -> T) {
     } catch (cause: Throwable) {
         completeExceptionally(cause)
     }
+}
+
+suspend inline fun <T> deferred(block: (CompletableDeferred<T>) -> Unit): T {
+    val deferred = CompletableDeferred<T>()
+    block(deferred)
+    return deferred.await()
 }

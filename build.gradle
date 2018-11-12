@@ -33,13 +33,15 @@ allprojects {
         implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinx_coroutines"
         implementation "io.ktor:ktor-network:$ktor_version"
 
+        implementation group: 'ch.qos.logback', name: 'logback-classic', version: logback_version
+
+
         testImplementation "io.ktor:ktor-server-core:$ktor_version"
         testImplementation "io.ktor:ktor-server-sessions:$ktor_version"
         testImplementation "junit:junit:$junit_version"
         testImplementation "com.natpryce:hamkrest:$hamkrest_version"
         testImplementation "org.jetbrains.kotlin:kotlin-test:$kotlin_version"
         testImplementation "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"
-        testImplementation "org.slf4j:slf4j-simple:$slf4j_simple_version"
         testImplementation "com.palantir.docker.compose:docker-compose-rule-junit4:$docker_compose_rule_junit"
     }
 

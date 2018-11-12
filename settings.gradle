@@ -1,3 +1,5 @@
 
+include 'ktor-client-sql'
 include 'ktor-client-postgre'
 include 'ktor-client-redis'
+include 'ktor-client-utils'

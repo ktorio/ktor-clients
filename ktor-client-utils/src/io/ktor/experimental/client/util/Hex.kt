@@ -1,4 +1,4 @@
-package io.ktor.experimental.client.postgre.util
+package io.ktor.experimental.client.util
 
 object Hex {
     private const val DIGITS = "0123456789ABCDEF"
@@ -19,9 +19,7 @@ object Hex {
         for (n in 0 until out.size) {
             val high = value[m++]
             val low = value[m++]
-            out[n] = ((decodeHexDigit(high) shl 4) or (decodeHexDigit(
-                low
-            ) shl 0)).toByte()
+            out[n] = ((decodeHexDigit(high) shl 4) or (decodeHexDigit(low) shl 0)).toByte()
         }
         return out
     }

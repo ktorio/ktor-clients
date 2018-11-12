@@ -1,27 +1,33 @@
-package io.ktor.experimental.client.postgre
+package io.ktor.experimental.client.postgre.connection
 
+import io.ktor.experimental.client.postgre.*
 import io.ktor.experimental.client.postgre.protocol.*
 import io.ktor.experimental.client.postgre.scheme.*
-import io.ktor.experimental.client.postgre.util.*
+import io.ktor.experimental.client.sql.*
+import io.ktor.experimental.client.util.*
 import io.ktor.network.selector.*
 import io.ktor.network.sockets.*
-import io.ktor.network.sockets.*
 import io.ktor.network.sockets.Socket
-import io.ktor.pipeline.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import kotlinx.coroutines.io.*
 import kotlinx.io.core.*
+import org.slf4j.*
+import java.lang.IllegalStateException
 import java.net.*
+import kotlin.coroutines.*
 
 private val POSTGRE_SELECTOR_MANAGER = ActorSelectorManager(Dispatchers.Default)
 
 class PostgreConnection(
-    val address: InetSocketAddress,
-    val user: String, val password: String?,
-    val database: String,
-    requests: ReceiveChannel<PipelineElement<String, PostgreRawResponse>>
-) : ConnectionPipeline<String, PostgreRawResponse>(requests) {
+    private val address: InetSocketAddress,
+    private val database: String,
+    private val user: String,
+    private val password: String?,
+    requests: ReceiveChannel<SqlRequest>,
+    coroutineContext: CoroutineContext
+) : ConnectionPipeline<String, QueryResult>(requests, coroutineContext = coroutineContext), CoroutineScope {
+
     private lateinit var socket: Socket
     private lateinit var input: ByteReadChannel
     private lateinit var output: ByteWriteChannel
@@ -29,6 +35,7 @@ class PostgreConnection(
     private lateinit var properties: Map<String, String>
 
     override suspend fun onStart() {
+        super.onStart()
         socket = aSocket(POSTGRE_SELECTOR_MANAGER)
             .tcp().tcpNoDelay()
             .connect(address)
@@ -40,57 +47,36 @@ class PostgreConnection(
         negotiate()
     }
 
-    override suspend fun send(request: String) {
+    override suspend fun send(callScope: CoroutineScope, request: String) {
         output.writePostgrePacket(FrontendMessage.QUERY) {
             writeCString(request)
         }
     }
 
-    override suspend fun receive(): PostgreRawResponse {
-        var info = ""
-        val rows = mutableListOf<List<ByteArray?>>()
-        var columns: List<PostgreColumn> = emptyList()
-        var notice: PostgreException? = null
+    override suspend fun receive(callScope: CoroutineScope): QueryResult {
+        val firstPacket = input.readPostgrePacket()
 
-        read@ while (true) {
-            val packet = input.readPostgrePacket()
-            val payload = packet.payload
+        return callScope.trySimplePipeline(firstPacket, input)
+            ?: callScope.tryExtendedPipeline(firstPacket, input)
+            ?: error("Unexpected packet: type ${firstPacket.type}, $firstPacket")
+    }
 
-            when (packet.type) {
-                BackendMessage.ROW_DESCRIPTION -> {
-                    columns = payload.readColumns()
-                }
-                BackendMessage.DATA_ROW -> {
-                    rows += payload.readRow()
-                }
-                BackendMessage.COMMAND_COMPLETE -> {
-                    info = payload.readCString()
-                    break@read
-                }
-                BackendMessage.ERROR_RESPONSE -> {
-                    throw payload.readException()
-                }
-                BackendMessage.NOTICE_RESPONSE -> {
-                    notice = payload.readException()
-                }
-                BackendMessage.READY_FOR_QUERY -> {
-                    check(payload.remaining == 1L)
-                    /* ignored in negotiate transaction status indicator */
-                    payload.readByte()
-                }
-                else -> error("Unsupported message type: ${packet.type}")
-            }
-
-            check(payload.remaining == 0L)
-        }
-
-        return PostgreRawResponse(
-            info, notice, columns, rows
-        )
+    private fun CoroutineScope.tryExtendedPipeline(
+        firstPacket: PostgrePacket,
+        input: ByteReadChannel
+    ): QueryResult? {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
     override fun onDone() {
+        super.onDone()
         socket.close()
+    }
+
+    override fun onError(cause: Throwable) {
+        super.onError(cause)
+
+        println("Connection fail: $cause")
     }
 
     private suspend fun negotiate() {
@@ -112,9 +98,7 @@ class PostgreConnection(
                             }
 
                             val salt = payload.readBytes(4)
-                            val currentPassword = password ?: throw PostgreConnectException("Password required.")
-
-                            output.authMD5(user, currentPassword, salt)
+                            output.authMD5(user, password, salt)
                         }
                         else -> error("Unsupported auth format: $authType")
                     }
@@ -138,19 +122,18 @@ class PostgreConnection(
                     val value = payload.readCString()
                     activeProperties[key] = value
                 }
-                BackendMessage.NOTICE_RESPONSE -> {
-                    // TODO: log instead
-                    throw payload.readException()
-                }
-                BackendMessage.ERROR_RESPONSE -> {
-                    throw payload.readException()
-                }
-                else -> error("Unsupported packet type in negotiate: ${packet.type}")
+                else -> checkErrors(packet.type, payload)
             }
 
             check(payload.remaining == 0L)
         }
     }
+
+    override fun close() {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
 }
 
-class PostgreConnectException(override val message: String) : RuntimeException()
+class UnknownPostgrePacketTypeException internal constructor(
+    type: BackendMessage
+) : IllegalStateException("Type: $type")
