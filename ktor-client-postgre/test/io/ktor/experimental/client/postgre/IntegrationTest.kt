@@ -28,7 +28,7 @@ class IntegrationTest {
             addPerson(id, "lastName-$id", "firstName-$id", "address-$id", "city-$id")
         }
 
-        val persons = query("SELECT * from Persons;")
+        val persons = query("SELECT * from Persons; SELECT * from Persons;")
 
         for (table in persons) {
             println("TABLE: $table")
