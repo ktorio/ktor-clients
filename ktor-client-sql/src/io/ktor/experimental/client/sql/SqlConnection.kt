@@ -4,5 +4,7 @@ import kotlinx.coroutines.*
 import kotlinx.io.core.*
 
 interface SqlConnection : CoroutineScope, Closeable {
-    suspend fun query(queryString: String): QueryResult
+    suspend fun execute(queryString: String): SqlQueryResult
+
+    suspend fun prepare(queryString: String): SqlStatement
 }

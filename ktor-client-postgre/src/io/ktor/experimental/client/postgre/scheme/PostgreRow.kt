@@ -1,27 +1,26 @@
 package io.ktor.experimental.client.postgre.scheme
 
 import io.ktor.experimental.client.sql.*
-import kotlinx.coroutines.io.*
 import kotlinx.io.core.*
 import kotlin.coroutines.*
 
 class PostgreRow(
-    override val result: QueryResultTable,
+    override val result: SqlTable,
     private val data: List<ByteArray?>,
     override val coroutineContext: CoroutineContext
-) : ResultRow {
+) : SqlRow {
 
-    override fun get(column: SqlColumn): ResultCell = PostgreCell(
+    override fun get(column: SqlColumn): SqlCell = PostgreCell(
         this, coroutineContext, column, data[column.id]
     )
 }
 
 class PostgreCell(
-    override val row: ResultRow,
+    override val row: SqlRow,
     override val coroutineContext: CoroutineContext,
     override val column: SqlColumn,
     val content: ByteArray?
-) : ResultCell {
+) : SqlCell {
 
     override fun asInt(): Int {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.

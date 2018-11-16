@@ -6,11 +6,10 @@ import io.ktor.experimental.client.util.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import kotlinx.io.core.*
-import org.slf4j.*
 import java.net.*
 import kotlin.coroutines.*
 
-internal typealias SqlRequest = PipelineElement<String, QueryResult>
+internal typealias SqlRequest = PipelineElement<String, SqlQueryResult>
 
 // https://www.postgresql.org/docs/11/static/index.html
 class PostgreClient(
@@ -27,28 +26,22 @@ class PostgreClient(
 
     init {
         List(maxConnections) {
-            PostgreConnection(
-                address, database,
-                user, password,
-                requests, coroutineContext
+            coroutineContext.PostgreConnectionPipeline(
+                address, database, user, password, requests
             )
         }
     }
 
-    override suspend fun connection(): SqlConnection {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
+    override suspend fun connection(): SqlConnection = PostgreConnection(
+        address, database, user, password, coroutineContext
+    )
 
-    override suspend fun query(queryString: String): QueryResult = deferred {
+    override suspend fun execute(queryString: String): SqlQueryResult = deferred {
         requests.send(SqlRequest(queryString, it))
     }
 
-    override suspend fun prepare(): PreparedQuery {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override suspend fun query(query: PreparedQuery): QueryResultTable {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    override suspend fun prepare(queryString: String): SqlStatement {
+        requests.send(SqlRequest)
     }
 
     override fun close() {

@@ -3,10 +3,7 @@ package io.ktor.experimental.client.sql
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 
-typealias QueryResult = Channel<QueryResultTable>
-
-interface QueryResultTable : ReceiveChannel<ResultRow>, CoroutineScope {
-
+interface SqlTable : ReceiveChannel<SqlRow>,
+    CoroutineScope {
     val columns: List<SqlColumn>
 }
-

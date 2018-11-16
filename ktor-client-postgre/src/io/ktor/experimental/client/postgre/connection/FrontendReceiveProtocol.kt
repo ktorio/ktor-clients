@@ -8,19 +8,19 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import kotlinx.coroutines.io.*
 
-internal fun CoroutineScope.trySimplePipeline(
+internal fun CoroutineScope.simpleReceivePipeline(
     firstPacket: PostgrePacket,
     input: ByteReadChannel
-): QueryResult? {
+): SqlQueryResult? {
     if (firstPacket.type != BackendMessage.ROW_DESCRIPTION && firstPacket.type != BackendMessage.COMMAND_COMPLETE) {
         return null
     }
 
-    val tables = Channel<QueryResultTable>()
+    val tables = Channel<SqlTable>()
 
     launch {
         var packet = firstPacket
-        lateinit var current: QueryResultTable
+        lateinit var current: SqlTable
         var rows: Channel<PostgreRow>? = null
 
         while (true) {
@@ -30,7 +30,7 @@ internal fun CoroutineScope.trySimplePipeline(
                 BackendMessage.ROW_DESCRIPTION -> {
                     rows?.close()
                     rows = Channel()
-                    current = PostgreResultTable(payload.readColumns(), rows, coroutineContext)
+                    current = PostgreTable(payload.readColumns(), rows, coroutineContext)
                     tables.send(current)
                 }
                 BackendMessage.DATA_ROW -> {
@@ -57,5 +57,19 @@ internal fun CoroutineScope.trySimplePipeline(
         tables.close(it)
     }
 
-    return tables
+    return PostgreTables(tables)
+}
+
+internal fun CoroutineScope.extendedReceivePipeline(
+    headPacket: PostgrePacket,
+    input: ByteReadChannel
+): SqlQueryResult? {
+    return null
+}
+
+internal suspend fun ByteReadChannel.nextResponseHead(): PostgrePacket {
+    while (true) {
+        val packet = readPostgrePacket()
+        if (packet.type != BackendMessage.READY_FOR_QUERY) return packet
+    }
 }

@@ -73,3 +73,11 @@ allprojects {
     }
 }
 
+
+//https://github.com/Kotlin/kotlinx.coroutines/tree/debug-agent/core/kotlinx-coroutines-core-test
+//
+//https://dl.bintray.com/qwwdfsad/kotlinx/
+//
+//1.0.1-debug2
+//
+//+нужно добавить артефакт kotlinx-coroutines-core-test (edited)

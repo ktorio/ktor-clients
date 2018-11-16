@@ -1,24 +1,27 @@
 package io.ktor.experimental.client.postgre
 
 import ch.qos.logback.classic.*
-import ch.qos.logback.classic.spi.*
-import ch.qos.logback.core.*
 import com.palantir.docker.compose.*
 import com.palantir.docker.compose.configuration.*
 import com.palantir.docker.compose.connection.waiting.*
+import io.ktor.experimental.client.postgre.protocol.*
+import io.ktor.experimental.client.postgre.scheme.*
 import io.ktor.experimental.client.sql.*
+import kotlinx.coroutines.*
 import org.junit.*
+import org.junit.Test
 import org.junit.rules.*
 import org.slf4j.*
 import org.slf4j.Logger
 import java.net.*
 import java.util.concurrent.*
+import kotlin.test.*
 
 class IntegrationTest {
 
     @Rule
     @JvmField
-    val timeout = Timeout(5, TimeUnit.SECONDS)
+    val timeout = Timeout(10, TimeUnit.SECONDS)
 
     @Test
     fun simpleRequestTest() = postgreTest(address) {
@@ -28,34 +31,77 @@ class IntegrationTest {
             addPerson(id, "lastName-$id", "firstName-$id", "address-$id", "city-$id")
         }
 
-        val persons = query("SELECT * from Persons; SELECT * from Persons;")
+
+        val persons = select("SELECT * from Persons; SELECT * from Persons;")
 
         for (table in persons) {
             println("TABLE: $table")
-
             for (row in table) {
                 println("${row["PersonID"].asString()}: ${row["LastName"].asString()}")
             }
         }
+
+        dropPersons()
     }
 
-    private suspend fun SqlClient.addPerson(
-        id: Int,
-        lastName: String, firstName: String,
-        address: String, city: String
-    ) {
-        query("INSERT INTO Persons VALUES($id, '$lastName', '$firstName', '$address', '$city');")
+    @Test
+    fun createDatabaseTest() = postgreTest(address) {
+        execute("CREATE DATABASE goods;")
+        execute("CREATE DATABASE orders;")
+
+        assertFailsWith<PostgreException> {
+            runBlocking { execute("CREATE DATABASE goods;") }
+        }
+
+        execute("DROP DATABASE goods;")
+        assertFailsWith<PostgreException> {
+            runBlocking { execute("DROP DATABASE goods;") }
+        }
+
+        execute("CREATE DATABASE goods;")
+
+        assertFailsWith<PostgreException> {
+            runBlocking { execute("CREATE DATABASE goods; CREATE DATABASE stores;") }
+        }
+
+        execute("DROP DATABASE orders;")
+        execute("DROP DATABASE goods;")
     }
 
-    private suspend fun SqlClient.createPersons() = query(
-        "CREATE TABLE IF NOT EXISTS Persons (\n" +
-                "    PersonID int,\n" +
-                "    LastName varchar(255),\n" +
-                "    FirstName varchar(255),\n" +
-                "    Address varchar(255),\n" +
-                "    City varchar(255) \n" +
-                ");"
-    )
+    @Test
+    fun prepareQueryTest() = postgreTest(address) {
+        createPersons()
+
+        connection {
+            val statement = prepare("INSERT INTO Persons VALUES ($1, $2, $3, $4, $5);")
+
+            statement.execute("1", "hello-2", "hello-3", "hello-4", "hello-5")
+
+            val persons = select("SELECT * FROM Persons;")
+            var count = 0
+            for (table in persons) {
+                for (person in table) {
+                    count++
+
+                    assertEquals("1", person["Id"].asString())
+                    assertEquals("hello-2", person["LastName"].asString())
+                    assertEquals("hello-3", person["FirstName"].asString())
+                    assertEquals("hello-4", person["Address"].asString())
+                    assertEquals("hello-5", person["City"].asString())
+                }
+            }
+
+            assertEquals(1, count)
+        }
+    }
+
+    @Test
+    fun createTableTest() = postgreTest(address) {
+        createPersons()
+
+        addFakePersons(10)
+        addFakePersons(10)
+    }
 
     companion object {
         val POSTGRE_SERVICE = "postgre"

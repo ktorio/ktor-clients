@@ -20,7 +20,7 @@ abstract class ConnectionPipeline<TRequest : Any, TResponse : Any>(
 ) : CoroutineScope, Closeable {
     private val started = AtomicBoolean(false)
 
-    private val writer: Job = launch {
+    protected val writer: Job = launch(start = CoroutineStart.LAZY) {
         try {
             onStart()
 
@@ -44,7 +44,7 @@ abstract class ConnectionPipeline<TRequest : Any, TResponse : Any>(
         }
     }
 
-    private val reader: SendChannel<RequestContext<TResponse>> = actor(
+    protected val reader: SendChannel<RequestContext<TResponse>> = actor(
         capacity = pipelineSize,
         start = CoroutineStart.LAZY
     ) {
@@ -75,5 +75,3 @@ abstract class ConnectionPipeline<TRequest : Any, TResponse : Any>(
 class PipelineException(val request: Any, override val cause: Throwable) : RuntimeException() {
     override val message: String = "Fail to execute: $request"
 }
-
-private inline fun silent(block: () -> Unit) = try { block() } catch (_: Throwable) {}

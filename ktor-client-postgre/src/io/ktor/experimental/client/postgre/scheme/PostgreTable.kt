@@ -5,11 +5,11 @@ import kotlinx.coroutines.channels.*
 import kotlin.coroutines.*
 
 
-class PostgreResultTable(
+class PostgreTable(
     override val columns: List<SqlColumn>,
     internal val rows: Channel<PostgreRow>,
     override val coroutineContext: CoroutineContext
-) : QueryResultTable, ReceiveChannel<ResultRow> by rows {
+) : SqlTable, ReceiveChannel<SqlRow> by rows {
 
     override fun toString(): String = "PostgreResultTable(${columns.joinToString()})"
 }
