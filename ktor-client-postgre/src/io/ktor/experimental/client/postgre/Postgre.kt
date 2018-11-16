@@ -41,7 +41,8 @@ class PostgreClient(
     }
 
     override suspend fun prepare(queryString: String): SqlStatement {
-        requests.send(SqlRequest)
+        TODO()
+//        requests.send(SqlRequest)
     }
 
     override fun close() {

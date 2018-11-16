@@ -12,6 +12,7 @@ allprojects {
         maven { url 'https://dl.bintray.com/kotlin/ktor' }
         maven { url 'https://dl.bintray.com/kotlin/kotlinx' }
         maven { url 'https://dl.bintray.com/palantir/releases' }
+        maven { url 'https://dl.bintray.com/qwwdfsad/kotlinx/' }
         jcenter()
     }
 
@@ -31,6 +32,7 @@ allprojects {
     dependencies {
         implementation group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib-jdk8', version: kotlin_version
         implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinx_coroutines"
+        implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core-test:$kotlinx_coroutines"
         implementation "io.ktor:ktor-network:$ktor_version"
 
         implementation group: 'ch.qos.logback', name: 'logback-classic', version: logback_version
@@ -72,12 +74,3 @@ allprojects {
         }
     }
 }
-
-
-//https://github.com/Kotlin/kotlinx.coroutines/tree/debug-agent/core/kotlinx-coroutines-core-test
-//
-//https://dl.bintray.com/qwwdfsad/kotlinx/
-//
-//1.0.1-debug2
-//
-//+нужно добавить артефакт kotlinx-coroutines-core-test (edited)

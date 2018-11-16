@@ -61,18 +61,18 @@ private class PostgreConnectionPipeline(
         negotiate()
     }
 
-    override suspend fun send(callScope: CoroutineScope, request: String, requestType: RequestType) {
-        when (requestType){
-            RequestType.QUERY -> {
+    override suspend fun send(callScope: CoroutineScope, request: String) {
+//        when (requestType){
+//            RequestType.QUERY -> {
                 output.writePostgrePacket(FrontendMessage.QUERY) {
                     writeCString(request)
                 }
-            }
-            RequestType.PREPARE -> {
-                output.writePostgrePacket(FrontendMessage.PARSE) {
-                }
-            }
-        }
+//            }
+//            RequestType.PREPARE -> {
+//                output.writePostgrePacket(FrontendMessage.PARSE) {
+//                }
+//            }
+//        }
     }
 
     override suspend fun receive(callScope: CoroutineScope): SqlQueryResult {
