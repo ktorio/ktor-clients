@@ -3,11 +3,13 @@ package io.ktor.experimental.client.postgre.connection
 import io.ktor.experimental.client.postgre.*
 import io.ktor.experimental.client.sql.*
 import io.ktor.experimental.client.util.*
+import io.ktor.network.selector.*
 import kotlinx.coroutines.channels.*
 import java.net.*
 import kotlin.coroutines.*
 
 class PostgreConnection internal constructor(
+    selectorManager: ActorSelectorManager,
     address: InetSocketAddress, database: String,
     username: String, password: String?,
     override val coroutineContext: CoroutineContext
@@ -15,7 +17,7 @@ class PostgreConnection internal constructor(
     val requestChannel: Channel<SqlRequest> = Channel()
 
     private val pipeline = coroutineContext.PostgreConnectionPipeline(
-        address, database, username, password, requestChannel
+        selectorManager, address, database, username, password, requestChannel
     )
 
     override suspend fun execute(queryString: String): SqlQueryResult = deferred {

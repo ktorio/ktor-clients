@@ -1,7 +1,9 @@
 package io.ktor.experimental.client.util
 
+import io.ktor.util.pipeline.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
+import kotlinx.coroutines.selects.*
 import kotlinx.io.core.*
 import java.util.concurrent.atomic.*
 import kotlin.coroutines.*
@@ -18,13 +20,19 @@ abstract class ConnectionPipeline<TRequest : Any, TResponse : Any>(
     pipelineSize: Int = 10,
     override val coroutineContext: CoroutineContext
 ) : CoroutineScope, Closeable {
-    private val started = AtomicBoolean(false)
+    private val closer = CompletableDeferred<Unit>()
 
     protected val writer: Job = launch(start = CoroutineStart.LAZY) {
         try {
             onStart()
 
-            source.consumeEach { element ->
+            while (!source.isClosedForReceive) {
+
+                val element = select<Any> {
+                    source.onReceive { it }
+                    closer.completeWith { }
+                } as? PipelineElement<TRequest, TResponse> ?: return@launch
+
                 val callContext = createCallContext()
                 try {
                     reader.send(RequestContext(element.response, callContext))
@@ -70,6 +78,10 @@ abstract class ConnectionPipeline<TRequest : Any, TResponse : Any>(
     protected open suspend fun onStart() {}
     protected open fun onDone() {}
     protected open fun onError(cause: Throwable) {}
+
+    override fun close() {
+        closer.complete(Unit)
+    }
 }
 
 class PipelineException(val request: Any, override val cause: Throwable) : RuntimeException() {

@@ -4,32 +4,30 @@ import io.ktor.experimental.client.postgre.*
 import io.ktor.experimental.client.postgre.protocol.*
 import io.ktor.experimental.client.sql.*
 import io.ktor.experimental.client.sql.utils.*
+import io.ktor.experimental.client.util.*
 import io.ktor.network.selector.*
 import io.ktor.network.sockets.*
 import io.ktor.network.sockets.Socket
-import io.ktor.util.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import kotlinx.coroutines.io.*
 import kotlinx.io.core.*
-import java.lang.IllegalStateException
 import java.net.*
 import kotlin.coroutines.*
 
-@UseExperimental(KtorExperimentalAPI::class)
-private val POSTGRE_SELECTOR_MANAGER = ActorSelectorManager(Dispatchers.Default)
-
 internal fun CoroutineContext.PostgreConnectionPipeline(
+    selectorManager: ActorSelectorManager,
     address: InetSocketAddress, database: String,
     user: String, password: String?,
-    requests: ReceiveChannel<SqlRequest>
+    requests: ReceiveChannel<PipelineElement<String, SqlQueryResult>>
 ): SqlConnectionPipeline = PostgreConnectionPipeline(
-    address, database, user, password, requests, this
+    selectorManager, address, database, user, password, requests, this
 ).apply {
     start()
 }
 
 private class PostgreConnectionPipeline(
+    private val selectorManager: ActorSelectorManager,
     private val address: InetSocketAddress,
     private val database: String,
     private val user: String,
@@ -50,7 +48,7 @@ private class PostgreConnectionPipeline(
 
     override suspend fun onStart() {
         super.onStart()
-        socket = aSocket(POSTGRE_SELECTOR_MANAGER)
+        socket = aSocket(selectorManager)
             .tcp().tcpNoDelay()
             .connect(address)
 
@@ -149,7 +147,7 @@ private class PostgreConnectionPipeline(
     }
 
     override fun close() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        super.close()
     }
 }
 
