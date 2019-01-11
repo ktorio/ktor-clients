@@ -9,8 +9,8 @@ extensions.configure<PublishingExtension>("publishing") {
             url = uri("https://api.bintray.com/maven/$name/$repo/$artifact/;publish=1")
 
             credentials {
-                username = System.getenv("BINTRAY_USER") as String
-                password = System.getenv("BINTRAY_API_KEY") as String
+                username = System.getenv("BINTRAY_USER")
+                password = System.getenv("BINTRAY_API_KEY")
             }
         }
     }
