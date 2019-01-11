@@ -42,8 +42,6 @@ allprojects {
     apply(plugin = "maven-publish")
     apply(plugin = "org.jetbrains.dokka")
 
-
-
     configure<SourceSetContainer> {
         getByName("main") {
             java.srcDirs("src")
@@ -71,8 +69,6 @@ allprojects {
     }
 
     apply { from(rootProject.file("gradle/publish.gradle.kts")) }
-    apply { from(rootProject.file("gradle/dokka.gradle.kts")) }
-    apply { from(rootProject.file("gradle/test.gradle")) }
 
     (tasks["dokka"] as DokkaTask).apply {
         outputFormat = "gfm"
