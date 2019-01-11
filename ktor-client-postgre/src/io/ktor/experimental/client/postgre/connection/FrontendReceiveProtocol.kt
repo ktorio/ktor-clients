@@ -15,6 +15,14 @@ internal fun CoroutineScope.simpleReceivePipeline(
     if (firstPacket.type != BackendMessage.ROW_DESCRIPTION && firstPacket.type != BackendMessage.COMMAND_COMPLETE) {
         return null
     }
+    
+    if (firstPacket.type == BackendMessage.COMMAND_COMPLETE) {
+        // No tables, just info
+        val payload = firstPacket.payload
+        val info = payload.readCString()
+        check(payload.remaining == 0L)
+        return SqlMessage(info)
+    }
 
     val tables = Channel<SqlTable>()
 
