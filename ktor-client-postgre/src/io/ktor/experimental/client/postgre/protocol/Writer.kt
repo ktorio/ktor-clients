@@ -5,9 +5,13 @@ import io.ktor.experimental.client.util.*
 import kotlinx.coroutines.io.*
 import java.security.*
 
-internal suspend fun ByteWriteChannel.authMD5(
-    user: String, password: String, salt: ByteArray
-) {
+internal suspend fun ByteWriteChannel.authPlainPassword(password: String) {
+    writePostgrePacket(FrontendMessage.PASSWORD_MESSAGE) {
+        writeCString(password)
+    }
+}
+
+internal suspend fun ByteWriteChannel.authMD5(user: String, password: String, salt: ByteArray) {
     val encoder = MessageDigest.getInstance("MD5")!!
 
     fun md5(password: String, salt: ByteArray): String {

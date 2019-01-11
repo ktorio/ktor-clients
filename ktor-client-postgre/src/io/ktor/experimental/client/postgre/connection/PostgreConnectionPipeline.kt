@@ -108,6 +108,10 @@ private class PostgreConnectionPipeline(
                     val authType = AuthenticationType.fromCode(payload.readInt())
                     when (authType) {
                         AuthenticationType.OK -> continue@loop
+                        AuthenticationType.CLEARTEXT_PASSWORD -> {
+                            check(password != null)
+                            output.authPlainPassword(password)
+                        }
                         AuthenticationType.MD5_PASSWORD -> {
                             check(password != null)
                             check(payload.remaining == 4L) {
@@ -145,6 +149,7 @@ private class PostgreConnectionPipeline(
             check(payload.remaining == 0L)
         }
     }
+
 }
 
 class UnknownPostgrePacketTypeException internal constructor(
