@@ -1,11 +1,7 @@
 package io.ktor.experimental.client.util
 
-import io.ktor.util.pipeline.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
-import kotlinx.coroutines.selects.*
-import kotlinx.io.core.*
-import java.util.concurrent.atomic.*
 import kotlin.coroutines.*
 
 class PipelineElement<TRequest : Any, TResponse : Any>(
@@ -19,20 +15,14 @@ abstract class ConnectionPipeline<TRequest : Any, TResponse : Any>(
     source: ReceiveChannel<PipelineElement<TRequest, TResponse>>,
     pipelineSize: Int = 10,
     override val coroutineContext: CoroutineContext
-) : CoroutineScope, Closeable {
+) : CoroutineScope {
     private val closer = CompletableDeferred<Unit>()
 
     protected val writer: Job = launch(start = CoroutineStart.LAZY) {
         try {
             onStart()
 
-            while (!source.isClosedForReceive) {
-
-                val element = select<Any> {
-                    source.onReceive { it }
-                    closer.completeWith { }
-                } as? PipelineElement<TRequest, TResponse> ?: return@launch
-
+            for (element in source ) {
                 val callContext = createCallContext()
                 try {
                     reader.send(RequestContext(element.response, callContext))
@@ -75,13 +65,14 @@ abstract class ConnectionPipeline<TRequest : Any, TResponse : Any>(
 
     protected abstract suspend fun receive(callScope: CoroutineScope): TResponse
 
-    protected open suspend fun onStart() {}
-    protected open fun onDone() {}
-    protected open fun onError(cause: Throwable) {}
-
-    override fun close() {
-        closer.complete(Unit)
+    protected open suspend fun onStart() {
+        println("pipeline start")
     }
+    protected open fun onDone() {
+        println("pipeline done")
+    }
+
+    protected open fun onError(cause: Throwable) {}
 }
 
 class PipelineException(val request: Any, override val cause: Throwable) : RuntimeException() {

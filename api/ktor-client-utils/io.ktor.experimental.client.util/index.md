@@ -6,7 +6,7 @@
 
 | Name | Summary |
 |---|---|
-| [ConnectionPipeline](-connection-pipeline/index.md) | `abstract class ConnectionPipeline<TRequest : `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`, TResponse : `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`> : CoroutineScope, Closeable` |
+| [ConnectionPipeline](-connection-pipeline/index.md) | `abstract class ConnectionPipeline<TRequest : `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`, TResponse : `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`> : CoroutineScope` |
 | [ContextManager](-context-manager/index.md) | `class ContextManager : CoroutineScope` |
 | [Hex](-hex/index.md) | `object Hex` |
 | [PipelineElement](-pipeline-element/index.md) | `class PipelineElement<TRequest : `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`, TResponse : `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`>` |

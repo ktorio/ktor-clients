@@ -15,13 +15,13 @@ import kotlinx.io.core.*
 import java.net.*
 import kotlin.coroutines.*
 
-internal fun CoroutineContext.PostgreConnectionPipeline(
+internal fun CoroutineScope.PostgreConnectionPipeline(
     selectorManager: ActorSelectorManager,
     address: InetSocketAddress, database: String,
     user: String, password: String?,
     requests: ReceiveChannel<PipelineElement<String, SqlQueryResult>>
 ): SqlConnectionPipeline = PostgreConnectionPipeline(
-    selectorManager, address, database, user, password, requests, this
+    selectorManager, address, database, user, password, requests, coroutineContext
 ).apply {
     start()
 }
@@ -144,10 +144,6 @@ private class PostgreConnectionPipeline(
 
             check(payload.remaining == 0L)
         }
-    }
-
-    override fun close() {
-        super.close()
     }
 }
 

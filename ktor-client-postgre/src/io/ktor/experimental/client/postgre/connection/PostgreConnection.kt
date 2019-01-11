@@ -14,11 +14,11 @@ class PostgreConnection internal constructor(
     username: String, password: String?,
     override val coroutineContext: CoroutineContext
 ) : SqlConnection {
-    val requestChannel: Channel<SqlRequest> = Channel()
+    private val requestChannel: Channel<SqlRequest> = Channel()
 
-    private val pipeline = coroutineContext.PostgreConnectionPipeline(
-        selectorManager, address, database, username, password, requestChannel
-    )
+    init {
+        PostgreConnectionPipeline(selectorManager, address, database, username, password, requestChannel)
+    }
 
     override suspend fun execute(queryString: String): SqlQueryResult = deferred {
         requestChannel.send(SqlRequest(queryString, it))
@@ -28,6 +28,6 @@ class PostgreConnection internal constructor(
     }
 
     override fun close() {
-        pipeline.close()
+        requestChannel.close()
     }
 }

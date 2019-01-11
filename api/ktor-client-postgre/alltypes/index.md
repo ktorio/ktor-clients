@@ -5,7 +5,7 @@
 | Name | Summary |
 |---|---|
 | [io.ktor.experimental.client.postgre.scheme.PostgreCell](../io.ktor.experimental.client.postgre.scheme/-postgre-cell/index.md) |  |
-| [io.ktor.experimental.client.postgre.PostgreClient](../io.ktor.experimental.client.postgre/-postgre-client/index.md) |  |
+| [io.ktor.experimental.client.postgre.PostgreClient](../io.ktor.experimental.client.postgre/-postgre-client/index.md) | https://www.postgresql.org/docs/11/static/index.html |
 | [io.ktor.experimental.client.postgre.scheme.PostgreColumn](../io.ktor.experimental.client.postgre.scheme/-postgre-column/index.md) |  |
 | [io.ktor.experimental.client.postgre.connection.PostgreConnection](../io.ktor.experimental.client.postgre.connection/-postgre-connection/index.md) |  |
 | [io.ktor.experimental.client.postgre.protocol.PostgreException](../io.ktor.experimental.client.postgre.protocol/-postgre-exception/index.md) | TODO: remove map |

@@ -9,7 +9,6 @@
 | Name | Summary |
 |---|---|
 | [coroutineContext](coroutine-context.md) | `val coroutineContext: <ERROR CLASS>` |
-| [requestChannel](request-channel.md) | `val requestChannel: Channel<SqlRequest>` |
 
 ### Functions
 

@@ -2,12 +2,13 @@
 
 # SqlQueryResult
 
-`sealed class SqlQueryResult`
+`interface SqlQueryResult`
 
 ### Inheritors
 
 | Name | Summary |
 |---|---|
+| [SqlBatchResult](-sql-batch-result/index.md) | `class SqlBatchResult<T : `[`SqlQueryResult`](./-sql-query-result.md)`> : `[`SqlQueryResult`](./-sql-query-result.md) |
 | [SqlEmptyResult](-sql-empty-result.md) | `object SqlEmptyResult : `[`SqlQueryResult`](./-sql-query-result.md) |
 | [SqlMessage](-sql-message/index.md) | `class SqlMessage : `[`SqlQueryResult`](./-sql-query-result.md) |
 | [SqlStatement](-sql-statement/index.md) | `abstract class SqlStatement : `[`SqlQueryResult`](./-sql-query-result.md) |

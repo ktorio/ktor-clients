@@ -27,7 +27,7 @@ val docker_compose_rule_junit = "0.34.0"
 
 allprojects {
     group = "io.ktor.clients"
-    version = "0.0.0"
+    version = "0.0.1"
 
     repositories {
         maven { setUrl("https://dl.bintray.com/ktorio/ktor") }

@@ -6,13 +6,14 @@
 
 | Name | Summary |
 |---|---|
+| [SqlBatchResult](-sql-batch-result/index.md) | `class SqlBatchResult<T : `[`SqlQueryResult`](-sql-query-result.md)`> : `[`SqlQueryResult`](-sql-query-result.md) |
 | [SqlCell](-sql-cell/index.md) | `interface SqlCell : CoroutineScope` |
 | [SqlClient](-sql-client/index.md) | `interface SqlClient : CoroutineScope, Closeable` |
 | [SqlColumn](-sql-column/index.md) | `interface SqlColumn` |
 | [SqlConnection](-sql-connection/index.md) | `interface SqlConnection : CoroutineScope, Closeable` |
 | [SqlEmptyResult](-sql-empty-result.md) | `object SqlEmptyResult : `[`SqlQueryResult`](-sql-query-result.md) |
 | [SqlMessage](-sql-message/index.md) | `class SqlMessage : `[`SqlQueryResult`](-sql-query-result.md) |
-| [SqlQueryResult](-sql-query-result.md) | `sealed class SqlQueryResult` |
+| [SqlQueryResult](-sql-query-result.md) | `interface SqlQueryResult` |
 | [SqlRow](-sql-row/index.md) | `interface SqlRow : CoroutineScope` |
 | [SqlStatement](-sql-statement/index.md) | `abstract class SqlStatement : `[`SqlQueryResult`](-sql-query-result.md) |
 | [SqlTable](-sql-table/index.md) | `interface SqlTable : ReceiveChannel<`[`SqlRow`](-sql-row/index.md)`>, CoroutineScope` |

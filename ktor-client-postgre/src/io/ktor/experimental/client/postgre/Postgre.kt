@@ -20,21 +20,20 @@ class PostgreClient(
     val database: String = "default",
     val user: String = "root",
     private val password: String? = null,
-    val maxConnections: Int = 1
+    maxConnections: Int = 1
 ) : SqlClient, Closeable {
+    private val completion = CompletableDeferred<Unit>()
 
     override val coroutineContext: CoroutineContext =
-        Dispatchers.Default + SupervisorJob() + CoroutineName("ktor-postgre-client")
+        Dispatchers.Default + completion + CoroutineName("ktor-client-postgre")
 
-    private val selectorManager = ActorSelectorManager(coroutineContext)
+    private val selectorManager = ActorSelectorManager(coroutineContext + Job())
 
     private val requests = Channel<PipelineElement<String, SqlQueryResult>>()
 
     init {
         List(maxConnections) {
-            coroutineContext.PostgreConnectionPipeline(
-                selectorManager, address, database, user, password, requests
-            )
+            PostgreConnectionPipeline(selectorManager, address, database, user, password, requests)
         }
     }
 
@@ -52,6 +51,9 @@ class PostgreClient(
 
     override fun close() {
         requests.close()
-        coroutineContext.cancel()
+        completion.complete(Unit)
+        completion.invokeOnCompletion {
+            selectorManager.close()
+        }
     }
 }

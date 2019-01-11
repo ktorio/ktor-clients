@@ -12,8 +12,8 @@ buildscript {
 }
 
 dependencies {
-    implementation 'io.ktor.clients:ktor-client-postgre:0.0.0'
-    implementation 'io.ktor.clients:ktor-client-redis:0.0.0'
+    implementation 'io.ktor.clients:ktor-client-postgre:0.0.1'
+    implementation 'io.ktor.clients:ktor-client-redis:0.0.1'
 }
 
 ```

@@ -2,7 +2,7 @@
 
 # SqlMessage
 
-`class SqlMessage : `[`SqlQueryResult`](../-sql-query-result.md)
+`inline class SqlMessage : `[`SqlQueryResult`](../-sql-query-result.md)
 
 ### Constructors
 
