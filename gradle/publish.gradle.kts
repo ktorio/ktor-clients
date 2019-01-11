@@ -1,3 +1,14 @@
+import org.gradle.jvm.tasks.Jar
+
+val sourcesJar by tasks.creating(Jar::class) {
+    group = JavaBasePlugin.DOCUMENTATION_GROUP
+    description = "Assembles sources JAR"
+    classifier = "sources"
+    println("Configuring sources for $project")
+    from(project.convention.getByType(SourceSetContainer::class.java).getByName("main").allSource)
+}
+
+artifacts.add("archives", sourcesJar)
 
 extensions.configure<PublishingExtension>("publishing") {
     repositories {
@@ -16,6 +27,7 @@ extensions.configure<PublishingExtension>("publishing") {
     }
     publications {
         create<MavenPublication>("maven") {
+            artifact(sourcesJar)
 
             from(components["java"])
 
