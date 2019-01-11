@@ -1,0 +1,8 @@
+$dokka.format:gfm
+$dokka.linkExtension:md
+
+io.ktor.experimental.client.redis
+io.ktor.experimental.client.redis.commands
+io.ktor.experimental.client.redis.geo
+io.ktor.experimental.client.redis.protocol
+io.ktor.experimental.client.redis.utils

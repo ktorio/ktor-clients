@@ -1,0 +1,7 @@
+$dokka.format:gfm
+$dokka.linkExtension:md
+
+io.ktor.experimental.client.postgre
+io.ktor.experimental.client.postgre.connection
+io.ktor.experimental.client.postgre.protocol
+io.ktor.experimental.client.postgre.scheme

@@ -1,0 +1,6 @@
+$dokka.format:gfm
+$dokka.linkExtension:md
+$dokka.location:io.ktor.experimental.client.util$completeWith(kotlinx.coroutines.CompletableDeferred((io.ktor.experimental.client.util.completeWith.T)), kotlin.Function0((io.ktor.experimental.client.util.completeWith.T)))io.ktor.experimental.client.util/kotlinx.coroutines.-completable-deferred/complete-with.md
+$dokka.location:io.ktor.experimental.client.util$fromHex(kotlin.String)io.ktor.experimental.client.util/kotlin.-string/from-hex.md
+$dokka.location:io.ktor.experimental.client.util$toHex(kotlin.ByteArray)io.ktor.experimental.client.util/kotlin.-byte-array/to-hex.md
+io.ktor.experimental.client.util
