@@ -1,5 +1,4 @@
 import org.jetbrains.dokka.gradle.*
-import org.jetbrains.kotlin.utils.addToStdlib.*
 
 val implementation = "implementation"
 val testImplementation = "testImplementation"
@@ -28,7 +27,7 @@ val docker_compose_rule_junit = "0.34.0"
 
 allprojects {
     group = "io.ktor.clients"
-    version = "0.0.1"
+    version = "0.0.0"
 
     repositories {
         maven { setUrl("https://dl.bintray.com/ktorio/ktor") }

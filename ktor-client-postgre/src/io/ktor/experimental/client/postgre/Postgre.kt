@@ -12,7 +12,9 @@ import kotlin.coroutines.*
 
 internal typealias SqlRequest = PipelineElement<String, SqlQueryResult>
 
-// https://www.postgresql.org/docs/11/static/index.html
+/**
+ * https://www.postgresql.org/docs/11/static/index.html
+ */
 class PostgreClient(
     val address: InetSocketAddress,
     val database: String = "default",
