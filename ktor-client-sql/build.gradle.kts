@@ -1,4 +1,4 @@
 
 dependencies {
-    api(project(":ktor-client-utils"))
+    "api"(project(":ktor-client-utils"))
 }
