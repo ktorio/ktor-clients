@@ -28,10 +28,13 @@ internal fun ByteReadPacket.readColumns(): List<PostgreColumn> {
         PostgreColumn(
             name = readCString(),
             tableOID = readInt(),
-            id = readShort().toInt() and 0xffff,
+            attributeID = readShort().toInt() and 0xffff,
             typeOID = readInt(),
-            typeSize = readShort().toInt(), /* typeSize could be negative*/
+            typeSize = readShort().toInt(), /* typeSize can be negative */
             typeMod = readInt(),
+            // The format code being used for the field. Currently will be zero (text) or one (binary). 
+            // In a RowDescription returned from the statement variant of Describe, the format code is not yet known
+            // and will always be zero.
             text = readShort().toInt() == 0
         )
     }

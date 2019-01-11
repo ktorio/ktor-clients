@@ -8,9 +8,8 @@ interface SqlRow : CoroutineScope {
     val columns: List<SqlColumn> get() = result.columns
 
     operator fun get(column: SqlColumn): SqlCell
+    operator fun get(columnIndex: Int): SqlCell
 }
-
-operator fun SqlRow.get(columnIndex: Int): SqlCell = get(columns[columnIndex])
 
 operator fun SqlRow.get(columnName: String): SqlCell = columns.find {
     it.name.equals(columnName, ignoreCase = true)

@@ -9,10 +9,15 @@ class PostgreRow(
     private val data: List<ByteArray?>,
     override val coroutineContext: CoroutineContext
 ) : SqlRow {
+    
+    override fun get(columnIndex: Int): SqlCell {
+        return PostgreCell(this, coroutineContext, columns[columnIndex], data[columnIndex])
+    }
 
-    override fun get(column: SqlColumn): SqlCell = PostgreCell(
-        this, coroutineContext, column, data[column.id]
-    )
+    override fun get(column: SqlColumn): SqlCell {
+        val columnIndex = columns.indexOf(column)
+        return get(columnIndex)
+    }
 }
 
 class PostgreCell(
