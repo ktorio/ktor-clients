@@ -32,12 +32,12 @@ internal suspend fun ByteWriteChannel.writePostgreStartup(
          * The least significant 16 bits are the minor version number (0 for the protocol described here).
          */
         writeInt(0x0003_0000)
-        val pairArray = arrayListOf<Pair<String, String>>().apply {
-            add("user" to user)
-            add("database" to database)
-            add("application_name" to "ktor-cio")
-            add("client_encoding" to "UTF8")
-            addAll(params)
+        val pairArray = mutableMapOf<String, String>().apply {
+            put("user", user)
+            put("database", database)
+            put("application_name", "ktor-cio") 
+            put("client_encoding", "UTF8")
+            putAll(params)
         }
         for ((key, value) in pairArray) {
             writeCString(key)
