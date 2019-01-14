@@ -18,7 +18,7 @@ internal suspend fun ByteWriteChannel.authMD5(user: String, password: String, sa
         encoder.update(password.toByteArray())
         encoder.update(salt)
 
-        return encoder.digest().toHex()
+        return encoder.digest().toHexString()
     }
 
     writePostgrePacket(FrontendMessage.PASSWORD_MESSAGE) {

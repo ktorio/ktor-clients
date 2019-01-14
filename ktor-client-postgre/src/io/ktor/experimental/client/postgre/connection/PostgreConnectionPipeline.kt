@@ -20,10 +20,10 @@ internal fun CoroutineScope.PostgreConnectionPipeline(
     address: InetSocketAddress, database: String,
     user: String, password: String?,
     requests: ReceiveChannel<PipelineElement<String, SqlQueryResult>>
-): SqlConnectionPipeline = PostgreConnectionPipeline(
-    selectorManager, address, database, user, password, requests, coroutineContext
-).apply {
-    start()
+): SqlConnectionPipeline {
+    val pipeline = PostgreConnectionPipeline(selectorManager, address, database, user, password, requests, coroutineContext)
+    pipeline.start()
+    return pipeline
 }
 
 private class PostgreConnectionPipeline(
@@ -62,9 +62,9 @@ private class PostgreConnectionPipeline(
     override suspend fun send(callScope: CoroutineScope, request: String) {
 //        when (requestType){
 //            RequestType.QUERY -> {
-                output.writePostgrePacket(FrontendMessage.QUERY) {
-                    writeCString(request)
-                }
+        output.writePostgrePacket(FrontendMessage.QUERY) {
+            writeCString(request)
+        }
 //            }
 //            RequestType.PREPARE -> {
 //                output.writePostgrePacket(FrontendMessage.PARSE) {

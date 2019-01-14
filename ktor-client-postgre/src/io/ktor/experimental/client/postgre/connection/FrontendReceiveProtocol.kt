@@ -43,7 +43,7 @@ internal fun CoroutineScope.simpleReceivePipeline(
                 }
                 BackendMessage.DATA_ROW -> {
                     val data = payload.readRow()
-                    rows!!.send(PostgreRow(current, data, coroutineContext))
+                    rows!!.send(PostgreRow(current, data))
                 }
                 BackendMessage.COMMAND_COMPLETE -> {
                     /* info */ payload.readCString()

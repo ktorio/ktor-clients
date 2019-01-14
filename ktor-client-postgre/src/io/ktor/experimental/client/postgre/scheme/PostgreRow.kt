@@ -2,16 +2,14 @@ package io.ktor.experimental.client.postgre.scheme
 
 import io.ktor.experimental.client.sql.*
 import kotlinx.io.core.*
-import kotlin.coroutines.*
 
 class PostgreRow(
     override val result: SqlTable,
-    private val data: List<ByteArray?>,
-    override val coroutineContext: CoroutineContext
+    private val data: List<ByteArray?>
 ) : SqlRow {
-    
+
     override fun get(columnIndex: Int): SqlCell {
-        return PostgreCell(this, coroutineContext, columns[columnIndex], data[columnIndex])
+        return PostgreCell(this, columns[columnIndex], data[columnIndex])
     }
 
     override fun get(column: SqlColumn): SqlCell {
@@ -22,7 +20,6 @@ class PostgreRow(
 
 class PostgreCell(
     override val row: SqlRow,
-    override val coroutineContext: CoroutineContext,
     override val column: SqlColumn,
     val content: ByteArray?
 ) : SqlCell {

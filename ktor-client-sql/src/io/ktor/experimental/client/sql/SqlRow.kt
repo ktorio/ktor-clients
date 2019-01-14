@@ -1,8 +1,6 @@
 package io.ktor.experimental.client.sql
 
-import kotlinx.coroutines.*
-
-interface SqlRow : CoroutineScope {
+interface SqlRow  {
     val result: SqlTable
 
     val columns: List<SqlColumn> get() = result.columns
