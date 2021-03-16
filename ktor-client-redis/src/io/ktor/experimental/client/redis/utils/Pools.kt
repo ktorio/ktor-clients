@@ -1,6 +1,6 @@
 package io.ktor.experimental.client.redis.utils
 
-import kotlinx.io.pool.*
+import io.ktor.utils.io.pool.*
 import java.nio.*
 
 internal const val DEFAULT_REDIS_BUFFER_SIZE = 4096

@@ -8,10 +8,10 @@ import io.ktor.experimental.client.util.*
 import io.ktor.network.selector.*
 import io.ktor.network.sockets.*
 import io.ktor.network.sockets.Socket
+import io.ktor.utils.io.*
+import io.ktor.utils.io.core.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
-import kotlinx.coroutines.io.*
-import kotlinx.io.core.*
 import org.slf4j.*
 import java.lang.IllegalStateException
 import java.net.*

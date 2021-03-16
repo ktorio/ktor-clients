@@ -1,8 +1,8 @@
 package io.ktor.experimental.client.postgre
 
 import io.ktor.experimental.client.postgre.protocol.*
+import io.ktor.utils.io.*
 import kotlinx.coroutines.*
-import kotlinx.coroutines.io.*
 import kotlin.test.*
 
 class PostgreTest {

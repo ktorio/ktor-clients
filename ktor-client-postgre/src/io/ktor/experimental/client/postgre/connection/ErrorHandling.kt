@@ -1,7 +1,7 @@
 package io.ktor.experimental.client.postgre.connection
 
 import io.ktor.experimental.client.postgre.protocol.*
-import kotlinx.io.core.*
+import io.ktor.utils.io.core.*
 
 
 internal fun checkErrors(type: BackendMessage, payload: ByteReadPacket): Unit = when (type) {

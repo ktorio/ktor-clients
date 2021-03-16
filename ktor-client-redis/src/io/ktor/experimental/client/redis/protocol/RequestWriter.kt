@@ -1,7 +1,9 @@
 package io.ktor.experimental.client.redis.protocol
 
-import kotlinx.io.core.*
-import java.nio.charset.*
+import io.ktor.utils.io.charsets.*
+import io.ktor.utils.io.core.*
+import java.nio.charset.Charset
+import kotlin.text.*
 
 /**
  * TODO: Consider to remove duplicated data types

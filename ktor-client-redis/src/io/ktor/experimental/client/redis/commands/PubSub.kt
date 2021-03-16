@@ -2,6 +2,10 @@ package io.ktor.experimental.client.redis.commands
 
 import io.ktor.experimental.client.redis.*
 import kotlinx.coroutines.channels.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.consumeAsFlow
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.map
 
 interface RedisPubSub {
     interface Packet
@@ -19,7 +23,7 @@ interface RedisPubSubInternal : RedisPubSub {
 internal class RedisPubSubImpl(override val redis: Redis) :
     RedisPubSubInternal {
     internal val rawChannel = redis.run { RedisInternalChannel.run { getMessageChannel() } }
-    internal val channel = rawChannel.map {
+    internal val channel = rawChannel.consumeAsFlow().map {
         val list = it as List<Any>
         val kind = list[0].toString()
         val channel = list[1].toString()
@@ -87,11 +91,11 @@ internal suspend fun RedisPubSub.subscribe(vararg channels: String): RedisPubSub
 /**
  * Gets the a channel of packets for this client subscription.
  */
-internal suspend fun RedisPubSub.channel(): ReceiveChannel<RedisPubSub.Packet> = (this as RedisPubSubImpl).channel
+internal suspend fun RedisPubSub.channel(): Flow<RedisPubSub.Packet> = (this as RedisPubSubImpl).channel
 
-internal suspend fun RedisPubSub.messagesChannel(): ReceiveChannel<RedisPubSub.Message> = channel().map { it as? RedisPubSub.Message? }.filterNotNull()
+internal suspend fun RedisPubSub.messagesChannel(): Flow<RedisPubSub.Message> = channel().map { it as? RedisPubSub.Message? }.filterNotNull()
 
-internal suspend fun RedisPubSub.subscriptionChannel(): ReceiveChannel<RedisPubSub.Subscription> = channel().map { it as? RedisPubSub.Subscription? }.filterNotNull()
+internal suspend fun RedisPubSub.subscriptionChannel(): Flow<RedisPubSub.Subscription> = channel().map { it as? RedisPubSub.Subscription? }.filterNotNull()
 
 /**
  * Stop listening for messages posted to channels matching the given patterns

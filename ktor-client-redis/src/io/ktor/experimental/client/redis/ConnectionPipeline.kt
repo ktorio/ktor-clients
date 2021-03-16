@@ -3,11 +3,12 @@ package io.ktor.experimental.client.redis
 import io.ktor.experimental.client.redis.protocol.*
 import io.ktor.experimental.client.redis.utils.*
 import io.ktor.network.sockets.*
+import io.ktor.utils.io.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
-import kotlinx.coroutines.io.*
 import java.io.*
 import java.nio.charset.*
+import kotlin.coroutines.cancellation.CancellationException
 
 internal class RedisRequest(val args: Any?, val result: CompletableDeferred<Any?>?)
 
@@ -38,7 +39,7 @@ internal class ConnectionPipeline(
                 it.result?.completeExceptionally(cause)
             }
 
-            requestQueue.cancel(cause)
+            requestQueue.cancel(CancellationException(cause))
             throw cause
         }
 

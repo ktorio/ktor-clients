@@ -1,12 +1,15 @@
 package io.ktor.experimental.client.redis.protocol
 
 import io.ktor.experimental.client.redis.utils.*
-import kotlinx.coroutines.io.*
-import kotlinx.io.core.*
-import kotlinx.io.pool.*
+import io.ktor.utils.io.*
+import io.ktor.utils.io.charsets.*
+import io.ktor.utils.io.core.*
+import io.ktor.utils.io.pool.*
 import java.nio.*
 import java.nio.ByteBuffer
 import java.nio.charset.*
+import java.nio.charset.CharsetDecoder
+import kotlin.text.*
 
 internal suspend fun ByteReadChannel.readRedisMessage(
     decoder: CharsetDecoder = Charsets.UTF_8.newDecoder()

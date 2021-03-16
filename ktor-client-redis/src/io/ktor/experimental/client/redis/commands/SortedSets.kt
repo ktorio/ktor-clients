@@ -2,6 +2,9 @@ package io.ktor.experimental.client.redis.commands
 
 import io.ktor.experimental.client.redis.*
 import kotlinx.coroutines.channels.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.consumeAsFlow
+import kotlinx.coroutines.flow.map
 
 data class RedisBzPopResult(val key: String, val member: String, val score: Double)
 
@@ -151,7 +154,13 @@ suspend fun Redis.zgetall(key: String): Map<String, Double> = zrange(key, 0L, In
  * @since 2.8.9
  */
 suspend fun Redis.zrangebylex(key: String, min: String, max: String, limit: LongRange? = null): List<String> =
-    executeArrayString(*arrayOf("ZRANGEBYLEX", key, min, max) + (if (limit != null) arrayOf("LIMIT", "${limit.start}", "${limit.endInclusive - limit.start + 1}") else arrayOf()))
+    executeArrayString(
+        *arrayOf("ZRANGEBYLEX", key, min, max) + (if (limit != null) arrayOf(
+            "LIMIT",
+            "${limit.start}",
+            "${limit.endInclusive - limit.start + 1}"
+        ) else arrayOf())
+    )
 
 /**
  * Return a range of members in a sorted set, by score
@@ -161,7 +170,19 @@ suspend fun Redis.zrangebylex(key: String, min: String, max: String, limit: Long
  * @since 1.0.5
  */
 suspend fun Redis.zrangebyscore(key: String, min: Double, max: Double, limit: LongRange? = null): Map<String, Double> =
-    executeArrayString(*arrayOf("ZRANGEBYSCORE", key, min.toRedisString(), min.toRedisString(), "WITHSCORES") + (if (limit != null) arrayOf("LIMIT", "${limit.start}", "${limit.endInclusive - limit.start + 1}") else arrayOf()))
+    executeArrayString(
+        *arrayOf(
+            "ZRANGEBYSCORE",
+            key,
+            min.toRedisString(),
+            min.toRedisString(),
+            "WITHSCORES"
+        ) + (if (limit != null) arrayOf(
+            "LIMIT",
+            "${limit.start}",
+            "${limit.endInclusive - limit.start + 1}"
+        ) else arrayOf())
+    )
         .listOfPairsToMap()
         .mapValues { it.value.toDouble() }
 
@@ -243,7 +264,13 @@ suspend fun Redis.zrevrange(key: String, start: Long, stop: Long): Map<String, D
  * @since 2.8.9
  */
 suspend fun Redis.zrevrangebylex(key: String, min: String, max: String, limit: LongRange? = null): List<String> =
-    executeArrayString(*arrayOf("ZREVRANGEBYLEX", key, min, max) + (if (limit != null) arrayOf("LIMIT", "${limit.start}", "${limit.endInclusive - limit.start + 1}") else arrayOf()))
+    executeArrayString(
+        *arrayOf("ZREVRANGEBYLEX", key, min, max) + (if (limit != null) arrayOf(
+            "LIMIT",
+            "${limit.start}",
+            "${limit.endInclusive - limit.start + 1}"
+        ) else arrayOf())
+    )
 
 /**
  * Return a range of members in a sorted set, by score, with scores ordered from high to low
@@ -252,10 +279,28 @@ suspend fun Redis.zrevrangebylex(key: String, min: String, max: String, limit: L
  *
  * @since 2.2.0
  */
-suspend fun Redis.zrevrangebyscore(key: String, min: Double, max: Double, limit: LongRange? = null): Map<String, Double> =
-    executeArrayString(*arrayOf("ZREVRANGEBYSCORE", key, min.toRedisString(), min.toRedisString(), "WITHSCORES") + (if (limit != null) arrayOf("LIMIT", "${limit.start}", "${limit.endInclusive - limit.start + 1}") else arrayOf()))
+suspend fun Redis.zrevrangebyscore(
+    key: String,
+    min: Double,
+    max: Double,
+    limit: LongRange? = null
+): Map<String, Double> =
+    executeArrayString(
+        *arrayOf(
+            "ZREVRANGEBYSCORE",
+            key,
+            min.toRedisString(),
+            min.toRedisString(),
+            "WITHSCORES"
+        ) + (if (limit != null) arrayOf(
+            "LIMIT",
+            "${limit.start}",
+            "${limit.endInclusive - limit.start + 1}"
+        ) else arrayOf())
+    )
         .listOfPairsToMap()
         .mapValues { it.value.toDouble() }
+
 /**
  * Determine the index of a member in a sorted set, with scores ordered from high to low
  *
@@ -272,7 +317,8 @@ suspend fun Redis.zrevrank(key: String, member: String): Long = executeTyped("ZR
  *
  * @since 2.8.0
  */
-suspend fun Redis.zscan(key: String, pattern: String? = null): ReceiveChannel<Pair<String, Double>> = _scanBasePairs("ZSCAN", key, pattern).map { it.first to it.second.toDouble() }
+suspend fun Redis.zscan(key: String, pattern: String? = null): Flow<Pair<String, Double>> =
+    _scanBasePairs("ZSCAN", key, pattern).consumeAsFlow().map { it.first to it.second.toDouble() }
 
 /**
  * Get the score associated with the given member in a sorted set

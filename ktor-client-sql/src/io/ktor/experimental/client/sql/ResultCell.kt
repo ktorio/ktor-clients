@@ -1,8 +1,7 @@
 package io.ktor.experimental.client.sql
 
+import io.ktor.utils.io.core.*
 import kotlinx.coroutines.*
-import kotlinx.coroutines.io.*
-import kotlinx.io.core.*
 
 interface ResultCell : CoroutineScope {
     val row: ResultRow

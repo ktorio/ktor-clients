@@ -1,9 +1,7 @@
 package io.ktor.experimental.client.postgre
 
 import kotlinx.coroutines.*
-import kotlinx.io.core.*
 import java.net.*
-import kotlin.system.*
 
 fun postgreTest(
     address: InetSocketAddress,

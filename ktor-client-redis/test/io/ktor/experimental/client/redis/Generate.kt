@@ -1,7 +1,9 @@
 package io.ktor.experimental.client.redis
 
 import io.ktor.http.*
+import io.ktor.util.*
 
+@InternalAPI
 object Generate {
     @JvmStatic
     fun main(args: Array<String>) {

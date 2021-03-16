@@ -2,7 +2,7 @@ package io.ktor.experimental.client.postgre.protocol
 
 import io.ktor.experimental.client.postgre.*
 import io.ktor.experimental.client.postgre.scheme.*
-import kotlinx.io.core.*
+import io.ktor.utils.io.core.*
 
 internal fun ByteReadPacket.readException(): PostgreException {
     val details = mutableListOf<Pair<Char, String>>()

@@ -1,7 +1,8 @@
 package io.ktor.experimental.client.postgre
 
-import kotlinx.io.charsets.*
-import kotlinx.io.core.*
+import io.ktor.utils.io.charsets.*
+import io.ktor.utils.io.core.*
+
 
 internal fun String.postgreEscape(): String {
     var out = ""

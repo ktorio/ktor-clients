@@ -2,6 +2,9 @@ package io.ktor.experimental.client.redis.commands
 
 import io.ktor.experimental.client.redis.*
 import kotlinx.coroutines.channels.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.consumeAsFlow
+import kotlinx.coroutines.flow.map
 import java.util.*
 
 /**
@@ -422,10 +425,10 @@ suspend fun Redis.memoryUsage(key: String, samplesCount: Long? = null) =
  *
  * @since 1.0.0
  */
-suspend inline fun Redis.monitor(): ReceiveChannel<String> {
+suspend inline fun Redis.monitor(): Flow<String> {
     executeTyped<Unit>("MONITOR")
     val stream = RedisInternalChannel.run { getMessageChannel() }
-    return stream.map { it.toString() }
+    return stream.consumeAsFlow().map { it.toString() }
 }
 
 /**

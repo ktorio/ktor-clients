@@ -1,8 +1,8 @@
 package io.ktor.experimental.client.postgre.scheme
 
 import io.ktor.experimental.client.sql.*
-import kotlinx.coroutines.io.*
-import kotlinx.io.core.*
+import io.ktor.utils.io.core.*
+import kotlin.String
 import kotlin.coroutines.*
 
 class PostgreRow(

@@ -4,9 +4,9 @@ import io.ktor.experimental.client.postgre.*
 import io.ktor.experimental.client.postgre.protocol.*
 import io.ktor.experimental.client.postgre.scheme.*
 import io.ktor.experimental.client.sql.*
+import io.ktor.utils.io.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
-import kotlinx.coroutines.io.*
 
 internal fun CoroutineScope.trySimplePipeline(
     firstPacket: PostgrePacket,

@@ -1,8 +1,8 @@
 package io.ktor.experimental.client.postgre.protocol
 
 import io.ktor.experimental.client.postgre.*
-import kotlinx.coroutines.io.*
-import kotlinx.io.core.*
+import io.ktor.utils.io.*
+import io.ktor.utils.io.core.*
 
 internal class PostgrePacket(
     val type: BackendMessage,

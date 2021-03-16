@@ -3,9 +3,9 @@ package io.ktor.experimental.client.postgre
 import io.ktor.experimental.client.postgre.connection.*
 import io.ktor.experimental.client.sql.*
 import io.ktor.experimental.client.util.*
+import io.ktor.utils.io.core.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
-import kotlinx.io.core.*
 import org.slf4j.*
 import java.net.*
 import kotlin.coroutines.*

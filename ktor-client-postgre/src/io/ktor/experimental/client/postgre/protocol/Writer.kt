@@ -2,7 +2,7 @@ package io.ktor.experimental.client.postgre.protocol
 
 import io.ktor.experimental.client.postgre.*
 import io.ktor.experimental.client.util.*
-import kotlinx.coroutines.io.*
+import io.ktor.utils.io.*
 import java.security.*
 
 internal suspend fun ByteWriteChannel.authMD5(

@@ -1,9 +1,10 @@
 package io.ktor.experimental.client.redis
 
+import io.ktor.utils.io.*
+import io.ktor.utils.io.core.*
 import kotlinx.coroutines.*
-import kotlinx.coroutines.io.*
-import kotlinx.io.core.*
 import java.net.*
+import kotlin.use
 
 internal fun redisTest(
     address: InetSocketAddress,

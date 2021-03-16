@@ -1,8 +1,8 @@
 package io.ktor.experimental.client.util
 
+import io.ktor.utils.io.core.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
-import kotlinx.io.core.*
 import java.util.concurrent.atomic.*
 import kotlin.coroutines.*
 
